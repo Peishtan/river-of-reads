@@ -33,7 +33,14 @@ const MonthTooltip = ({ data }: MonthTooltipProps) => {
                 ))}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-[11px] text-foreground/90 leading-tight block truncate font-medium">{book.title}</span>
+                <span className="text-[11px] text-foreground/90 leading-tight block font-medium" style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical' as const,
+                  overflow: 'hidden',
+                  overflowWrap: 'break-word',
+                  wordBreak: 'normal',
+                }}>{book.title}</span>
                 {book.author && (
                   <span className="text-[10px] text-muted-foreground/50 block truncate">{book.author}</span>
                 )}
