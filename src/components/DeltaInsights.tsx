@@ -72,36 +72,6 @@ const DeltaInsights = () => {
         ? `Your "${vibeLabels[worstDrought.vibe]}" stream hasn't seen a 5-star book in ${worstDrought.months} months. Time for a high-rated classic?`
         : `All your streams are flowing with great books recently!`;
 
-    // --- DIVERSITY SCORE ---
-    const allYears = [...new Set(readingData.map(d => d.year))].sort();
-    const firstYear = allYears[0];
-    const lastYear = allYears[allYears.length - 1];
-
-    const vibeSpread = (yr: number) => {
-      const yrData = readingData.filter(d => d.year === yr);
-      const counts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
-      yrData.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { counts[v]++; })));
-      const total = Object.values(counts).reduce((a, b) => a + b, 0);
-      if (total === 0) return 0;
-      // Shannon entropy normalized
-      let entropy = 0;
-      insightVibes.forEach(v => {
-        const p = counts[v] / total;
-        if (p > 0) entropy -= p * Math.log2(p);
-      });
-      return entropy / Math.log2(insightVibes.length); // normalize to 0-1
-    };
-
-    const firstSpread = vibeSpread(firstYear);
-    const lastSpread = vibeSpread(lastYear);
-    const spreadDiff = firstSpread > 0 ? Math.round(((lastSpread - firstSpread) / firstSpread) * 100) : 0;
-
-    const diversityText = spreadDiff > 10
-      ? `Your ${lastYear} Delta is ${spreadDiff}% wider than your ${firstYear} Source. Your tastes are expanding!`
-      : spreadDiff < -10
-        ? `Your ${lastYear} Delta is ${Math.abs(spreadDiff)}% narrower than ${firstYear}. You're becoming more focused!`
-        : `Your reading diversity has stayed consistent from ${firstYear} to ${lastYear}. A balanced reader!`;
-
     // --- THE FLOOD ---
     // Find the month with volume far above baseline
     const monthCounts = readingData.map(d => ({ year: d.year, month: d.month, count: d.books.length }));
@@ -120,7 +90,7 @@ const DeltaInsights = () => {
       ? `${monthNames[floodMonth.month]} ${floodMonth.year} was a flood — ${floodMonth.count} books, ${floodRatio.toFixed(1)}× your average of ${avgCount.toFixed(1)}/month. Mostly "${vibeLabels[floodVibe]}".`
       : `Your reading pace is remarkably steady. No major floods detected — you're a consistent reader!`;
 
-    return { surgeText, droughtText, diversityText, floodText, surgeVibe, worstDrought, floodVibe, floodRatio };
+    return { surgeText, droughtText, floodText, surgeVibe, worstDrought, floodVibe, floodRatio };
   }, [readingData]);
 
   if (!insights) return null;
@@ -130,7 +100,7 @@ const DeltaInsights = () => {
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
         Delta Insights
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* The Surge */}
         <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-2">
@@ -158,18 +128,6 @@ const DeltaInsights = () => {
           <p className="text-xs text-muted-foreground leading-relaxed">{insights.droughtText}</p>
         </div>
 
-        {/* Diversity Score */}
-        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex -space-x-0.5">
-              {VIBES.slice(0, 3).map(v => (
-                <span key={v} className="w-2 h-2 rounded-full" style={{ backgroundColor: riverColors[v] }} />
-              ))}
-            </div>
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">Diversity Score</h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.diversityText}</p>
-        </div>
       </div>
     </div>
   );
