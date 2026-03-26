@@ -7,20 +7,11 @@ import {
 import MonthTooltip from './MonthTooltip';
 
 const VIBES: VibeGroup[] = ['escapist', 'ideas', 'nature', 'history', 'memoir'];
-// Tributaries — everything except the "main current" which is all combined
-const TRIBUTARIES: VibeGroup[] = ['escapist', 'ideas', 'nature', 'history', 'memoir'];
 
-// Each tributary gets a signed "drift direction" — how far it wants to push
-// away from center when active. Positive = down, negative = up.
 const DRIFT_DIR: Record<VibeGroup, number> = {
-  escapist: -1,    // drifts up
-  ideas: -0.55,    // drifts slightly up
-  nature: 0.7,     // drifts down
-  history: 0.4,    // drifts slightly down
-  memoir: 1,       // drifts down furthest
+  escapist: -1, ideas: -0.55, nature: 0.7, history: 0.4, memoir: 1,
 };
 
-// Unique meander params per tributary
 const MEANDER: Record<VibeGroup, { f1: number; f2: number; a1: number; a2: number; p: number }> = {
   escapist: { f1: 0.065, f2: 0.11, a1: 1, a2: 0.4, p: 0 },
   ideas:    { f1: 0.05,  f2: 0.09, a1: 0.8, a2: 0.35, p: 1.4 },
@@ -29,7 +20,15 @@ const MEANDER: Record<VibeGroup, { f1: number; f2: number; a1: number; a2: numbe
   memoir:   { f1: 0.07,  f2: 0.12, a1: 0.85, a2: 0.45, p: 5.6 },
 };
 
-/** Gaussian-weighted moving average */
+// Brighter center color for 3D cylindrical effect
+const vibeBright: Record<VibeGroup, string> = {
+  escapist: 'hsl(195, 70%, 65%)',
+  ideas:    'hsl(210, 55%, 55%)',
+  nature:   'hsl(160, 45%, 58%)',
+  history:  'hsl(180, 50%, 48%)',
+  memoir:   'hsl(220, 45%, 68%)',
+};
+
 const smooth = (arr: number[], radius = 3): number[] =>
   arr.map((_, i) => {
     let sum = 0, wt = 0;
@@ -68,7 +67,6 @@ const RiverOfReading = () => {
     return months;
   }, [years]);
 
-  // Double-pass smoothed counts
   const smoothedCounts = useMemo(() => {
     const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], memoir: [] };
     series.forEach(s => VIBES.forEach(v => raw[v].push(s.vibeBooks[v])));
@@ -96,22 +94,24 @@ const RiverOfReading = () => {
 
     const x = d3.scaleLinear().domain([0, series.length - 1]).range([0, innerW]);
 
-    // Max books in any single vibe for width scaling
     const maxBooks = d3.max(VIBES, v => d3.max(smoothedCounts[v])!) || 1;
     const widthScale = d3.scaleLinear().domain([0, maxBooks]).range([1.5, 30]);
-
-    // Max drift distance from center
     const maxDrift = innerH * 0.38;
 
     const defs = svg.append('defs');
 
-    // Glow filters
+    // Filters
     const glow = defs.append('filter').attr('id', 'river-glow')
       .attr('x', '-30%').attr('y', '-30%').attr('width', '160%').attr('height', '160%');
     glow.append('feGaussianBlur').attr('stdDeviation', '10').attr('result', 'blur');
     const fm = glow.append('feMerge');
     fm.append('feMergeNode').attr('in', 'blur');
     fm.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    // Heavy blur for the membrane shadow
+    const membraneBlur = defs.append('filter').attr('id', 'membrane-blur')
+      .attr('x', '-40%').attr('y', '-40%').attr('width', '180%').attr('height', '180%');
+    membraneBlur.append('feGaussianBlur').attr('stdDeviation', '18');
 
     const dotGlow = defs.append('filter').attr('id', 'dot-glow')
       .attr('x', '-100%').attr('y', '-100%').attr('width', '300%').attr('height', '300%');
@@ -120,23 +120,21 @@ const RiverOfReading = () => {
     dm.append('feMergeNode').attr('in', 'blur');
     dm.append('feMergeNode').attr('in', 'SourceGraphic');
 
-    // Per-vibe vertical gradients
+    // 3D cylindrical gradients — bright center, dark edges
     VIBES.forEach(vibe => {
       const lg = defs.append('linearGradient')
-        .attr('id', `vgrad-${vibe}`)
+        .attr('id', `cyl-${vibe}`)
         .attr('x1', '0%').attr('y1', '0%')
         .attr('x2', '0%').attr('y2', '100%');
-      lg.append('stop').attr('offset', '0%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.2);
-      lg.append('stop').attr('offset', '30%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.7);
-      lg.append('stop').attr('offset', '70%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.7);
-      lg.append('stop').attr('offset', '100%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.2);
+      lg.append('stop').attr('offset', '0%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.15);
+      lg.append('stop').attr('offset', '20%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.55);
+      lg.append('stop').attr('offset', '45%').attr('stop-color', vibeBright[vibe]).attr('stop-opacity', 0.85);
+      lg.append('stop').attr('offset', '55%').attr('stop-color', vibeBright[vibe]).attr('stop-opacity', 0.85);
+      lg.append('stop').attr('offset', '80%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.55);
+      lg.append('stop').attr('offset', '100%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.15);
     });
 
-    // Compute braided center lines:
-    // - All start at centerY (the spine)
-    // - Drift AWAY proportional to their book count (volume pushes outward)
-    // - Get PULLED BACK toward center when volume is low (radial attractor)
-    // - Meander with unique sine harmonics
+    // Compute braided center lines with FORCED convergence at origin
     type RiverPoint = { x: number; yTop: number; yBot: number; center: number };
     const riverPaths: Record<VibeGroup, RiverPoint[]> = {} as any;
 
@@ -145,30 +143,30 @@ const RiverOfReading = () => {
       const { f1, f2, a1, a2, p } = MEANDER[vibe];
       const dir = DRIFT_DIR[vibe];
 
-      // Raw center positions
       const rawCenters = series.map((_, i) => {
-        const t = i / (series.length - 1); // 0..1 progress through time
+        const t = i / (series.length - 1);
 
-        // Volume-driven push: higher count = pushed further from center
         const volume = counts[i];
-        const pushStrength = volume / maxBooks; // 0..1
+        const pushStrength = volume / maxBooks;
 
-        // Attractor: low volume pulls back to center, high volume lets it drift
-        // At t=0 everything starts at center (confluence origin)
-        const originPull = Math.max(0, 1 - t * 4); // strong pull in first ~25% of timeline
-        const volumePull = 1 - pushStrength; // pulled back when volume is low
+        // CONVERGENCE: exponential decay from origin — all rivers start at centerY
+        // First ~8 months: very strong pull to center
+        const originPull = Math.exp(-t * 6); // e^(-6t), ~0.05 at t=0.5
 
-        const attractorStrength = Math.max(originPull, volumePull * 0.7);
-        const driftAmount = maxDrift * pushStrength * (1 - attractorStrength);
+        // MAGNETIC CENTER: low volume = pulled to center
+        // High volume = allowed to drift
+        const gravity = (1 - pushStrength) * 0.8;
+        const attractorStrength = Math.max(originPull, gravity);
 
-        // Organic meander (sine harmonics)
-        const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 12;
+        const driftAmount = maxDrift * pushStrength * dir * (1 - attractorStrength);
 
-        const offset = dir * driftAmount + meander;
-        return centerY + offset;
+        // Organic meander — scaled by (1 - originPull) so it's zero at origin
+        const meanderScale = 1 - originPull;
+        const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 12 * meanderScale;
+
+        return centerY + driftAmount + meander;
       });
 
-      // Double-smooth the center line itself
       const smoothCenters = smooth(smooth(rawCenters, 3), 2);
 
       riverPaths[vibe] = series.map((_, i) => {
@@ -194,60 +192,71 @@ const RiverOfReading = () => {
       }
     });
 
-    // Draw connecting membranes FIRST (behind rivers)
-    // Thin translucent "water" between each tributary and the center spine
+    // === MEMBRANE: blurred shadow filling the space between all rivers ===
+    // Build a hull area from the outermost top/bottom of all rivers combined
+    const envelopeTop = series.map((_, i) => ({
+      x: x(i),
+      y: d3.min(VIBES, v => riverPaths[v][i].yTop)! - 8,
+    }));
+    const envelopeBot = series.map((_, i) => ({
+      x: x(i),
+      y: d3.max(VIBES, v => riverPaths[v][i].yBot)! + 8,
+    }));
+
+    const envelopeArea = d3.area<{ x: number; y: number }>()
+      .x(d => d.x)
+      .y0((_, i) => envelopeBot[i].y)
+      .y1(d => d.y)
+      .curve(d3.curveBasis);
+
+    g.append('path')
+      .datum(envelopeTop)
+      .attr('d', envelopeArea)
+      .attr('fill', 'hsl(190, 30%, 25%)')
+      .attr('opacity', 0.03)
+      .attr('filter', 'url(#membrane-blur)');
+
+    // Per-tributary membrane connectors to center
     VIBES.forEach(vibe => {
       const pts = riverPaths[vibe];
-      // Membrane: area from the tributary's inner edge to the center
       const membraneArea = d3.area<RiverPoint>()
         .x(d => d.x)
         .y0(() => centerY)
-        .y1(d => DRIFT_DIR[vibe] < 0 ? d.yBot : d.yTop) // inner edge toward center
+        .y1(d => DRIFT_DIR[vibe] < 0 ? d.yBot : d.yTop)
         .curve(d3.curveBasis);
 
       g.append('path')
         .datum(pts)
         .attr('d', membraneArea)
         .attr('fill', vibeHSL[vibe])
-        .attr('opacity', 0.04);
+        .attr('opacity', 0.03)
+        .attr('filter', 'url(#membrane-blur)');
     });
 
-    // Draw each river
+    // Draw each river with 3D cylindrical gradient
+    const areaGen = d3.area<RiverPoint>()
+      .x(d => d.x).y0(d => d.yBot).y1(d => d.yTop)
+      .curve(d3.curveBasis);
+
     VIBES.forEach(vibe => {
       const pts = riverPaths[vibe];
 
-      const areaGen = d3.area<RiverPoint>()
-        .x(d => d.x).y0(d => d.yBot).y1(d => d.yTop)
-        .curve(d3.curveBasis);
-
-      const lineTopGen = d3.line<RiverPoint>().x(d => d.x).y(d => d.yTop).curve(d3.curveBasis);
-      const lineBotGen = d3.line<RiverPoint>().x(d => d.x).y(d => d.yBot).curve(d3.curveBasis);
-
       // Ambient glow
       g.append('path').datum(pts).attr('d', areaGen)
-        .attr('fill', vibeHSL[vibe]).attr('opacity', 0.06)
+        .attr('fill', vibeHSL[vibe]).attr('opacity', 0.05)
         .attr('filter', 'url(#river-glow)');
 
-      // Main fill
+      // Main fill — cylindrical gradient (bright center, faded edges)
       g.append('path').datum(pts).attr('d', areaGen)
-        .attr('fill', `url(#vgrad-${vibe})`);
+        .attr('fill', `url(#cyl-${vibe})`);
 
-      // Subtle white edge
-      [lineTopGen, lineBotGen].forEach(gen => {
-        g.append('path').datum(pts).attr('d', gen)
-          .attr('fill', 'none')
-          .attr('stroke', 'hsla(0, 0%, 100%, 0.06)')
-          .attr('stroke-width', 0.8);
-      });
+      // Subtle highlight stroke on top edge
+      const lineTopGen = d3.line<RiverPoint>().x(d => d.x).y(d => d.yTop).curve(d3.curveBasis);
+      g.append('path').datum(pts).attr('d', lineTopGen)
+        .attr('fill', 'none')
+        .attr('stroke', 'hsla(0, 0%, 100%, 0.08)')
+        .attr('stroke-width', 0.6);
     });
-
-    // Central spine indicator — very subtle
-    g.append('line')
-      .attr('x1', 0).attr('y1', centerY)
-      .attr('x2', innerW).attr('y2', centerY)
-      .attr('stroke', 'hsla(180, 20%, 40%, 0.06)')
-      .attr('stroke-width', 0.5)
-      .attr('stroke-dasharray', '2 12');
 
     // Right-side vibe labels
     const lastIdx = series.length - 1;
@@ -290,7 +299,6 @@ const RiverOfReading = () => {
 
           g.selectAll('.hover-el').remove();
 
-          // Glowing dots on each active tributary
           VIBES.forEach(vibe => {
             if (smoothedCounts[vibe][i] < 0.3) return;
             const c = riverPaths[vibe][i].center;
@@ -298,24 +306,20 @@ const RiverOfReading = () => {
             g.append('circle').attr('class', 'hover-el')
               .attr('cx', x(i)).attr('cy', c).attr('r', 7)
               .attr('fill', 'none')
-              .attr('stroke', vibeHSL[vibe])
-              .attr('stroke-width', 1.5).attr('opacity', 0.4)
+              .attr('stroke', vibeBright[vibe])
+              .attr('stroke-width', 1.5).attr('opacity', 0.5)
               .attr('filter', 'url(#dot-glow)');
 
             g.append('circle').attr('class', 'hover-el')
               .attr('cx', x(i)).attr('cy', c).attr('r', 3)
-              .attr('fill', vibeHSL[vibe]).attr('opacity', 0.85);
-          });
+              .attr('fill', vibeBright[vibe]).attr('opacity', 0.9);
 
-          // Connecting lines from each dot to the spine
-          VIBES.forEach(vibe => {
-            if (smoothedCounts[vibe][i] < 0.3) return;
-            const c = riverPaths[vibe][i].center;
+            // Connector to spine
             g.append('line').attr('class', 'hover-el')
               .attr('x1', x(i)).attr('y1', centerY)
               .attr('x2', x(i)).attr('y2', c)
               .attr('stroke', vibeHSL[vibe])
-              .attr('stroke-width', 0.5).attr('opacity', 0.15)
+              .attr('stroke-width', 0.5).attr('opacity', 0.12)
               .attr('stroke-dasharray', '2 4');
           });
         })
