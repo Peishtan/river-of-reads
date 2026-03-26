@@ -227,8 +227,10 @@ const RiverOfReading = () => {
       }
     });
 
+    // Masked group — fades out at the right edge (delta dissolve)
+    const riverGroup = g.append('g').attr('mask', 'url(#river-fade)');
+
     // === MEMBRANE: blurred shadow filling the space between all rivers ===
-    // Build a hull area from the outermost top/bottom of all rivers combined
     const envelopeTop = series.map((_, i) => ({
       x: x(i),
       y: d3.min(VIBES, v => riverPaths[v][i].yTop)! - 8,
@@ -244,14 +246,14 @@ const RiverOfReading = () => {
       .y1(d => d.y)
       .curve(d3.curveBasis);
 
-    g.append('path')
+    riverGroup.append('path')
       .datum(envelopeTop)
       .attr('d', envelopeArea)
       .attr('fill', 'hsl(190, 30%, 25%)')
       .attr('opacity', 0.03)
       .attr('filter', 'url(#membrane-blur)');
 
-    // Per-tributary membrane connectors to center
+    // Per-tributary membrane connectors
     VIBES.forEach(vibe => {
       const pts = riverPaths[vibe];
       const membraneArea = d3.area<RiverPoint>()
@@ -260,7 +262,7 @@ const RiverOfReading = () => {
         .y1(d => DRIFT_DIR[vibe] < 0 ? d.yBot : d.yTop)
         .curve(d3.curveBasis);
 
-      g.append('path')
+      riverGroup.append('path')
         .datum(pts)
         .attr('d', membraneArea)
         .attr('fill', vibeHSL[vibe])
@@ -277,17 +279,17 @@ const RiverOfReading = () => {
       const pts = riverPaths[vibe];
 
       // Ambient glow
-      g.append('path').datum(pts).attr('d', areaGen)
+      riverGroup.append('path').datum(pts).attr('d', areaGen)
         .attr('fill', vibeHSL[vibe]).attr('opacity', 0.05)
         .attr('filter', 'url(#river-glow)');
 
-      // Main fill — cylindrical gradient (bright center, faded edges)
-      g.append('path').datum(pts).attr('d', areaGen)
+      // Main fill — cylindrical gradient
+      riverGroup.append('path').datum(pts).attr('d', areaGen)
         .attr('fill', `url(#cyl-${vibe})`);
 
-      // Subtle highlight stroke on top edge
+      // Subtle highlight stroke
       const lineTopGen = d3.line<RiverPoint>().x(d => d.x).y(d => d.yTop).curve(d3.curveBasis);
-      g.append('path').datum(pts).attr('d', lineTopGen)
+      riverGroup.append('path').datum(pts).attr('d', lineTopGen)
         .attr('fill', 'none')
         .attr('stroke', 'hsla(0, 0%, 100%, 0.08)')
         .attr('stroke-width', 0.6);
