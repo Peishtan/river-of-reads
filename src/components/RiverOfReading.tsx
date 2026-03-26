@@ -520,21 +520,30 @@ const RiverOfReading = () => {
         )}
       </header>
 
-      <div className="w-full max-w-[1800px] overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
           <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
 
-          {hoveredMonth && mousePos && (
-            <div
-              className="absolute z-50 pointer-events-none animate-fade-up"
-              style={{
-                left: `${mousePos.x}px`,
-                top: `${mousePos.y}px`,
-                transform: 'translate(16px, -100%)',
-              }}
-            >
-              <MonthTooltip data={hoveredMonth} />
-            </div>
+          {hoveredMonth && mousePos && containerRef.current && (() => {
+            const cw = containerRef.current!.clientWidth;
+            const ch = containerRef.current!.clientHeight;
+            const flipX = mousePos.x > cw - 260;
+            const flipY = mousePos.y < 180;
+            const tx = flipX ? 'calc(-100% - 16px)' : '16px';
+            const ty = flipY ? '16px' : 'calc(-100% - 8px)';
+            return (
+              <div
+                className="absolute z-50 pointer-events-none animate-fade-up"
+                style={{
+                  left: `${mousePos.x}px`,
+                  top: `${mousePos.y}px`,
+                  transform: `translate(${tx}, ${ty})`,
+                }}
+              >
+                <MonthTooltip data={hoveredMonth} />
+              </div>
+            );
+          })()}
           )}
         </div>
       </div>
