@@ -56,6 +56,7 @@ export default {
           ideas: "hsl(var(--vibe-ideas))",
           nature: "hsl(var(--vibe-nature))",
           history: "hsl(var(--vibe-history))",
+          memoir: "hsl(var(--vibe-memoir))",
         },
         gold: {
           DEFAULT: "hsl(var(--gold))",
