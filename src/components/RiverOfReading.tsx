@@ -721,7 +721,7 @@ const RiverOfReading = () => {
             </p>
             <p>
               <strong className="text-foreground/80">How it stays up to date:</strong> My rivers are updated automatically
-              via an n8n pipeline I've created from Goodreads.
+              via an n8n pipeline I've created from <a href="https://www.goodreads.com/review/list_rss/13139577-peishan-tan?shelf=read" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">Goodreads</a>.
             </p>
             <p>
               <strong className="text-foreground/80">Make your own:</strong> You don't need Goodreads or any automation —
