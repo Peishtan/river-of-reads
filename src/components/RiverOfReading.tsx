@@ -418,7 +418,7 @@ const RiverOfReading = () => {
         .on('click', (event: MouseEvent) => showHover(i, event));
     });
 
-  }, [series, smoothedCounts, avgVibeRating, years, riverColors]);
+  }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes]);
 
   // Dismiss on tap outside
   useEffect(() => {
