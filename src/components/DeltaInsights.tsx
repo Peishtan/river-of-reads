@@ -47,30 +47,33 @@ const DeltaInsights = () => {
       : `Your reading has been quiet recently. Time to dive back in!`;
 
     // --- THE DROUGHT ---
-    // Find which vibe hasn't seen a 5-star book in the longest time
+    // Find streams that have gone dry — no books at all in recent months
+    // Only fire when there's a real drought worth mentioning
+    const droughtThreshold = 6; // months with zero books to qualify
     let worstDrought: { vibe: VibeGroup; months: number } = { vibe: 'life', months: 0 };
     insightVibes.forEach(v => {
-      let lastFiveStar = -1;
+      let lastSeen = -1;
       readingData.forEach(d => {
         d.books.forEach(b => {
-          if (b.vibes.includes(v) && b.rating === 5) {
+          if (b.vibes.includes(v)) {
             const mi = (d.year - 2020) * 12 + d.month;
-            if (mi > lastFiveStar) lastFiveStar = mi;
+            if (mi > lastSeen) lastSeen = mi;
           }
         });
       });
       const currentMi = (currentYear - 2020) * 12 + currentMonth;
-      const drought = lastFiveStar >= 0 ? currentMi - lastFiveStar : 999;
+      const drought = lastSeen >= 0 ? currentMi - lastSeen : 999;
       if (drought > worstDrought.months) {
         worstDrought = { vibe: v, months: drought };
       }
     });
 
+    const showDrought = worstDrought.months >= droughtThreshold;
     const droughtText = worstDrought.months > 900
-      ? `Your "${vibeLabels[worstDrought.vibe]}" stream has never seen a 5-star book. Time to find a classic!`
-      : worstDrought.months > 3
-        ? `Your "${vibeLabels[worstDrought.vibe]}" stream hasn't seen a 5-star book in ${worstDrought.months} months. Time for a high-rated classic?`
-        : `All your streams are flowing with great books recently!`;
+      ? `Your "${vibeLabels[worstDrought.vibe]}" stream has run completely dry — not a single book, ever. Time to explore?`
+      : showDrought
+        ? `Your "${vibeLabels[worstDrought.vibe]}" stream has been dry for ${worstDrought.months} months. That river bed is cracking.`
+        : null;
 
     // --- THE FLOOD ---
     // Find the month with volume far above baseline
