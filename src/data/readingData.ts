@@ -29,18 +29,20 @@ export const setVibeHSL = (colors: Record<VibeGroup, string>) => {
 
 /** Map raw tag strings to vibe groups */
 export const TAG_TO_VIBE: Record<string, VibeGroup> = {
-  // Nature & Ocean
-  nature: 'nature', travel: 'nature',
-  // History & World
-  history: 'history', culture: 'history', politics: 'history', memoir: 'history', legal: 'history',
-  // Ideas & Technology
-  business: 'ideas', future: 'ideas', 'idea-dense': 'ideas', science: 'ideas',
-  systems: 'ideas', technology: 'ideas', 'philosophy-lite': 'ideas', practical: 'ideas', psychology: 'ideas',
   // Escapist & Adventure
-  adventure: 'escapist', escapist: 'escapist', mystery: 'escapist', thriller: 'escapist',
-  dystopian: 'escapist', dark: 'escapist', bleak: 'escapist', uncomfortable: 'escapist',
+  adventure: 'escapist', escapist: 'escapist', dark: 'escapist',
+  dystopian: 'escapist', mystery: 'escapist', thriller: 'escapist',
+  // Ideas & Technology
+  business: 'ideas', craft: 'ideas', future: 'ideas', 'idea-dense': 'ideas',
+  practical: 'ideas', science: 'ideas', systems: 'ideas', technology: 'ideas',
+  // History & World
+  culture: 'history', food: 'history', history: 'history', legal: 'history',
+  literary: 'history', politics: 'history', travel: 'history',
+  // Nature & Ocean
+  nature: 'nature',
   // Life & Reflective
-  reflective: 'life', literary: 'life', warm: 'life', hope: 'life', food: 'life', craft: 'life',
+  hope: 'life', memoir: 'life', 'philosophy-lite': 'life',
+  psychology: 'life', reflective: 'life', warm: 'life',
 };
 
 export function tagsToVibes(tagString: string): VibeGroup[] {
