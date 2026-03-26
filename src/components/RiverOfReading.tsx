@@ -69,6 +69,9 @@ const RiverOfReading = () => {
 
   const series = useMemo(() => {
     const startYear = years[0], endYear = years[years.length - 1];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
     const months: {
       monthIdx: number; year: number; month: number;
       data: MonthData | null;
@@ -77,6 +80,8 @@ const RiverOfReading = () => {
     }[] = [];
     for (let y = startYear; y <= endYear; y++) {
       for (let m = 0; m < 12; m++) {
+        // Stop at the current month — don't generate future empty months
+        if (y > currentYear || (y === currentYear && m > currentMonth)) break;
         const found = readingData.find(d => d.year === y && d.month === m) || null;
         const vb: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
         const vr: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
