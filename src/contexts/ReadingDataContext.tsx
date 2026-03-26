@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { MonthData, VibeGroup, readingData as dummyData, defaultVibeHSL, setVibeHSL, VIBES } from '@/data/readingData';
 import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 
 interface RiverColors extends Record<VibeGroup, string> {}
 
@@ -10,6 +11,9 @@ interface ReadingDataContextType {
   isCustomData: boolean;
   riverColors: RiverColors;
   setRiverColor: (vibe: VibeGroup, color: string) => void;
+  session: Session | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const ReadingDataContext = createContext<ReadingDataContextType>({
@@ -18,6 +22,9 @@ const ReadingDataContext = createContext<ReadingDataContextType>({
   isCustomData: false,
   riverColors: { ...defaultVibeHSL },
   setRiverColor: () => {},
+  session: null,
+  loading: true,
+  signOut: async () => {},
 });
 
 export const useReadingData = () => useContext(ReadingDataContext);
@@ -26,9 +33,34 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
   const [data, setDataRaw] = useState<MonthData[]>(dummyData);
   const [isCustomData, setIsCustomData] = useState(false);
   const [riverColors, setRiverColors] = useState<RiverColors>({ ...defaultVibeHSL });
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load river colors from Supabase on mount
+  // Auth listener
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load data when session changes
+  useEffect(() => {
+    if (!session) {
+      setDataRaw(dummyData);
+      setIsCustomData(false);
+      setRiverColors({ ...defaultVibeHSL });
+      setVibeHSL({ ...defaultVibeHSL });
+      return;
+    }
+
     const loadColors = async () => {
       try {
         const { data: settings } = await supabase
@@ -49,7 +81,6 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    // Load saved books from Supabase
     const loadBooks = async () => {
       try {
         const { data: books } = await supabase
@@ -89,7 +120,7 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
 
     loadColors();
     loadBooks();
-  }, []);
+  }, [session]);
 
   const setData = useCallback((d: MonthData[]) => {
     setDataRaw(d);
@@ -103,19 +134,37 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
       return next;
     });
 
-    // Persist to Supabase
-    try {
-      await supabase
-        .from('river_settings')
-        .update({ color_hsl: color })
-        .eq('vibe_key', vibe);
-    } catch (err) {
-      console.warn('Could not save river color:', err);
+    if (session) {
+      try {
+        // Upsert: try update first, then insert if no rows affected
+        const { data: existing } = await supabase
+          .from('river_settings')
+          .select('id')
+          .eq('vibe_key', vibe)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from('river_settings')
+            .update({ color_hsl: color })
+            .eq('id', existing.id);
+        } else {
+          await supabase
+            .from('river_settings')
+            .insert({ vibe_key: vibe, color_hsl: color, user_id: session.user.id });
+        }
+      } catch (err) {
+        console.warn('Could not save river color:', err);
+      }
     }
+  }, [session]);
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
   }, []);
 
   return (
-    <ReadingDataContext.Provider value={{ data, setData, isCustomData, riverColors, setRiverColor }}>
+    <ReadingDataContext.Provider value={{ data, setData, isCustomData, riverColors, setRiverColor, session, loading, signOut }}>
       {children}
     </ReadingDataContext.Provider>
   );
