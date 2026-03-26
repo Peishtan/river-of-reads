@@ -563,9 +563,8 @@ const RiverOfReading = () => {
       const nearest = findNearestData(i);
       if (nearest) setHoveredMonth(nearest.data);
 
-      if (event && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setMousePos({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+      if (event) {
+        setMousePos({ x: event.clientX, y: event.clientY });
       }
 
       g.selectAll('.hover-el').remove();
@@ -601,10 +600,7 @@ const RiverOfReading = () => {
         .attr('fill', 'transparent').attr('cursor', 'pointer')
         .on('mouseenter', (event: MouseEvent) => showHover(i, event))
         .on('mousemove', (event: MouseEvent) => {
-          if (containerRef.current) {
-            const rect = containerRef.current.getBoundingClientRect();
-            setMousePos({ x: event.clientX - rect.left, y: event.clientY - rect.top });
-          }
+          setMousePos({ x: event.clientX, y: event.clientY });
         })
         .on('mouseleave', hideHover)
         .on('click', (event: MouseEvent) => showHover(i, event));
@@ -659,34 +655,31 @@ const RiverOfReading = () => {
         )}
       </header>
 
-      <div className="w-full max-w-[1800px] overflow-x-auto overflow-y-visible px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div ref={containerRef} className="relative" style={{ minWidth: 1200, overflow: 'visible' }}>
+      <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
           <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
-
-          {hoveredMonth && mousePos && containerRef.current && (() => {
-            const scrollParent = containerRef.current!.parentElement;
-            const visibleWidth = scrollParent ? scrollParent.clientWidth : containerRef.current!.clientWidth;
-            const scrollLeft = scrollParent ? scrollParent.scrollLeft : 0;
-            const visibleRight = scrollLeft + visibleWidth;
-            const flipX = mousePos.x > visibleRight - 280;
-            const flipY = mousePos.y < 180;
-            const tx = flipX ? 'calc(-100% - 16px)' : '16px';
-            const ty = flipY ? '16px' : 'calc(-100% - 8px)';
-            return (
-              <div
-                className="absolute z-50 pointer-events-none animate-fade-up"
-                style={{
-                  left: `${mousePos.x}px`,
-                  top: `${mousePos.y}px`,
-                  transform: `translate(${tx}, ${ty})`,
-                }}
-              >
-                <MonthTooltip data={hoveredMonth} />
-              </div>
-            );
-          })()}
         </div>
       </div>
+
+      {hoveredMonth && mousePos && (() => {
+        const vw = window.innerWidth;
+        const flipX = mousePos.x > vw - 280;
+        const flipY = mousePos.y < 180;
+        const tx = flipX ? 'calc(-100% - 16px)' : '16px';
+        const ty = flipY ? '16px' : 'calc(-100% - 8px)';
+        return (
+          <div
+            className="fixed z-50 pointer-events-none animate-fade-up"
+            style={{
+              left: `${mousePos.x}px`,
+              top: `${mousePos.y}px`,
+              transform: `translate(${tx}, ${ty})`,
+            }}
+          >
+            <MonthTooltip data={hoveredMonth} />
+          </div>
+        );
+      })()}
 
       <div className="flex flex-wrap items-center gap-5 mt-4 justify-center px-4">
         {activeVibes.map(v => {
