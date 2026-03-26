@@ -13,7 +13,7 @@ export const vibeLabels: Record<VibeGroup, string> = {
 
 export const defaultVibeHSL: Record<VibeGroup, string> = {
   nature:   'hsl(175, 25%, 42%)',   // The Wild — Muted Teal
-  history:  'hsl(220, 35%, 30%)',   // The World — Deep Navy
+  history:  'hsl(215, 55%, 50%)',   // The World — Bright Blue
   ideas:    'hsl(215, 18%, 55%)',   // The Lab — Slate Blue
   escapist: 'hsl(18, 45%, 52%)',    // The Escape — Terracotta
   life:     'hsl(130, 15%, 52%)',   // The Hearth — Sage Green
