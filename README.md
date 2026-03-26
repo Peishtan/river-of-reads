@@ -12,14 +12,14 @@ Your reading life is a river. It starts as a single current and branches into tr
 
 The core visualization is a horizontal stacked-area chart built with **D3.js**. Each month of reading data becomes a vertical slice, and books are grouped into six **vibe tributaries**:
 
-| Vibe | Label | What it captures |
+| Vibe | Label | Associated Tags |
 |------|-------|-----------------|
-| `escapist` | Escapist & Adventure | Adventure, mystery, thriller, dystopian fiction |
-| `ideas` | Ideas & Technology | Business, technology, science, psychology |
-| `nature` | Nature & Ocean | Nature writing, travel |
-| `history` | History & World | History, culture, politics, memoir |
-| `life` | Life & Reflective | Literary fiction, reflective, warm, hopeful |
-| `current` | The Main Current | The base flow — books that don't fit a specific vibe |
+| `escapist` | Escapist & Adventure | adventure, escapist, dark, dystopian, mystery, thriller |
+| `ideas` | Ideas & Technology | business, craft, future, idea-dense, practical, science, systems, technology |
+| `history` | History & World | culture, food, history, legal, literary, politics, travel |
+| `nature` | Nature & Ocean | nature |
+| `life` | Life & Reflective | hope, memoir, philosophy-lite, psychology, reflective, warm |
+| `current` | The Main Current | The base flow — books that don't match any recognized tag |
 
 ### Branch Lifecycle
 
