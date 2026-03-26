@@ -319,10 +319,15 @@ const RiverOfReading = () => {
       
 
       // Compute points with meander applied
+      const GAP = 4; // pixel gap between adjacent streams
       const pts: LayerPoint[] = layer.map((d, i) => {
         const mx = meanderOff[i];
-        const y0 = yScale(d[0]) + mx;
-        const y1 = yScale(d[1]) + mx;
+        const rawY0 = yScale(d[0]) + mx;
+        const rawY1 = yScale(d[1]) + mx;
+        const thickness = rawY1 - rawY0;
+        const inset = thickness > GAP * 2 ? GAP / 2 : 0;
+        const y0 = rawY0 + inset;
+        const y1 = rawY1 - inset;
         return { x: xScale(i), y0, y1, center: (y0 + y1) / 2 };
       });
       layerPaths[vibe] = pts;
