@@ -85,6 +85,12 @@ export const monthLabelFull = (d: MonthData) => {
   return names[d.month];
 };
 
+export const totalPages = (d: MonthData) => d.books.reduce((s, b) => s + b.pages, 0);
+export const avgRating = (d: MonthData) => {
+  if (d.books.length === 0) return 0;
+  return d.books.reduce((s, b) => s + b.rating, 0) / d.books.length;
+};
+
 // Real reading data — tagged books from 2021 onwards
 
 // Reading data from CSV — 563 books
@@ -834,5 +840,5 @@ export const readingData: MonthData[] = [
     b('Kook: What Surfing Taught Me About Love, Life, and Catching the Perfect Wave', ['life', 'nature'], 3, 250, 'Peter Heller'),
     b('The Spies of Shilling Lane', ['history', 'life'], 2, 250, 'Jennifer Ryan'),
     b('Breakneck: China\'s Quest to Engineer the Future', ['ideas', 'history'], 5, 250, 'Dan Wang'),
-
+  ]),
 ];
