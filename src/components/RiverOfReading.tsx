@@ -226,7 +226,7 @@ const RiverOfReading = () => {
     stackedLayers.forEach(layer => {
       const vibe = layer.key as VibeGroup;
       const meanderOff = meanderOffsets[vibe];
-      const ratings = avgVibeRating[vibe];
+      
 
       // Compute points with meander applied
       const pts: LayerPoint[] = layer.map((d, i) => {
