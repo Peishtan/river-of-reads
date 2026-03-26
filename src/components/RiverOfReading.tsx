@@ -304,9 +304,18 @@ const RiverOfReading = () => {
         .text(mark);
     });
 
+    /* ── Glow filter ────────────────────────────────────── */
+    const glow = defs.append('filter').attr('id', 'river-glow')
+      .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%');
+    glow.append('feGaussianBlur').attr('in', 'SourceGraphic').attr('stdDeviation', '6').attr('result', 'blur');
+    glow.append('feColorMatrix').attr('in', 'blur').attr('type', 'saturate').attr('values', '1.3').attr('result', 'glow');
+    const glowMerge = glow.append('feMerge');
+    glowMerge.append('feMergeNode').attr('in', 'glow');
+    glowMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
     /* ── Draw rivers ─────────────────────────────────────── */
 
-    const riverOuter = g.append('g').attr('mask', 'url(#river-fade)');
+    const riverOuter = g.append('g').attr('mask', 'url(#river-fade)').attr('filter', 'url(#river-glow)');
     const riverGroup = riverOuter.append('g').attr('mask', 'url(#river-fade-h)');
 
     // Store computed paths for hover lookups
