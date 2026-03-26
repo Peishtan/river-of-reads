@@ -8,17 +8,44 @@ import MonthTooltip from './MonthTooltip';
 
 const VIBES: VibeGroup[] = ['escapist', 'ideas', 'nature', 'history', 'memoir'];
 
-/** Gaussian-weighted moving average for ultra-smooth input */
+// Affinity: related genres drift closer, unrelated drift apart
+// Higher = closer together. Used to compute dynamic center offsets.
+const AFFINITY: Record<VibeGroup, Record<VibeGroup, number>> = {
+  escapist: { escapist: 1, ideas: 0.4, nature: 0.2, history: 0.3, memoir: 0.5 },
+  ideas:    { escapist: 0.4, ideas: 1, nature: 0.2, history: 0.5, memoir: 0.3 },
+  nature:   { escapist: 0.2, ideas: 0.2, nature: 1, history: 0.4, memoir: 0.6 },
+  history:  { escapist: 0.3, ideas: 0.5, history: 1, nature: 0.4, memoir: 0.7 },
+  memoir:   { escapist: 0.5, ideas: 0.3, nature: 0.6, history: 0.7, memoir: 1 },
+};
+
+// Base vertical positions (spread across the height)
+const BASE_Y: Record<VibeGroup, number> = {
+  escapist: 0.15,
+  ideas: 0.35,
+  nature: 0.55,
+  history: 0.72,
+  memoir: 0.88,
+};
+
+// Unique sine-wave parameters per river for organic meandering
+const MEANDER: Record<VibeGroup, { freq: number; amp: number; phase: number }> = {
+  escapist: { freq: 0.08, amp: 18, phase: 0 },
+  ideas:    { freq: 0.06, amp: 14, phase: 1.2 },
+  nature:   { freq: 0.05, amp: 20, phase: 2.8 },
+  history:  { freq: 0.07, amp: 12, phase: 4.1 },
+  memoir:   { freq: 0.09, amp: 16, phase: 5.5 },
+};
+
+/** Gaussian-weighted moving average */
 const smooth = (arr: number[], radius = 3): number[] =>
   arr.map((_, i) => {
-    let sum = 0, wTotal = 0;
+    let sum = 0, wt = 0;
     for (let j = Math.max(0, i - radius); j <= Math.min(arr.length - 1, i + radius); j++) {
-      const dist = Math.abs(j - i) / radius;
-      const w = Math.exp(-2 * dist * dist); // gaussian
+      const w = Math.exp(-2 * ((j - i) / radius) ** 2);
       sum += arr[j] * w;
-      wTotal += w;
+      wt += w;
     }
-    return sum / wTotal;
+    return sum / wt;
   });
 
 const RiverOfReading = () => {
@@ -49,41 +76,22 @@ const RiverOfReading = () => {
     return months;
   }, [years]);
 
-  // Double-pass smoothing for ultra-fluid input
-  const smoothedSeries = useMemo(() => {
+  // Double-pass smoothed book counts per vibe
+  const smoothedCounts = useMemo(() => {
     const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], memoir: [] };
     series.forEach(s => VIBES.forEach(v => raw[v].push(s.vibeBooks[v])));
-
-    const smoothed: Record<VibeGroup, number[]> = {} as any;
-    VIBES.forEach(v => {
-      smoothed[v] = smooth(smooth(raw[v], 3), 2); // two passes
-    });
-
-    return series.map((s, i) => {
-      const vb: Record<VibeGroup, number> = {} as any;
-      VIBES.forEach(v => { vb[v] = Math.max(smoothed[v][i], 0.2); });
-      return { ...s, vibeBooks: vb };
-    });
+    const out: Record<VibeGroup, number[]> = {} as any;
+    VIBES.forEach(v => { out[v] = smooth(smooth(raw[v], 3), 2); });
+    return out;
   }, [series]);
-
-  const stacked = useMemo(() => {
-    const stack = d3.stack<typeof smoothedSeries[0], VibeGroup>()
-      .keys(VIBES)
-      .value((d, key) => d.vibeBooks[key])
-      .offset(d3.stackOffsetWiggle)
-      .order(d3.stackOrderInsideOut);
-    return stack(smoothedSeries);
-  }, [smoothedSeries]);
 
   useEffect(() => {
     if (!svgRef.current || !containerRef.current) return;
 
     const container = containerRef.current;
-    // Wider chart = more stretch between months
     const width = Math.max(container.clientWidth, 1400);
-    const height = 520;
-    const vPad = Math.round(height * 0.18);
-    const margin = { top: 40 + vPad, right: 130, bottom: 30 + vPad, left: 60 };
+    const height = 600;
+    const margin = { top: 55, right: 130, bottom: 40, left: 60 };
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
@@ -93,22 +101,20 @@ const RiverOfReading = () => {
     const innerH = height - margin.top - margin.bottom;
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // X scale — stretched wide
     const x = d3.scaleLinear()
-      .domain([0, smoothedSeries.length - 1])
+      .domain([0, series.length - 1])
       .range([0, innerW]);
 
-    const yMin = d3.min(stacked, layer => d3.min(layer, d => d[0]))!;
-    const yMax = d3.max(stacked, layer => d3.max(layer, d => d[1]))!;
-    const yPad = (yMax - yMin) * 0.15;
-    const y = d3.scaleLinear().domain([yMin - yPad, yMax + yPad]).range([innerH, 0]);
+    // Max book count across all vibes for width scaling
+    const maxBooks = d3.max(VIBES, v => d3.max(smoothedCounts[v])!) || 1;
+    const widthScale = d3.scaleLinear().domain([0, maxBooks]).range([2, 35]);
 
     const defs = svg.append('defs');
 
-    // Glow filters
+    // Glow filter
     const glow = defs.append('filter').attr('id', 'river-glow')
       .attr('x', '-30%').attr('y', '-30%').attr('width', '160%').attr('height', '160%');
-    glow.append('feGaussianBlur').attr('stdDeviation', '12').attr('result', 'blur');
+    glow.append('feGaussianBlur').attr('stdDeviation', '10').attr('result', 'blur');
     const fm = glow.append('feMerge');
     fm.append('feMergeNode').attr('in', 'blur');
     fm.append('feMergeNode').attr('in', 'SourceGraphic');
@@ -116,37 +122,64 @@ const RiverOfReading = () => {
     const dotGlow = defs.append('filter').attr('id', 'dot-glow')
       .attr('x', '-100%').attr('y', '-100%').attr('width', '300%').attr('height', '300%');
     dotGlow.append('feGaussianBlur').attr('stdDeviation', '5').attr('result', 'blur');
-    const dm = dotGlow.append('feMerge');
-    dm.append('feMergeNode').attr('in', 'blur');
-    dm.append('feMergeNode').attr('in', 'SourceGraphic');
+    const dm2 = dotGlow.append('feMerge');
+    dm2.append('feMergeNode').attr('in', 'blur');
+    dm2.append('feMergeNode').attr('in', 'SourceGraphic');
 
-    // Vertical gradient masks — transparent at banks, opaque in center
-    VIBES.forEach((vibe, li) => {
-      const gradId = `vgrad-${vibe}`;
+    // Per-vibe vertical gradients (transparent at banks, opaque center)
+    VIBES.forEach(vibe => {
       const lg = defs.append('linearGradient')
-        .attr('id', gradId)
+        .attr('id', `vgrad-${vibe}`)
         .attr('x1', '0%').attr('y1', '0%')
         .attr('x2', '0%').attr('y2', '100%');
-      lg.append('stop').attr('offset', '0%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.3);
-      lg.append('stop').attr('offset', '35%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.75);
-      lg.append('stop').attr('offset', '65%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.75);
-      lg.append('stop').attr('offset', '100%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.3);
+      lg.append('stop').attr('offset', '0%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.25);
+      lg.append('stop').attr('offset', '30%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.7);
+      lg.append('stop').attr('offset', '70%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.7);
+      lg.append('stop').attr('offset', '100%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.25);
     });
 
-    // curveBasis area — THE key to fluid flow
-    const area = d3.area<d3.SeriesPoint<typeof smoothedSeries[0]>>()
-      .x((_, i) => x(i))
-      .y0(d => y(d[0]))
-      .y1(d => y(d[1]))
-      .curve(d3.curveBasis);
+    // Compute center-line for each vibe at each month index
+    // Center = baseY * innerH + meander sine + affinity pull
+    const centerLines: Record<VibeGroup, number[]> = {} as any;
 
-    // Floating year labels at top — NO vertical lines
+    VIBES.forEach(vibe => {
+      const base = BASE_Y[vibe] * innerH;
+      const { freq, amp, phase } = MEANDER[vibe];
+      centerLines[vibe] = series.map((_, i) => {
+        // Organic sine meander
+        const meander = Math.sin(i * freq + phase) * amp
+          + Math.sin(i * freq * 0.6 + phase * 1.3) * amp * 0.4;
+
+        // Affinity pull: when related vibes are active at same time, drift closer
+        let pull = 0;
+        VIBES.forEach(other => {
+          if (other === vibe) return;
+          const affinity = AFFINITY[vibe][other];
+          const otherVal = smoothedCounts[other][i];
+          const myVal = smoothedCounts[vibe][i];
+          if (otherVal > 0.5 && myVal > 0.5) {
+            const otherBase = BASE_Y[other] * innerH;
+            const direction = otherBase > base ? 1 : -1;
+            pull += direction * affinity * Math.min(otherVal, myVal) * 3;
+          }
+        });
+
+        return base + meander + pull;
+      });
+    });
+
+    // Smooth the center lines too for fluid motion
+    VIBES.forEach(vibe => {
+      centerLines[vibe] = smooth(smooth(centerLines[vibe], 3), 2) as number[];
+    });
+
+    // Floating year labels
     const startYear = years[0];
     years.forEach(yr => {
       const mi = (yr - startYear) * 12;
-      if (mi >= 0 && mi < smoothedSeries.length) {
+      if (mi >= 0 && mi < series.length) {
         g.append('text')
-          .attr('x', x(mi)).attr('y', -vPad + 8)
+          .attr('x', x(mi)).attr('y', -12)
           .attr('text-anchor', 'middle')
           .attr('fill', 'hsl(200, 5%, 28%)')
           .attr('font-size', '11px')
@@ -156,58 +189,73 @@ const RiverOfReading = () => {
       }
     });
 
-    // Draw streams
-    stacked.forEach((layer, li) => {
-      const vibe = VIBES[li];
+    // Build per-vibe points: top/bottom edges around center line
+    type RiverPoint = { x: number; yTop: number; yBot: number; center: number };
+    const riverPaths: Record<VibeGroup, RiverPoint[]> = {} as any;
+
+    VIBES.forEach(vibe => {
+      riverPaths[vibe] = series.map((_, i) => {
+        const c = centerLines[vibe][i];
+        const halfW = widthScale(Math.max(smoothedCounts[vibe][i], 0.15));
+        return { x: x(i), yTop: c - halfW, yBot: c + halfW, center: c };
+      });
+    });
+
+    // Draw each river independently
+    VIBES.forEach(vibe => {
+      const pts = riverPaths[vibe];
+
+      // Build area path using curveBasis
+      const areaGen = d3.area<RiverPoint>()
+        .x(d => d.x)
+        .y0(d => d.yBot)
+        .y1(d => d.yTop)
+        .curve(d3.curveBasis);
+
+      const lineTopGen = d3.line<RiverPoint>().x(d => d.x).y(d => d.yTop).curve(d3.curveBasis);
+      const lineBotGen = d3.line<RiverPoint>().x(d => d.x).y(d => d.yBot).curve(d3.curveBasis);
 
       // Ambient glow
       g.append('path')
-        .datum(layer)
-        .attr('d', area)
+        .datum(pts)
+        .attr('d', areaGen)
         .attr('fill', vibeHSL[vibe])
-        .attr('opacity', 0.05)
+        .attr('opacity', 0.06)
         .attr('filter', 'url(#river-glow)');
 
-      // Main fill with vertical gradient (transparent banks, opaque center)
+      // Main fill with vertical gradient
       g.append('path')
-        .datum(layer)
-        .attr('d', area)
+        .datum(pts)
+        .attr('d', areaGen)
         .attr('fill', `url(#vgrad-${vibe})`);
 
-      // Ultra-subtle white separator
-      const lineGen = (accessor: (d: d3.SeriesPoint<typeof smoothedSeries[0]>) => number) =>
-        d3.line<d3.SeriesPoint<typeof smoothedSeries[0]>>()
-          .x((_, i) => x(i))
-          .y(accessor)
-          .curve(d3.curveBasis);
-
-      [d => y(d[1]), d => y(d[0])].forEach(acc => {
+      // Subtle white edge separators
+      [lineTopGen, lineBotGen].forEach(gen => {
         g.append('path')
-          .datum(layer)
-          .attr('d', lineGen(acc as any))
+          .datum(pts)
+          .attr('d', gen)
           .attr('fill', 'none')
-          .attr('stroke', 'hsla(0, 0%, 100%, 0.05)')
+          .attr('stroke', 'hsla(0, 0%, 100%, 0.06)')
           .attr('stroke-width', 0.8);
       });
     });
 
     // Right-side vibe labels
-    const lastIdx = smoothedSeries.length - 1;
-    stacked.forEach((layer, li) => {
-      const vibe = VIBES[li];
-      const lastPt = layer[lastIdx];
-      const midY = (y(lastPt[0]) + y(lastPt[1])) / 2;
+    const lastIdx = series.length - 1;
+    VIBES.forEach(vibe => {
+      const pts = riverPaths[vibe];
+      const lastPt = pts[lastIdx];
       const labelX = innerW + 16;
 
       g.append('line')
-        .attr('x1', innerW + 2).attr('y1', midY)
-        .attr('x2', labelX - 3).attr('y2', midY)
+        .attr('x1', innerW + 2).attr('y1', lastPt.center)
+        .attr('x2', labelX - 3).attr('y2', lastPt.center)
         .attr('stroke', vibeHSL[vibe])
         .attr('stroke-width', 0.4)
         .attr('opacity', 0.25);
 
       g.append('text')
-        .attr('x', labelX).attr('y', midY + 4)
+        .attr('x', labelX).attr('y', lastPt.center + 4)
         .attr('fill', vibeHSL[vibe])
         .attr('font-size', '10px')
         .attr('font-weight', '400')
@@ -216,43 +264,48 @@ const RiverOfReading = () => {
         .text(vibeLabels[vibe]);
     });
 
-    // Hover
+    // Hover hitboxes
     const hitboxes = g.append('g');
-    const colW = innerW / smoothedSeries.length;
+    const colW = innerW / series.length;
 
-    smoothedSeries.forEach((s, i) => {
+    series.forEach((s, i) => {
       const hitbox = hitboxes.append('rect')
-        .attr('x', x(i) - colW / 2).attr('y', -vPad)
-        .attr('width', colW).attr('height', innerH + vPad * 2)
+        .attr('x', x(i) - colW / 2).attr('y', 0)
+        .attr('width', colW).attr('height', innerH)
         .attr('fill', 'transparent').attr('cursor', 'pointer');
 
       hitbox.on('mouseenter', () => {
         if (s.data) {
           setHoveredMonth(s.data);
+          // Position tooltip above the topmost river at this index
+          const topmost = d3.min(VIBES, v => riverPaths[v][i].yTop)!;
           setTooltipPos({
             x: ((margin.left + x(i)) / width) * 100,
-            y: ((margin.top - vPad) / height) * 100,
+            y: ((margin.top + topmost - 10) / height) * 100,
           });
         }
 
         g.selectAll('.hover-el').remove();
 
-        // Single glowing dot at river center
-        const topY = d3.min(stacked, layer => y(layer[i][1]))!;
-        const botY = d3.max(stacked, layer => y(layer[i][0]))!;
-        const cy = (topY + botY) / 2;
+        // Show a glowing dot on each active river
+        VIBES.forEach(vibe => {
+          const val = smoothedCounts[vibe][i];
+          if (val < 0.3) return;
+          const center = riverPaths[vibe][i].center;
 
-        g.append('circle').attr('class', 'hover-el')
-          .attr('cx', x(i)).attr('cy', cy).attr('r', 10)
-          .attr('fill', 'none')
-          .attr('stroke', 'hsla(180, 40%, 70%, 0.25)')
-          .attr('stroke-width', 2)
-          .attr('filter', 'url(#dot-glow)');
+          g.append('circle').attr('class', 'hover-el')
+            .attr('cx', x(i)).attr('cy', center).attr('r', 7)
+            .attr('fill', 'none')
+            .attr('stroke', vibeHSL[vibe])
+            .attr('stroke-width', 1.5)
+            .attr('opacity', 0.4)
+            .attr('filter', 'url(#dot-glow)');
 
-        g.append('circle').attr('class', 'hover-el')
-          .attr('cx', x(i)).attr('cy', cy).attr('r', 3.5)
-          .attr('fill', 'hsl(180, 35%, 72%)')
-          .attr('opacity', 0.85);
+          g.append('circle').attr('class', 'hover-el')
+            .attr('cx', x(i)).attr('cy', center).attr('r', 3)
+            .attr('fill', vibeHSL[vibe])
+            .attr('opacity', 0.85);
+        });
       });
 
       hitbox.on('mouseleave', () => {
@@ -262,7 +315,7 @@ const RiverOfReading = () => {
       });
     });
 
-  }, [smoothedSeries, stacked, years]);
+  }, [series, smoothedCounts, years]);
 
   return (
     <div className="min-h-screen bg-[#0B1215] flex flex-col items-center px-2 py-8 overflow-x-auto">
@@ -271,7 +324,7 @@ const RiverOfReading = () => {
           River of Reading
         </h1>
         <p className="text-sm text-muted-foreground font-light tracking-wide font-sans">
-          A navigational log of Peishan's books — 2021 to present · width = books read · hover to explore
+          Five rivers of taste — 2021 to present · width = books read · hover to explore
         </p>
       </header>
 
