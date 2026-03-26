@@ -711,6 +711,29 @@ const RiverOfReading = () => {
         </div>
       )}
 
+      <div className="w-full max-w-2xl mx-auto mt-10 px-4 mb-8">
+        <div className="bg-card/40 backdrop-blur-sm border border-border rounded-lg px-6 py-5">
+          <h2 className="text-lg font-serif font-bold text-foreground mb-3">About this River</h2>
+          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              This visualization maps a reading life as a flowing river. Each tributary represents a different genre or mood —
+              they emerge when a category surges, meander through time, and fade when the current shifts elsewhere.
+            </p>
+            <p>
+              <strong className="text-foreground/80">How it stays up to date:</strong> My personal river is automatically
+              updated from <span className="text-foreground/70">Goodreads</span> via an automation pipeline. Every time I
+              finish a book, it flows into the river without lifting a finger.
+            </p>
+            <p>
+              <strong className="text-foreground/80">Make your own:</strong> You don't need Goodreads or any automation —
+              just <a href="/auth" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">create an account</a> and{' '}
+              <a href="/upload" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">upload a CSV</a> of
+              your reading history. Any spreadsheet with titles, dates, ratings, and genre tags will work.
+            </p>
+          </div>
+        </div>
+      </div>
+
       
     </div>
   );
