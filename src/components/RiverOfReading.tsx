@@ -517,7 +517,7 @@ const RiverOfReading = () => {
     const handler = (e: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setHoveredMonth(null);
-        setTooltipPos(null);
+        setMousePos(null);
       }
     };
     document.addEventListener('pointerdown', handler);
@@ -569,13 +569,13 @@ const RiverOfReading = () => {
         <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
           <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
 
-          {hoveredMonth && tooltipPos && (
+          {hoveredMonth && mousePos && (
             <div
               className="absolute z-50 pointer-events-none animate-fade-up"
               style={{
-                left: `${tooltipPos.x}%`,
-                top: `${tooltipPos.y}%`,
-                transform: 'translate(-50%, -100%)',
+                left: `${mousePos.x}px`,
+                top: `${mousePos.y}px`,
+                transform: 'translate(16px, -100%)',
               }}
             >
               <MonthTooltip data={hoveredMonth} />
