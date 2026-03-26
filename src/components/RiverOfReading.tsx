@@ -382,10 +382,58 @@ const RiverOfReading = () => {
     glowMerge.append('feMergeNode').attr('in', 'glow');
     glowMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
+    /* ── Water shimmer filter (turbulence + specular lighting) ── */
+    const waterFilter = defs.append('filter').attr('id', 'water-shimmer')
+      .attr('x', '-5%').attr('y', '-5%').attr('width', '110%').attr('height', '110%');
+    const turb = waterFilter.append('feTurbulence')
+      .attr('type', 'fractalNoise')
+      .attr('baseFrequency', '0.015 0.04')
+      .attr('numOctaves', '3')
+      .attr('seed', '5')
+      .attr('result', 'noise');
+    // Animate the turbulence seed to create water movement
+    turb.append('animate')
+      .attr('attributeName', 'baseFrequency')
+      .attr('values', '0.015 0.04;0.018 0.045;0.012 0.035;0.015 0.04')
+      .attr('dur', '8s')
+      .attr('repeatCount', 'indefinite');
+    waterFilter.append('feDisplacementMap')
+      .attr('in', 'SourceGraphic')
+      .attr('in2', 'noise')
+      .attr('scale', '3')
+      .attr('xChannelSelector', 'R')
+      .attr('yChannelSelector', 'G');
+
+    /* ── Animated shimmer gradient ─────────────────────────── */
+    const shimmerGrad = defs.append('linearGradient').attr('id', 'shimmer-sweep')
+      .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%')
+      .attr('gradientUnits', 'userSpaceOnUse');
+    shimmerGrad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
+    shimmerGrad.append('stop').attr('offset', '15%').attr('stop-color', 'white').attr('stop-opacity', 0);
+    shimmerGrad.append('stop').attr('offset', '50%').attr('stop-color', 'white').attr('stop-opacity', 0.12);
+    shimmerGrad.append('stop').attr('offset', '85%').attr('stop-color', 'white').attr('stop-opacity', 0);
+    shimmerGrad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
+    // Animate the gradient position
+    shimmerGrad.append('animateTransform')
+      .attr('attributeName', 'gradientTransform')
+      .attr('type', 'translate')
+      .attr('values', `${-innerW} 0;${innerW} 0`)
+      .attr('dur', '6s')
+      .attr('repeatCount', 'indefinite');
+
+    /* ── Per-stream specular highlight gradient (top-edge gloss) ── */
+    activeVibes.forEach(vibe => {
+      const hlGrad = defs.append('linearGradient').attr('id', `gloss-${vibe}`)
+        .attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
+      hlGrad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0.25);
+      hlGrad.append('stop').attr('offset', '35%').attr('stop-color', 'white').attr('stop-opacity', 0.06);
+      hlGrad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
+    });
+
     /* ── Draw rivers ─────────────────────────────────────── */
 
     const riverOuter = g.append('g').attr('mask', 'url(#river-fade)').attr('filter', 'url(#river-glow)');
-    const riverGroup = riverOuter.append('g').attr('mask', 'url(#river-fade-h)');
+    const riverGroup = riverOuter.append('g').attr('mask', 'url(#river-fade-h)').attr('filter', 'url(#water-shimmer)');
 
     // Store computed paths for hover lookups
     type LayerPoint = { x: number; y0: number; y1: number; center: number };
@@ -428,13 +476,38 @@ const RiverOfReading = () => {
           .attr('opacity', opacity);
       }
 
-      // ── Top edge 'ripple' stroke
+      // ── Glossy highlight overlay (top third of stream)
+      const glossArea = d3.area<LayerPoint>()
+        .x(d => d.x)
+        .y0(d => d.y1)
+        .y1(d => d.y1 - (d.y1 - d.y0) * 0.35)
+        .curve(d3.curveBasis);
+      riverGroup.append('path').datum(pts).attr('d', glossArea)
+        .attr('fill', `url(#gloss-${vibe})`)
+        .attr('opacity', 0.7);
+
+      // ── Shimmer sweep overlay (full stream shape)
+      const fullArea = d3.area<LayerPoint>()
+        .x(d => d.x).y0(d => d.y0).y1(d => d.y1).curve(d3.curveBasis);
+      riverGroup.append('path').datum(pts).attr('d', fullArea)
+        .attr('fill', 'url(#shimmer-sweep)')
+        .attr('opacity', 0.6);
+
+      // ── Top edge 'ripple' stroke (brighter for gloss)
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
       riverGroup.append('path').datum(pts).attr('d', topLine)
         .attr('fill', 'none')
         .attr('stroke', rippleColors[vibe])
+        .attr('stroke-width', 0.7)
+        .attr('opacity', 0.6);
+
+      // ── Bottom edge subtle dark line (depth)
+      const bottomLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y0).curve(d3.curveBasis);
+      riverGroup.append('path').datum(pts).attr('d', bottomLine)
+        .attr('fill', 'none')
+        .attr('stroke', 'rgba(0,0,0,0.25)')
         .attr('stroke-width', 0.5)
-        .attr('opacity', 0.5);
+        .attr('opacity', 0.4);
     });
 
     /* ── Decorative ambient tributaries ───────────────────── */
