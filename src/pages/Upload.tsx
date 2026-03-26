@@ -185,6 +185,7 @@ const UploadPage = () => {
                 <div>
                   <p className="text-foreground font-medium mb-1">Drop your reading CSV here</p>
                   <p className="text-xs text-muted-foreground">or click to browse · any CSV with book data</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-1 italic">⚠ Importing will replace all your existing data, not append to it.</p>
                 </div>
               </div>
             </div>
@@ -282,8 +283,9 @@ const UploadPage = () => {
                 onClick={handleSaveToCloud}
                 disabled={saving}
                 className="flex-1 py-3 rounded-lg border border-primary text-primary font-semibold text-sm hover:bg-primary/10 transition-colors disabled:opacity-50"
+                title="This will replace all your existing saved books with the new import"
               >
-                {saving ? 'Saving...' : '☁️ Save to Cloud'}
+                {saving ? 'Saving...' : '☁️ Save to Cloud (overwrites)'}
               </button>
               <button
                 onClick={() => navigate('/')}
