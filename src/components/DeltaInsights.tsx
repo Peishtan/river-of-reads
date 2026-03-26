@@ -48,7 +48,7 @@ const DeltaInsights = () => {
     // --- THE DROUGHT ---
     // Find which vibe hasn't seen a 5-star book in the longest time
     let worstDrought: { vibe: VibeGroup; months: number } = { vibe: 'life', months: 0 };
-    VIBES.forEach(v => {
+    insightVibes.forEach(v => {
       let lastFiveStar = -1;
       readingData.forEach(d => {
         d.books.forEach(b => {
