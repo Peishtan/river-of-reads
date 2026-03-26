@@ -90,9 +90,10 @@ const DeltaInsights = () => {
     floodData?.books.forEach(b => b.vibes.forEach(v => { floodVibeCounts[v]++; }));
     const floodVibe = insightVibes.reduce((a, b) => floodVibeCounts[a] >= floodVibeCounts[b] ? a : b);
 
-    const floodText = floodRatio >= 1.5
+    const showFlood = floodRatio >= 1.5;
+    const floodText = showFlood
       ? `${monthNames[floodMonth.month]} ${floodMonth.year} was a flood — ${floodMonth.count} books, ${floodRatio.toFixed(1)}× your average of ${avgCount.toFixed(1)}/month. Mostly "${vibeLabels[floodVibe]}".`
-      : `Your reading pace is remarkably steady. No major floods detected — you're a consistent reader!`;
+      : null;
 
     // --- THE SEASON ---
     // Find seasonal pattern: which quarter consistently has the highest volume
