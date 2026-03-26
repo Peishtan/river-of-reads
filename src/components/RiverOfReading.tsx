@@ -797,6 +797,8 @@ const RiverOfReading = () => {
             <p>
               This visualization maps a reading life as a flowing river. Each tributary represents a different genre or mood —
               they emerge when a category surges, meander through time, and fade when the current shifts elsewhere.
+              The depth of each stream reflects your ratings — stretches of highly-rated books run richer and more vivid,
+              while lower-rated periods fade back, so your favourites literally shine through.
             </p>
             <p>
               <strong className="text-foreground/80">How it stays up to date:</strong> My rivers are updated automatically
