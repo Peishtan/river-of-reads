@@ -1,12 +1,28 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import {
-  readingData, MonthData, VibeGroup, vibeLabels, vibeHSL,
-  getYears,
+  MonthData, VibeGroup, vibeLabels, vibeHSL,
+  getYears, readingData as defaultData,
 } from '@/data/readingData';
+import { useReadingData } from '@/contexts/ReadingDataContext';
 import MonthTooltip from './MonthTooltip';
 
 const VIBES: VibeGroup[] = ['escapist', 'ideas', 'nature', 'history', 'memoir'];
+
+/**
+ * Simple seeded pseudo-random noise for deterministic organic drift.
+ * Returns values between -1 and 1 that vary smoothly.
+ */
+const seededNoise = (seed: number, i: number): number => {
+  // Layer multiple sine waves with irrational-ish frequencies for pseudo-Perlin feel
+  const s = seed;
+  return (
+    Math.sin(i * 0.137 + s * 7.31) * 0.4 +
+    Math.sin(i * 0.071 + s * 13.7) * 0.3 +
+    Math.sin(i * 0.213 + s * 3.19) * 0.2 +
+    Math.sin(i * 0.043 + s * 19.1) * 0.1
+  );
+};
 
 const DRIFT_DIR: Record<VibeGroup, number> = {
   escapist: -1, ideas: -0.55, nature: 0.7, history: 0.4, memoir: 1,
