@@ -84,11 +84,11 @@ const DeltaInsights = () => {
       if (total === 0) return 0;
       // Shannon entropy normalized
       let entropy = 0;
-      VIBES.forEach(v => {
+      insightVibes.forEach(v => {
         const p = counts[v] / total;
         if (p > 0) entropy -= p * Math.log2(p);
       });
-      return entropy / Math.log2(5); // normalize to 0-1
+      return entropy / Math.log2(insightVibes.length); // normalize to 0-1
     };
 
     const firstSpread = vibeSpread(firstYear);
