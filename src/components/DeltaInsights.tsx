@@ -186,7 +186,7 @@ const DeltaInsights = () => {
       </h2>
       <div className={`grid grid-cols-1 md:grid-cols-2 ${gridCols} gap-4`}>
         {/* The Current — always renders */}
-        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
+        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-6">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.mostActiveStream] }} />
             <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Current</h3>
@@ -195,7 +195,7 @@ const DeltaInsights = () => {
         </div>
 
         {conditionalCards.map(card => (
-          <div key={card.key} className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
+          <div key={card.key} className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-6">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: card.color }} />
               <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">{card.title}</h3>
