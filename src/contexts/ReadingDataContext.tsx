@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { MonthData, VibeGroup, readingData as dummyData, defaultVibeHSL, setVibeHSL, VIBES } from '@/data/readingData';
+import { MonthData, VibeGroup, readingData as dummyData, defaultVibeHSL, setVibeHSL, VIBES, TAG_TO_VIBE } from '@/data/readingData';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 
