@@ -497,38 +497,43 @@ const RiverOfReading = () => {
           .attr('opacity', opacity);
       }
 
-      // ── Glossy highlight overlay (top third of stream)
+      // ── Glossy highlight overlay (top third of stream — more reflective)
       const glossArea = d3.area<LayerPoint>()
         .x(d => d.x)
         .y0(d => d.y1)
-        .y1(d => d.y1 - (d.y1 - d.y0) * 0.35)
+        .y1(d => d.y1 - (d.y1 - d.y0) * 0.4)
         .curve(d3.curveBasis);
       riverGroup.append('path').datum(pts).attr('d', glossArea)
         .attr('fill', `url(#gloss-${vibe})`)
-        .attr('opacity', 0.7);
+        .attr('opacity', 0.85);
 
-      // ── Shimmer sweep overlay (full stream shape)
+      // ── Primary shimmer sweep (left→right)
       const fullArea = d3.area<LayerPoint>()
         .x(d => d.x).y0(d => d.y0).y1(d => d.y1).curve(d3.curveBasis);
       riverGroup.append('path').datum(pts).attr('d', fullArea)
         .attr('fill', 'url(#shimmer-sweep)')
-        .attr('opacity', 0.6);
+        .attr('opacity', 0.7);
 
-      // ── Top edge 'ripple' stroke (brighter for gloss)
+      // ── Secondary shimmer sweep (slower, offset — layered reflections)
+      riverGroup.append('path').datum(pts).attr('d', fullArea)
+        .attr('fill', 'url(#shimmer-sweep-2)')
+        .attr('opacity', 0.5);
+
+      // ── Top edge 'ripple' stroke (bright specular edge)
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
       riverGroup.append('path').datum(pts).attr('d', topLine)
         .attr('fill', 'none')
         .attr('stroke', rippleColors[vibe])
-        .attr('stroke-width', 0.7)
-        .attr('opacity', 0.6);
+        .attr('stroke-width', 0.8)
+        .attr('opacity', 0.7);
 
       // ── Bottom edge subtle dark line (depth)
       const bottomLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y0).curve(d3.curveBasis);
       riverGroup.append('path').datum(pts).attr('d', bottomLine)
         .attr('fill', 'none')
-        .attr('stroke', 'rgba(0,0,0,0.25)')
-        .attr('stroke-width', 0.5)
-        .attr('opacity', 0.4);
+        .attr('stroke', 'rgba(0,0,0,0.3)')
+        .attr('stroke-width', 0.6)
+        .attr('opacity', 0.5);
     });
 
     /* ── Decorative ambient tributaries ───────────────────── */
