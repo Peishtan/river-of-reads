@@ -14,7 +14,7 @@ The core visualization is a horizontal stacked-area chart built with **D3.js**. 
 
 | Vibe | Label | Associated Tags |
 |------|-------|-----------------|
-| `escapist` | Escapist & Adventure | adventure, escapist, dark, dystopian, mystery, thriller |
+| `escapist` | Escapist & Adventure | adventure, bleak, dark, dystopian, escapist, mystery, thriller, uncomfortable |
 | `ideas` | Ideas & Technology | business, craft, future, idea-dense, practical, science, systems, technology |
 | `history` | History & World | culture, food, history, legal, literary, politics, travel |
 | `nature` | Nature & Ocean | nature |

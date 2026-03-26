@@ -30,8 +30,9 @@ export const setVibeHSL = (colors: Record<VibeGroup, string>) => {
 /** Map raw tag strings to vibe groups */
 export const TAG_TO_VIBE: Record<string, VibeGroup> = {
   // Escapist & Adventure
-  adventure: 'escapist', escapist: 'escapist', dark: 'escapist',
-  dystopian: 'escapist', mystery: 'escapist', thriller: 'escapist',
+  adventure: 'escapist', bleak: 'escapist', dark: 'escapist',
+  dystopian: 'escapist', escapist: 'escapist', mystery: 'escapist',
+  thriller: 'escapist', uncomfortable: 'escapist',
   // Ideas & Technology
   business: 'ideas', craft: 'ideas', future: 'ideas', 'idea-dense': 'ideas',
   practical: 'ideas', science: 'ideas', systems: 'ideas', technology: 'ideas',
