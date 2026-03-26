@@ -148,49 +148,40 @@ const DeltaInsights = () => {
 
   if (!insights) return null;
 
+  const conditionalCards = [
+    insights.showSurge && insights.surgeText && { key: 'surge', vibe: insights.surgeVibe, title: 'The Surge', text: insights.surgeText, color: riverColors[insights.surgeVibe] },
+    insights.showSeason && insights.seasonText && { key: 'season', vibe: null, title: 'The Season', text: insights.seasonText, color: 'hsl(var(--primary))' },
+    insights.showFlood && insights.floodText && { key: 'flood', vibe: insights.floodVibe, title: 'The Flood', text: insights.floodText, color: riverColors[insights.floodVibe] },
+    insights.showDrought && insights.droughtText && { key: 'drought', vibe: insights.worstDrought.vibe, title: 'The Drought', text: insights.droughtText, color: riverColors[insights.worstDrought.vibe] },
+  ].filter(Boolean) as { key: string; vibe: VibeGroup | null; title: string; text: string; color: string }[];
+
+  const totalCards = 1 + conditionalCards.length;
+  const gridCols = totalCards <= 2 ? 'lg:grid-cols-2' : totalCards === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
+
   return (
     <div className="w-full max-w-4xl mx-auto mt-10 px-4">
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
         Delta Insights
       </h2>
-      <div className={`grid grid-cols-1 md:grid-cols-2 ${insights.showDrought ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
-        {/* The Surge */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${gridCols} gap-4`}>
+        {/* The Current — always renders */}
         <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.surgeVibe] }} />
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Surge</h3>
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.dominantVibe] }} />
+            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Current</h3>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.surgeText}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{insights.currentText}</p>
         </div>
 
-        {/* The Season */}
-        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: insights.seasonRatio >= 1.3 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Season</h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.seasonText}</p>
-        </div>
-
-        {/* The Flood */}
-        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: insights.floodRatio >= 1.5 ? riverColors[insights.floodVibe] : 'hsl(var(--muted-foreground))' }} />
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Flood</h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.floodText}</p>
-        </div>
-
-        {/* The Drought — only shown when a real drought exists */}
-        {insights.showDrought && insights.droughtText && (
-          <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
+        {conditionalCards.map(card => (
+          <div key={card.key} className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.worstDrought.vibe] }} />
-              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Drought</h3>
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: card.color }} />
+              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">{card.title}</h3>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{insights.droughtText}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{card.text}</p>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
