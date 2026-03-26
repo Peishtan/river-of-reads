@@ -102,7 +102,25 @@ const DeltaInsights = () => {
         ? `Your ${lastYear} Delta is ${Math.abs(spreadDiff)}% narrower than ${firstYear}. You're becoming more focused!`
         : `Your reading diversity has stayed consistent from ${firstYear} to ${lastYear}. A balanced reader!`;
 
-    return { surgeText, droughtText, diversityText, surgeVibe, worstDrought };
+    // --- THE FLOOD ---
+    // Find the month with volume far above baseline
+    const monthCounts = readingData.map(d => ({ year: d.year, month: d.month, count: d.books.length }));
+    const avgCount = monthCounts.reduce((sum, m) => sum + m.count, 0) / monthCounts.length;
+    const floodMonth = monthCounts.reduce((a, b) => b.count > a.count ? b : a);
+    const floodRatio = avgCount > 0 ? floodMonth.count / avgCount : 0;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Find dominant vibe in that month
+    const floodData = readingData.find(d => d.year === floodMonth.year && d.month === floodMonth.month);
+    const floodVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
+    floodData?.books.forEach(b => b.vibes.forEach(v => { floodVibeCounts[v]++; }));
+    const floodVibe = insightVibes.reduce((a, b) => floodVibeCounts[a] >= floodVibeCounts[b] ? a : b);
+
+    const floodText = floodRatio >= 1.5
+      ? `${monthNames[floodMonth.month]} ${floodMonth.year} was a flood — ${floodMonth.count} books, ${floodRatio.toFixed(1)}× your average of ${avgCount.toFixed(1)}/month. Mostly "${vibeLabels[floodVibe]}".`
+      : `Your reading pace is remarkably steady. No major floods detected — you're a consistent reader!`;
+
+    return { surgeText, droughtText, diversityText, floodText, surgeVibe, worstDrought, floodVibe, floodRatio };
   }, [readingData]);
 
   if (!insights) return null;
