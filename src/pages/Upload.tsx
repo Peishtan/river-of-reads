@@ -190,6 +190,29 @@ const UploadPage = () => {
               </div>
             </div>
 
+            <div className="mt-6 p-4 rounded-lg bg-card border border-border text-left">
+              <h3 className="text-sm font-semibold text-foreground mb-2">📋 Required CSV fields</h3>
+              <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
+                <li><strong className="text-foreground">Title</strong> — book title</li>
+                <li><strong className="text-foreground">Date Read</strong> — when you finished it (e.g. "March 23, 2026" or "2026-03-23")</li>
+                <li><strong className="text-foreground">Rating</strong> — 1–5 star rating</li>
+                <li><strong className="text-foreground">Category / Tags</strong> — comma-separated tags per book (e.g. "history, memoir")</li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-3">
+                An optional <strong className="text-foreground">Author</strong> column is also supported.
+              </p>
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">How categories work:</strong> Tags are mapped into 5 river tributaries —
+                  <em> Nature & Ocean, History & World, Ideas & Tech, Escapist & Adventure,</em> and <em>Life & Reflective</em>.
+                  A book can belong to multiple categories. Unrecognized tags flow into <em>The Main Current</em>.
+                </p>
+                <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+                  Recognized tags: nature, travel, history, culture, politics, memoir, legal, business, future, science, technology, psychology, adventure, mystery, thriller, dystopian, reflective, literary, warm, hope, food, craft, and more.
+                </p>
+              </div>
+            </div>
+
             <div className="mt-6 text-center">
               <button
                 onClick={() => navigate('/')}

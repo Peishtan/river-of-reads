@@ -5,7 +5,7 @@ import {
 } from '@/data/readingData';
 import { useReadingData } from '@/contexts/ReadingDataContext';
 import MonthTooltip from './MonthTooltip';
-import RiverSettings from './RiverSettings';
+
 import DeltaInsights from './DeltaInsights';
 
 /* ── helpers ─────────────────────────────────────────────── */
@@ -50,7 +50,7 @@ const RiverOfReading = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredMonth, setHoveredMonth] = useState<MonthData | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  
 
   const { data: readingData, riverColors, session, signOut } = useReadingData();
 
@@ -468,14 +468,6 @@ const RiverOfReading = () => {
               Import your data →
             </a>
           )}
-          {session && (
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4"
-            >
-              ⚙ River Settings
-            </button>
-          )}
           {session ? (
             <button
               onClick={signOut}
@@ -538,7 +530,7 @@ const RiverOfReading = () => {
         </div>
       )}
 
-      <RiverSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      
     </div>
   );
 };
