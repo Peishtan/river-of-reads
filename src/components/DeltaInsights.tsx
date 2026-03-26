@@ -143,17 +143,28 @@ const DeltaInsights = () => {
       ? `Your current runs through ${vibeLabels[dominantVibe]} — ${dominantCount} of your last ${totalLast9} books. ${activeStreams.size >= 4 ? `${activeStreams.size} streams are active right now. Your river is running wide.` : activeStreams.size >= 2 ? `${activeStreams.size} streams are active right now.` : 'A single stream carries you forward.'}`
       : 'Your river is just beginning. Start reading to see where the current takes you.';
 
-    return { surgeText, showSurge, droughtText, showDrought, floodText, showFlood, seasonText, showSeason, currentText, surgeVibe, worstDrought, floodVibe, dominantVibe, activeStreams: activeStreams.size };
+    // Recency scores for ordering (lower = more recent = higher priority)
+    // Surge: based on last 6 months, so recency = 3 (midpoint)
+    const surgeRecency = 3;
+    // Flood: how many months ago was the flood month
+    const floodRecency = (currentYear - floodMonth.year) * 12 + (currentMonth - floodMonth.month);
+    // Drought: it's about absence, recency = when the stream dried up (invert: longer drought = less recent)
+    const droughtRecency = worstDrought.months;
+    // Season: structural pattern, no single moment — always least recent
+    const seasonRecency = 999;
+
+    return { surgeText, showSurge, surgeRecency, droughtText, showDrought, droughtRecency, floodText, showFlood, floodRecency, seasonText, showSeason, seasonRecency, currentText, surgeVibe, worstDrought, floodVibe, dominantVibe, activeStreams: activeStreams.size };
   }, [readingData]);
 
   if (!insights) return null;
 
-  const conditionalCards = [
-    insights.showSurge && insights.surgeText && { key: 'surge', vibe: insights.surgeVibe, title: 'The Surge', text: insights.surgeText, color: riverColors[insights.surgeVibe] },
-    insights.showSeason && insights.seasonText && { key: 'season', vibe: null, title: 'The Season', text: insights.seasonText, color: 'hsl(var(--primary))' },
-    insights.showFlood && insights.floodText && { key: 'flood', vibe: insights.floodVibe, title: 'The Flood', text: insights.floodText, color: riverColors[insights.floodVibe] },
-    insights.showDrought && insights.droughtText && { key: 'drought', vibe: insights.worstDrought.vibe, title: 'The Drought', text: insights.droughtText, color: riverColors[insights.worstDrought.vibe] },
-  ].filter(Boolean) as { key: string; vibe: VibeGroup | null; title: string; text: string; color: string }[];
+  const conditionalCards = ([
+    insights.showSurge && insights.surgeText && { key: 'surge', title: 'The Surge', text: insights.surgeText, color: riverColors[insights.surgeVibe], recency: insights.surgeRecency },
+    insights.showFlood && insights.floodText && { key: 'flood', title: 'The Flood', text: insights.floodText, color: riverColors[insights.floodVibe], recency: insights.floodRecency },
+    insights.showDrought && insights.droughtText && { key: 'drought', title: 'The Drought', text: insights.droughtText, color: riverColors[insights.worstDrought.vibe], recency: insights.droughtRecency },
+    insights.showSeason && insights.seasonText && { key: 'season', title: 'The Season', text: insights.seasonText, color: 'hsl(var(--primary))', recency: insights.seasonRecency },
+  ].filter(Boolean) as { key: string; title: string; text: string; color: string; recency: number }[])
+    .sort((a, b) => a.recency - b.recency);
 
   const totalCards = 1 + conditionalCards.length;
   const gridCols = totalCards <= 2 ? 'lg:grid-cols-2' : totalCards === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
