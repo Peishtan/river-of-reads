@@ -6,18 +6,14 @@ import {
 import { useReadingData } from '@/contexts/ReadingDataContext';
 import MonthTooltip from './MonthTooltip';
 import RiverSettings from './RiverSettings';
+import DeltaInsights from './DeltaInsights';
 
-/**
- * Simple seeded pseudo-random noise for deterministic organic drift.
- */
-const seededNoise = (seed: number, i: number): number => {
-  return (
-    Math.sin(i * 0.137 + seed * 7.31) * 0.4 +
-    Math.sin(i * 0.071 + seed * 13.7) * 0.3 +
-    Math.sin(i * 0.213 + seed * 3.19) * 0.2 +
-    Math.sin(i * 0.043 + seed * 19.1) * 0.1
-  );
-};
+const seededNoise = (seed: number, i: number): number => (
+  Math.sin(i * 0.137 + seed * 7.31) * 0.4 +
+  Math.sin(i * 0.071 + seed * 13.7) * 0.3 +
+  Math.sin(i * 0.213 + seed * 3.19) * 0.2 +
+  Math.sin(i * 0.043 + seed * 19.1) * 0.1
+);
 
 const DRIFT_DIR: Record<VibeGroup, number> = {
   escapist: -1, ideas: -0.55, nature: 0.7, history: 0.4, life: 1,
@@ -42,12 +38,18 @@ const smooth = (arr: number[], radius = 3): number[] =>
     return sum / wt;
   });
 
-/** Compute brighter center variant from an HSL string */
 function brightenHSL(hsl: string): string {
   const m = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
   if (!m) return hsl;
   const h = parseInt(m[1]), s = Math.min(100, parseInt(m[2]) + 10), l = Math.min(100, parseInt(m[3]) + 13);
   return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
+/** Extract h,s,l numbers from hsl string */
+function parseHSL(hsl: string): [number, number, number] | null {
+  const m = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+  if (!m) return null;
+  return [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])];
 }
 
 const RiverOfReading = () => {
@@ -80,11 +82,7 @@ const RiverOfReading = () => {
         const vr: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0 };
         if (found) {
           found.books.forEach(b => {
-            // Multi-vibe: book contributes to ALL its vibes
-            b.vibes.forEach(v => {
-              vb[v] += 1;
-              vr[v] += b.rating;
-            });
+            b.vibes.forEach(v => { vb[v] += 1; vr[v] += b.rating; });
           });
         }
         months.push({ monthIdx: (y - startYear) * 12 + m, year: y, month: m, data: found, vibeBooks: vb, vibeRatingSum: vr });
@@ -93,7 +91,6 @@ const RiverOfReading = () => {
     return months;
   }, [years, readingData]);
 
-  // Smoothed counts with carry-forward
   const smoothedCounts = useMemo(() => {
     const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [] };
     series.forEach(s => VIBES.forEach(v => raw[v].push(s.vibeBooks[v])));
@@ -115,7 +112,6 @@ const RiverOfReading = () => {
     return out;
   }, [series]);
 
-  // Average rating per vibe per month (for saturation)
   const avgVibeRating = useMemo(() => {
     const out: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [] };
     series.forEach(s => {
@@ -124,15 +120,34 @@ const RiverOfReading = () => {
         out[v].push(count > 0 ? s.vibeRatingSum[v] / count : 3);
       });
     });
-    // Smooth ratings
     VIBES.forEach(v => { out[v] = smooth(out[v], 2); });
     return out;
+  }, [series]);
+
+  // --- Yearly "focus" factor: how concentrated reading is across vibes ---
+  const yearlyFocus = useMemo(() => {
+    const focusMap: Record<number, number> = {};
+    const allYears = [...new Set(series.map(s => s.year))];
+    allYears.forEach(yr => {
+      const yrSeries = series.filter(s => s.year === yr);
+      const totals: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0 };
+      yrSeries.forEach(s => VIBES.forEach(v => { totals[v] += s.vibeBooks[v]; }));
+      const total = Object.values(totals).reduce((a, b) => a + b, 0);
+      if (total === 0) { focusMap[yr] = 0.5; return; }
+      // Shannon entropy normalized to 0-1: 1 = diverse, 0 = focused
+      let entropy = 0;
+      VIBES.forEach(v => {
+        const p = totals[v] / total;
+        if (p > 0) entropy -= p * Math.log2(p);
+      });
+      focusMap[yr] = entropy / Math.log2(5);
+    });
+    return focusMap;
   }, [series]);
 
   useEffect(() => {
     if (!svgRef.current || !containerRef.current) return;
 
-    // Use latest colors from context
     const currentColors = { ...riverColors };
     const currentBright: Record<VibeGroup, string> = {} as any;
     VIBES.forEach(v => { currentBright[v] = brightenHSL(currentColors[v]); });
@@ -178,13 +193,32 @@ const RiverOfReading = () => {
     dm.append('feMergeNode').attr('in', 'blur');
     dm.append('feMergeNode').attr('in', 'SourceGraphic');
 
-    // Horizontal fade-out mask
+    // High-rating glow filters per vibe
+    VIBES.forEach(vibe => {
+      const hsl = parseHSL(currentColors[vibe]);
+      const glowFilter = defs.append('filter').attr('id', `loved-glow-${vibe}`)
+        .attr('x', '-50%').attr('y', '-50%').attr('width', '200%').attr('height', '200%');
+      glowFilter.append('feGaussianBlur').attr('stdDeviation', '8').attr('result', 'blur');
+      if (hsl) {
+        glowFilter.append('feFlood')
+          .attr('flood-color', `hsl(${hsl[0]}, ${Math.min(100, hsl[1] + 20)}%, ${Math.min(100, hsl[2] + 15)}%)`)
+          .attr('flood-opacity', '0.4').attr('result', 'color');
+        glowFilter.append('feComposite').attr('in', 'color').attr('in2', 'blur').attr('operator', 'in').attr('result', 'colorBlur');
+      }
+      const gm = glowFilter.append('feMerge');
+      gm.append('feMergeNode').attr('in', hsl ? 'colorBlur' : 'blur');
+      gm.append('feMergeNode').attr('in', 'SourceGraphic');
+    });
+
+    // RIGHT EDGE FEATHERED FADE — last 50px of the river area
+    const fadePixels = 50;
+    const fadeStart = Math.max(0, (innerW - fadePixels) / innerW);
     const fadeMask = defs.append('linearGradient')
       .attr('id', 'fade-right')
       .attr('x1', '0%').attr('y1', '0%')
       .attr('x2', '100%').attr('y2', '0%');
     fadeMask.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 1);
-    fadeMask.append('stop').attr('offset', '85%').attr('stop-color', 'white').attr('stop-opacity', 1);
+    fadeMask.append('stop').attr('offset', `${fadeStart * 100}%`).attr('stop-color', 'white').attr('stop-opacity', 1);
     fadeMask.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
 
     const mask = defs.append('mask').attr('id', 'river-fade');
@@ -192,7 +226,7 @@ const RiverOfReading = () => {
       .attr('width', innerW).attr('height', innerH)
       .attr('fill', 'url(#fade-right)');
 
-    // 3D cylindrical gradients with RATING-BASED SATURATION
+    // Cylindrical gradients
     VIBES.forEach(vibe => {
       const lg = defs.append('linearGradient')
         .attr('id', `cyl-${vibe}`)
@@ -206,8 +240,8 @@ const RiverOfReading = () => {
       lg.append('stop').attr('offset', '100%').attr('stop-color', currentColors[vibe]).attr('stop-opacity', 0.15);
     });
 
-    // Compute braided center lines
-    type RiverPoint = { x: number; yTop: number; yBot: number; center: number; saturation: number };
+    // Compute braided center lines with YEARLY FOCUS modulating drift
+    type RiverPoint = { x: number; yTop: number; yBot: number; center: number; saturation: number; avgRating: number };
     const riverPaths: Record<VibeGroup, RiverPoint[]> = {} as any;
 
     VIBES.forEach(vibe => {
@@ -216,23 +250,24 @@ const RiverOfReading = () => {
       const { f1, f2, a1, a2, p } = MEANDER[vibe];
       const dir = DRIFT_DIR[vibe];
 
-      const rawCenters = series.map((_, i) => {
+      const rawCenters = series.map((s, i) => {
         const t = i / (series.length - 1);
         const volume = counts[i];
         const pushStrength = volume / maxBooks;
 
-        // Convergence at LEFT origin
+        // Yearly focus: diverse years → rivers spread apart, focused years → huddle
+        const focus = yearlyFocus[s.year] ?? 0.5;
+        // focus 0 = very focused (huddle), 1 = very diverse (spread)
+        const huddleFactor = 0.4 + focus * 0.6; // range 0.4 to 1.0
+
         const originPull = Math.exp(-(1 - t) * 6);
         const convergencePull = 1 - originPull;
-
-        // Magnetic center weakens rightward
         const gravityDecay = 1 - t * 0.8;
         const gravity = (1 - pushStrength) * 0.5 * gravityDecay;
         const attractorStrength = Math.max(convergencePull, gravity);
 
-        const driftAmount = maxDrift * pushStrength * dir * (1 - attractorStrength);
+        const driftAmount = maxDrift * pushStrength * dir * (1 - attractorStrength) * huddleFactor;
 
-        // Meander + Perlin-like noise
         const meanderScale = originPull;
         const structuredMeander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 14;
         const noiseDrift = seededNoise(VIBES.indexOf(vibe) + 1, i) * 10;
@@ -246,25 +281,35 @@ const RiverOfReading = () => {
       riverPaths[vibe] = series.map((_, i) => {
         const c = smoothCenters[i];
         const halfW = Math.max(widthScale(Math.max(counts[i], 0.12)), 2);
-        // Rating saturation: map [1-5] → [0.3-1.0]
         const ratingNorm = Math.max(0.3, (ratings[i] - 1) / 4);
-        return { x: x(i), yTop: c - halfW, yBot: c + halfW, center: c, saturation: ratingNorm };
+        return { x: x(i), yTop: c - halfW, yBot: c + halfW, center: c, saturation: ratingNorm, avgRating: ratings[i] };
       });
     });
 
-    // Year labels
+    // YEAR LABELS — serif, at very top, with thin tide lines
     const startYear = years[0];
     years.forEach(yr => {
       const mi = (yr - startYear) * 12;
       if (mi >= 0 && mi < series.length) {
+        // Year label
         g.append('text')
-          .attr('x', x(mi)).attr('y', -12)
+          .attr('x', x(mi)).attr('y', -20)
           .attr('text-anchor', 'middle')
-          .attr('fill', 'hsl(200, 5%, 28%)')
-          .attr('font-size', '11px')
-          .attr('font-weight', '400')
-          .attr('font-family', "'Source Sans 3', sans-serif")
+          .attr('fill', 'hsl(200, 8%, 38%)')
+          .attr('font-size', '13px')
+          .attr('font-weight', '600')
+          .attr('font-family', "'Playfair Display', 'Georgia', serif")
+          .attr('letter-spacing', '0.08em')
           .text(yr);
+
+        // Thin vertical tide line from label to riverbed
+        const bottommost = d3.max(VIBES, v => riverPaths[v][mi]?.yBot ?? centerY)! + 10;
+        g.append('line')
+          .attr('x1', x(mi)).attr('y1', -8)
+          .attr('x2', x(mi)).attr('y2', bottommost)
+          .attr('stroke', 'hsl(200, 8%, 38%)')
+          .attr('stroke-width', 0.5)
+          .attr('opacity', 0.05);
       }
     });
 
@@ -309,28 +354,32 @@ const RiverOfReading = () => {
         .attr('filter', 'url(#membrane-blur)');
     });
 
-    // Draw each river — use per-segment opacity for rating saturation
+    // Draw each river with per-segment opacity + HIGH RATING GLOW
     VIBES.forEach(vibe => {
       const pts = riverPaths[vibe];
 
-      // We draw the river in segments to vary opacity by rating
       const segmentSize = 3;
       for (let si = 0; si < pts.length - 1; si += segmentSize) {
         const end = Math.min(si + segmentSize + 1, pts.length);
         const segment = pts.slice(si, end);
         const avgSat = segment.reduce((a, p) => a + p.saturation, 0) / segment.length;
+        const avgRat = segment.reduce((a, p) => a + p.avgRating, 0) / segment.length;
 
         const segArea = d3.area<RiverPoint>()
           .x(d => d.x).y0(d => d.yBot).y1(d => d.yTop)
           .curve(d3.curveBasis);
 
-        // Main fill with saturation-modulated opacity
-        riverGroup.append('path').datum(segment).attr('d', segArea)
+        const path = riverGroup.append('path').datum(segment).attr('d', segArea)
           .attr('fill', currentBright[vibe])
           .attr('opacity', 0.15 + avgSat * 0.55);
+
+        // Loved glow for segments with avg rating > 4.2
+        if (avgRat > 4.2) {
+          path.attr('filter', `url(#loved-glow-${vibe})`);
+        }
       }
 
-      // Overall ambient glow
+      // Ambient glow
       const areaGen = d3.area<RiverPoint>()
         .x(d => d.x).y0(d => d.yBot).y1(d => d.yTop)
         .curve(d3.curveBasis);
@@ -370,7 +419,6 @@ const RiverOfReading = () => {
     // Helper: find nearest month with data
     const findNearestData = (idx: number): { data: MonthData; idx: number } | null => {
       if (series[idx]?.data) return { data: series[idx].data!, idx };
-      // Search outward ±3 months
       for (let d = 1; d <= 3; d++) {
         if (idx - d >= 0 && series[idx - d]?.data) return { data: series[idx - d].data!, idx: idx - d };
         if (idx + d < series.length && series[idx + d]?.data) return { data: series[idx + d].data!, idx: idx + d };
@@ -422,7 +470,7 @@ const RiverOfReading = () => {
       g.selectAll('.hover-el').remove();
     };
 
-    // Hover hitboxes with both mouse and touch support
+    // Hover hitboxes
     const hitboxes = g.append('g');
     const colW = innerW / series.length;
 
@@ -436,7 +484,7 @@ const RiverOfReading = () => {
         .on('click', () => showHover(i));
     });
 
-  }, [series, smoothedCounts, avgVibeRating, years, riverColors]);
+  }, [series, smoothedCounts, avgVibeRating, years, riverColors, yearlyFocus]);
 
   // Dismiss tooltip on tap outside chart
   useEffect(() => {
@@ -480,23 +528,23 @@ const RiverOfReading = () => {
         </div>
       </header>
 
-      <div className="w-full max-w-[1800px] overflow-x-auto">
-      <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
-        <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
+      <div className="w-full max-w-[1800px] overflow-x-auto -webkit-overflow-scrolling-touch">
+        <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
+          <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
 
-        {hoveredMonth && tooltipPos && (
-          <div
-            className="absolute z-50 pointer-events-none animate-fade-up"
-            style={{
-              left: `${tooltipPos.x}%`,
-              top: `${tooltipPos.y}%`,
-              transform: 'translate(-50%, -100%)',
-            }}
-          >
-            <MonthTooltip data={hoveredMonth} />
-          </div>
-        )}
-      </div>
+          {hoveredMonth && tooltipPos && (
+            <div
+              className="absolute z-50 pointer-events-none animate-fade-up"
+              style={{
+                left: `${tooltipPos.x}%`,
+                top: `${tooltipPos.y}%`,
+                transform: 'translate(-50%, -100%)',
+              }}
+            >
+              <MonthTooltip data={hoveredMonth} />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-5 mt-4 justify-center px-4">
@@ -508,6 +556,8 @@ const RiverOfReading = () => {
         ))}
         <span className="text-xs text-muted-foreground italic border-l border-border pl-4">hover any month to explore</span>
       </div>
+
+      <DeltaInsights />
 
       <RiverSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
