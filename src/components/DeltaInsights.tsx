@@ -158,7 +158,7 @@ const DeltaInsights = () => {
     // Season: structural pattern, no single moment — always least recent
     const seasonRecency = 999;
 
-    return { surgeText, showSurge, surgeRecency, droughtText, showDrought, droughtRecency, floodText, showFlood, floodRecency, seasonText, showSeason, seasonRecency, currentText, surgeVibe, worstDrought, floodVibe, dominantVibe, activeStreams: activeStreams.size };
+    return { surgeText, showSurge, surgeRecency, droughtText, showDrought, droughtRecency, floodText, showFlood, floodRecency, seasonText, showSeason, seasonRecency, currentText, surgeVibe, worstDrought, floodVibe, mostActiveStream, activeStreams: activeStreams.size };
   }, [readingData]);
 
   if (!insights) return null;
