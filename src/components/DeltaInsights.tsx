@@ -93,7 +93,7 @@ const DeltaInsights = () => {
       ? `${monthNames[floodMonth.month]} ${floodMonth.year} was a flood — ${floodMonth.count} books, ${floodRatio.toFixed(1)}× your average of ${avgCount.toFixed(1)}/month. Mostly "${vibeLabels[floodVibe]}".`
       : `Your reading pace is remarkably steady. No major floods detected — you're a consistent reader!`;
 
-    // --- THE TIDE ---
+    // --- THE SEASON ---
     // Find seasonal pattern: which quarter consistently has the highest volume
     const quarterNames = ['Winter (Jan–Mar)', 'Spring (Apr–Jun)', 'Summer (Jul–Sep)', 'Autumn (Oct–Dec)'];
     const quarterCounts = [0, 0, 0, 0];
@@ -104,17 +104,16 @@ const DeltaInsights = () => {
       quarterCounts[q] += count;
       if (count > 0) quarterYears[q].add(d.year);
     });
-    // Normalize by number of years with data in that quarter
     const quarterAvgs = quarterCounts.map((c, i) => quarterYears[i].size > 0 ? c / quarterYears[i].size : 0);
     const peakQ = quarterAvgs.reduce((best, val, i) => val > quarterAvgs[best] ? i : best, 0);
     const lowQ = quarterAvgs.reduce((best, val, i) => val < quarterAvgs[best] ? i : best, 0);
-    const tideRatio = quarterAvgs[lowQ] > 0 ? quarterAvgs[peakQ] / quarterAvgs[lowQ] : 0;
+    const seasonRatio = quarterAvgs[lowQ] > 0 ? quarterAvgs[peakQ] / quarterAvgs[lowQ] : 0;
 
-    const tideText = tideRatio >= 1.3
-      ? `The tide rises highest in ${quarterNames[peakQ]} — ${quarterAvgs[peakQ].toFixed(1)} books/month vs ${quarterAvgs[lowQ].toFixed(1)} in ${quarterNames[lowQ]}.`
-      : `Your reading tide is steady year-round — no strong seasonal pattern detected.`;
+    const seasonText = seasonRatio >= 1.3
+      ? `Your reading peaks in ${quarterNames[peakQ]} — ${quarterAvgs[peakQ].toFixed(1)} books/month vs ${quarterAvgs[lowQ].toFixed(1)} in ${quarterNames[lowQ]}.`
+      : `No strong seasonal pattern — you read steadily year-round.`;
 
-    return { surgeText, droughtText, floodText, tideText, surgeVibe, worstDrought, floodVibe, floodRatio, tideRatio, peakQ };
+    return { surgeText, droughtText, showDrought, floodText, seasonText, surgeVibe, worstDrought, floodVibe, floodRatio, seasonRatio };
   }, [readingData]);
 
   if (!insights) return null;
