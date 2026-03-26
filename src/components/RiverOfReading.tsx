@@ -142,7 +142,7 @@ const RiverOfReading = () => {
     const container = containerRef.current;
     const width = Math.max(container.clientWidth, 1400);
     const height = Math.max(Math.round(window.innerHeight * 0.7), 500);
-    const margin = { top: 55, right: 130, bottom: 40, left: 60 };
+    const margin = { top: 55, right: 30, bottom: 40, left: 60 };
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
