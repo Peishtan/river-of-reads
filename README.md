@@ -86,3 +86,23 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) to view the river.
+
+## Automated Book Ingestion (n8n)
+
+New books are automatically added to the database via an **n8n workflow** that runs on a schedule (or can be triggered manually). The workflow:
+
+1. **Fetches book data** from an external source (e.g. a reading tracker API or RSS feed)
+2. **Parses and enriches** each book with title, author, date read, rating, and vibe tags using a JavaScript code node
+3. **Authenticates** against the backend using stored credentials to obtain a session token
+4. **Inserts** each book into the `books` table via the REST API with proper authorization headers
+
+### Key Details
+
+- **Duplicate prevention:** The workflow should check for existing entries before inserting (e.g. by matching on title + date_read) to avoid duplicates.
+- **Vibe tagging:** Tags from the source are mapped to the six river tributaries (`nature`, `history`, `ideas`, `escapist`, `life`, `current`) in the n8n Code node.
+- **Auth flow:** The workflow uses `POST /auth/v1/token?grant_type=password` to obtain an access token, then passes it as a `Bearer` token in the `Authorization` header for the insert request.
+- **Prefer header:** Add `Prefer: return=representation` to the insert HTTP request to get the created row back in the response.
+
+### Adding a New Book Manually
+
+You can also add books via CSV upload on the `/upload` page, or directly through the REST API with a valid auth token.
