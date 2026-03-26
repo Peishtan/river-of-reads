@@ -47,6 +47,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        river: {
+          fiction: "hsl(var(--river-fiction))",
+          nonfiction: "hsl(var(--river-nonfiction))",
+          scifi: "hsl(var(--river-scifi))",
+          poetry: "hsl(var(--river-poetry))",
+          history: "hsl(var(--river-history))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
