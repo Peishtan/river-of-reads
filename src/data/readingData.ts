@@ -11,8 +11,8 @@ export const vibeLabels: Record<VibeGroup, string> = {
 };
 
 export const defaultVibeHSL: Record<VibeGroup, string> = {
-  escapist: 'hsl(195, 60%, 50%)',
-  ideas:    'hsl(210, 45%, 40%)',
+  escapist: 'hsl(30, 50%, 64%)',
+  ideas:    'hsl(68, 40%, 82%)',
   nature:   'hsl(160, 35%, 45%)',
   history:  'hsl(180, 40%, 35%)',
   life:     'hsl(220, 35%, 55%)',
