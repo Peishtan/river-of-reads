@@ -19,7 +19,7 @@ const DeltaInsights = () => {
       return monthsAgo >= 0 && monthsAgo <= 6;
     });
 
-    const recentVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0 };
+    const recentVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
     recentMonths.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { recentVibeCounts[v]++; })));
 
     const surgeVibe = VIBES.reduce((a, b) => recentVibeCounts[a] >= recentVibeCounts[b] ? a : b);
@@ -77,7 +77,7 @@ const DeltaInsights = () => {
 
     const vibeSpread = (yr: number) => {
       const yrData = readingData.filter(d => d.year === yr);
-      const counts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0 };
+      const counts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
       yrData.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { counts[v]++; })));
       const total = Object.values(counts).reduce((a, b) => a + b, 0);
       if (total === 0) return 0;

@@ -72,8 +72,8 @@ const RiverOfReading = () => {
     for (let y = startYear; y <= endYear; y++) {
       for (let m = 0; m < 12; m++) {
         const found = readingData.find(d => d.year === y && d.month === m) || null;
-        const vb: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0 };
-        const vr: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0 };
+        const vb: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
+        const vr: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
         if (found) {
           found.books.forEach(b => b.vibes.forEach(v => { vb[v]++; vr[v] += b.rating; }));
         }
@@ -85,7 +85,7 @@ const RiverOfReading = () => {
 
   // Smoothed counts with carry-forward so rivers never fully vanish
   const smoothedCounts = useMemo(() => {
-    const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [] };
+    const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
     series.forEach(s => VIBES.forEach(v => raw[v].push(s.vibeBooks[v])));
     const out: Record<VibeGroup, number[]> = {} as any;
     VIBES.forEach(v => {
@@ -105,7 +105,7 @@ const RiverOfReading = () => {
 
   // Average rating per vibe per month
   const avgVibeRating = useMemo(() => {
-    const out: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [] };
+    const out: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
     series.forEach(s => VIBES.forEach(v => {
       const c = s.vibeBooks[v];
       out[v].push(c > 0 ? s.vibeRatingSum[v] / c : 3);
