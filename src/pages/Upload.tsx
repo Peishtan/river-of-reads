@@ -211,7 +211,6 @@ const UploadPage = () => {
                   Recognized tags: nature, travel, history, culture, politics, memoir, legal, business, future, science, technology, psychology, adventure, mystery, thriller, dystopian, reflective, literary, warm, hope, food, craft, and more.
                 </p>
               </div>
-              </div>
             </div>
 
             <div className="mt-6 text-center">
