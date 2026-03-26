@@ -508,24 +508,35 @@ const RiverOfReading = () => {
           A braided river of taste — tributaries branch when genres surge · hover to explore
         </p>
         <div className="flex items-center justify-center gap-4 mt-2">
-          <a href="/upload" className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4">
-            Import your data →
-          </a>
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4"
-          >
-            ⚙ River Settings
-          </button>
           {session && (
+            <a href="/upload" className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4">
+              Import your data →
+            </a>
+          )}
+          {session && (
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4"
+            >
+              ⚙ River Settings
+            </button>
+          )}
+          {session ? (
             <button
               onClick={signOut}
               className="text-xs text-muted-foreground/50 hover:text-destructive transition-colors underline underline-offset-4"
             >
               Sign out
             </button>
+          ) : (
+            <a href="/auth" className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4">
+              Sign in →
+            </a>
           )}
         </div>
+        {!session && (
+          <p className="text-[10px] text-muted-foreground/50 mt-1 italic">Viewing demo data</p>
+        )}
       </header>
 
       <div className="w-full max-w-[1800px] overflow-x-auto -webkit-overflow-scrolling-touch">
@@ -558,6 +569,16 @@ const RiverOfReading = () => {
       </div>
 
       <DeltaInsights />
+
+      {!session && (
+        <div className="w-full max-w-2xl mx-auto mt-10 px-4">
+          <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg px-6 py-4 text-center">
+            <p className="text-sm text-foreground/80 font-serif">
+              Love this? <a href="/auth" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors font-semibold">Create a free account</a> to map your own Reading River.
+            </p>
+          </div>
+        </div>
+      )}
 
       <RiverSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
