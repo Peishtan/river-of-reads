@@ -62,7 +62,12 @@ const RiverOfReading = () => {
   const [hoveredMonth, setHoveredMonth] = useState<MonthData | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
-  const years = useMemo(() => getYears(), []);
+  const { data: readingData } = useReadingData();
+
+  const years = useMemo(() => {
+    const yrs = [...new Set(readingData.map(d => d.year))].sort();
+    return yrs.length ? yrs : [2021];
+  }, [readingData]);
 
   const series = useMemo(() => {
     const startYear = years[0];
