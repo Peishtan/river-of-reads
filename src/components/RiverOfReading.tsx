@@ -243,25 +243,38 @@ const RiverOfReading = () => {
       lg.append('stop').attr('offset', '100%').attr('stop-color', currentColors[vibe]).attr('stop-opacity', 0.15);
     });
 
-    // Compute braided center lines with YEARLY FOCUS modulating drift
+    // Inside-out ordering: most frequent vibe centered, others branch symmetrically
+    const vibeTotals = VIBES.map(v => ({
+      vibe: v,
+      total: smoothedCounts[v].reduce((a, b) => a + b, 0),
+    })).sort((a, b) => b.total - a.total);
+
+    // Assign vertical slots: center=0, then alternate +1,-1,+2,-2...
+    const vibeOrder: { vibe: VibeGroup; slot: number }[] = [];
+    vibeTotals.forEach((vt, idx) => {
+      if (idx === 0) vibeOrder.push({ vibe: vt.vibe, slot: 0 });
+      else {
+        const half = Math.ceil(idx / 2);
+        vibeOrder.push({ vibe: vt.vibe, slot: idx % 2 === 1 ? -half : half });
+      }
+    });
+
     type RiverPoint = { x: number; yTop: number; yBot: number; center: number; saturation: number; avgRating: number };
     const riverPaths: Record<VibeGroup, RiverPoint[]> = {} as any;
 
-    VIBES.forEach(vibe => {
+    vibeOrder.forEach(({ vibe, slot }) => {
       const counts = smoothedCounts[vibe];
       const ratings = avgVibeRating[vibe];
       const { f1, f2, a1, a2, p } = MEANDER[vibe];
-      const dir = DRIFT_DIR[vibe];
+      const dir = slot; // Use slot as drift direction
 
       const rawCenters = series.map((s, i) => {
         const t = i / (series.length - 1);
         const volume = counts[i];
         const pushStrength = volume / maxBooks;
 
-        // Yearly focus: diverse years → rivers spread apart, focused years → huddle
         const focus = yearlyFocus[s.year] ?? 0.5;
-        // focus 0 = very focused (huddle), 1 = very diverse (spread)
-        const huddleFactor = 0.4 + focus * 0.6; // range 0.4 to 1.0
+        const huddleFactor = 0.4 + focus * 0.6;
 
         const originPull = Math.exp(-(1 - t) * 6);
         const convergencePull = 1 - originPull;
@@ -269,7 +282,8 @@ const RiverOfReading = () => {
         const gravity = (1 - pushStrength) * 0.5 * gravityDecay;
         const attractorStrength = Math.max(convergencePull, gravity);
 
-        const driftAmount = maxDrift * pushStrength * dir * (1 - attractorStrength) * huddleFactor;
+        const normalizedDir = dir / Math.max(1, Math.ceil((VIBES.length - 1) / 2));
+        const driftAmount = maxDrift * pushStrength * normalizedDir * (1 - attractorStrength) * huddleFactor;
 
         const meanderScale = originPull;
         const structuredMeander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 14;
@@ -283,7 +297,7 @@ const RiverOfReading = () => {
 
       riverPaths[vibe] = series.map((_, i) => {
         const c = smoothCenters[i];
-        const halfW = Math.max(widthScale(Math.max(counts[i], 0.12)), 2);
+        const halfW = Math.max(widthScale(Math.max(counts[i], 0.12)), 2.5);
         const ratingNorm = Math.max(0.3, (ratings[i] - 1) / 4);
         return { x: x(i), yTop: c - halfW, yBot: c + halfW, center: c, saturation: ratingNorm, avgRating: ratings[i] };
       });
