@@ -327,14 +327,14 @@ const RiverOfReading = () => {
       });
       layerPaths[vibe] = pts;
 
-      // ── Main matte fill
+      // ── Main fill
       const mainArea = d3.area<LayerPoint>()
         .x(d => d.x).y0(d => d.y0).y1(d => d.y1)
         .curve(d3.curveBasis);
 
       riverGroup.append('path').datum(pts).attr('d', mainArea)
         .attr('fill', currentColors[vibe])
-        .attr('opacity', 0.75);
+        .attr('opacity', 0.88);
 
       // ── Top edge 'ripple' stroke
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
