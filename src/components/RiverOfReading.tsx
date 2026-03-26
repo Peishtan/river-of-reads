@@ -500,8 +500,8 @@ const RiverOfReading = () => {
           return (
             <div key={v} className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[v], opacity: 0.85 }} />
-              <span className="text-[11px] text-muted-foreground">{vibeLabels[v]}</span>
-              <span className="text-[10px] text-muted-foreground/40">{count}</span>
+              <span className="text-[12px] text-muted-foreground">{vibeLabels[v]}</span>
+              <span className="text-[11px] text-muted-foreground/70">{count}</span>
             </div>
           );
         })}
