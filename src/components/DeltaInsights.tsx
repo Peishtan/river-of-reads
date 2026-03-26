@@ -19,6 +19,7 @@ const DeltaInsights = () => {
       return monthsAgo >= 0 && monthsAgo <= 6;
     });
 
+    const insightVibes = VIBES.filter(v => v !== 'current');
     const recentVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
     recentMonths.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { recentVibeCounts[v]++; })));
 
