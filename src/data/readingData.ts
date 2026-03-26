@@ -1,13 +1,14 @@
-export type VibeGroup = 'escapist' | 'ideas' | 'nature' | 'history' | 'life';
+export type VibeGroup = 'escapist' | 'ideas' | 'nature' | 'history' | 'life' | 'current';
 
-export const VIBES: VibeGroup[] = ['escapist', 'ideas', 'nature', 'history', 'life'];
+export const VIBES: VibeGroup[] = ['escapist', 'ideas', 'current', 'nature', 'history', 'life'];
 
 export const vibeLabels: Record<VibeGroup, string> = {
-  escapist: 'Escapist & Adventure',
-  ideas: 'Ideas & Technology',
-  nature: 'Nature & Ocean',
-  history: 'History & World',
-  life: 'Life & Reflective',
+  escapist: 'The Escape',
+  ideas: 'The Lab',
+  nature: 'The Wild',
+  history: 'The World',
+  life: 'The Hearth',
+  current: 'The Main Current',
 };
 
 export const defaultVibeHSL: Record<VibeGroup, string> = {
@@ -16,6 +17,7 @@ export const defaultVibeHSL: Record<VibeGroup, string> = {
   ideas:    'hsl(215, 18%, 55%)',   // The Lab — Slate Blue
   escapist: 'hsl(18, 45%, 52%)',    // The Escape — Terracotta
   life:     'hsl(130, 15%, 52%)',   // The Hearth — Sage Green
+  current:  'hsl(210, 22%, 24%)',   // The Main Current — Deep Slate
 };
 
 // Kept as mutable reference that can be overridden by river settings
@@ -48,7 +50,7 @@ export function tagsToVibes(tagString: string): VibeGroup[] {
     const vibe = TAG_TO_VIBE[tag];
     if (vibe) vibeSet.add(vibe);
   }
-  return vibeSet.size > 0 ? Array.from(vibeSet) : ['life']; // default
+  return vibeSet.size > 0 ? Array.from(vibeSet) : ['current']; // default to Main Current
 }
 
 export interface Book {

@@ -23,6 +23,7 @@ const MEANDER_CFG: Record<VibeGroup, { f1: number; f2: number; a1: number; a2: n
   nature:   { f1: 0.025, f2: 0.045, a1: 0.9, a2: 0.5, p: 2.9 },
   history:  { f1: 0.032, f2: 0.055, a1: 0.7, a2: 0.3, p: 4.2 },
   life:     { f1: 0.038, f2: 0.065, a1: 0.85, a2: 0.45, p: 5.6 },
+  current:  { f1: 0.02,  f2: 0.035, a1: 0.5, a2: 0.2, p: 3.0 },
 };
 
 const smooth = (arr: number[], radius = 3): number[] =>
@@ -71,8 +72,8 @@ const RiverOfReading = () => {
     for (let y = startYear; y <= endYear; y++) {
       for (let m = 0; m < 12; m++) {
         const found = readingData.find(d => d.year === y && d.month === m) || null;
-        const vb: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0 };
-        const vr: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0 };
+        const vb: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
+        const vr: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
         if (found) {
           found.books.forEach(b => b.vibes.forEach(v => { vb[v]++; vr[v] += b.rating; }));
         }
@@ -84,7 +85,7 @@ const RiverOfReading = () => {
 
   // Smoothed counts with carry-forward so rivers never fully vanish
   const smoothedCounts = useMemo(() => {
-    const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [] };
+    const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
     series.forEach(s => VIBES.forEach(v => raw[v].push(s.vibeBooks[v])));
     const out: Record<VibeGroup, number[]> = {} as any;
     VIBES.forEach(v => {
@@ -104,7 +105,7 @@ const RiverOfReading = () => {
 
   // Average rating per vibe per month
   const avgVibeRating = useMemo(() => {
-    const out: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [] };
+    const out: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
     series.forEach(s => VIBES.forEach(v => {
       const c = s.vibeBooks[v];
       out[v].push(c > 0 ? s.vibeRatingSum[v] / c : 3);
@@ -178,10 +179,33 @@ const RiverOfReading = () => {
       return row;
     });
 
+    // Custom order: 'current' always in the center (highest sum), others branch outward
     const stack = d3.stack<Record<string, number>>()
       .keys(VIBES as string[])
       .offset(d3.stackOffsetWiggle)
-      .order(d3.stackOrderInsideOut);
+      .order((series) => {
+        // insideOut puts highest-sum keys in the center; force 'current' to have the highest sum
+        const sums = series.map((s, i) => ({
+          i,
+          sum: VIBES[i] === 'current'
+            ? Infinity
+            : d3.sum(s, d => d[1] - d[0]),
+        }));
+        sums.sort((a, b) => b.sum - a.sum);
+        // insideOut interleaving: largest in center, alternating sides
+        const order: number[] = [];
+        let top = 0, bottom = 0;
+        for (let j = 0; j < sums.length; j++) {
+          if (j % 2 === 0) {
+            order.splice(Math.floor(order.length / 2) + top, 0, sums[j].i);
+            top++;
+          } else {
+            order.splice(Math.floor(order.length / 2) - bottom + 1, 0, sums[j].i);
+            bottom++;
+          }
+        }
+        return order;
+      });
 
     const stackedLayers = stack(stackData);
 
