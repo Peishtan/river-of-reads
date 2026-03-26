@@ -42,9 +42,10 @@ const DeltaInsights = () => {
       if (count > previousPeakCount) { previousPeakCount = count; previousPeakYear = yr; }
     });
 
+    const showSurge = surgeCount > 0 && previousPeakYear > 0;
     const surgeText = surgeCount > 0
       ? `You are currently in a heavy "${vibeLabels[surgeVibe]}" surge. ${previousPeakYear ? `This is your strongest interest since early ${previousPeakYear}.` : 'This is a new frontier for you!'}`
-      : `Your reading has been quiet recently. Time to dive back in!`;
+      : null;
 
     // --- THE DROUGHT ---
     // Find streams that have gone dry — no books at all in recent months
@@ -89,9 +90,10 @@ const DeltaInsights = () => {
     floodData?.books.forEach(b => b.vibes.forEach(v => { floodVibeCounts[v]++; }));
     const floodVibe = insightVibes.reduce((a, b) => floodVibeCounts[a] >= floodVibeCounts[b] ? a : b);
 
-    const floodText = floodRatio >= 1.5
+    const showFlood = floodRatio >= 1.5;
+    const floodText = showFlood
       ? `${monthNames[floodMonth.month]} ${floodMonth.year} was a flood — ${floodMonth.count} books, ${floodRatio.toFixed(1)}× your average of ${avgCount.toFixed(1)}/month. Mostly "${vibeLabels[floodVibe]}".`
-      : `Your reading pace is remarkably steady. No major floods detected — you're a consistent reader!`;
+      : null;
 
     // --- THE SEASON ---
     // Find seasonal pattern: which quarter consistently has the highest volume
@@ -109,58 +111,77 @@ const DeltaInsights = () => {
     const lowQ = quarterAvgs.reduce((best, val, i) => val < quarterAvgs[best] ? i : best, 0);
     const seasonRatio = quarterAvgs[lowQ] > 0 ? quarterAvgs[peakQ] / quarterAvgs[lowQ] : 0;
 
-    const seasonText = seasonRatio >= 1.3
+    const showSeason = seasonRatio >= 1.3;
+    const seasonText = showSeason
       ? `Your reading peaks in ${quarterNames[peakQ]} — ${quarterAvgs[peakQ].toFixed(1)} books/month vs ${quarterAvgs[lowQ].toFixed(1)} in ${quarterNames[lowQ]}.`
-      : `No strong seasonal pattern — you read steadily year-round.`;
+      : null;
 
-    return { surgeText, droughtText, showDrought, floodText, seasonText, surgeVibe, worstDrought, floodVibe, floodRatio, seasonRatio };
+    // --- THE CURRENT ---
+    // Always renders. Describes where the reader is right now.
+    const last9Books: { vibes: VibeGroup[] }[] = [];
+    for (let i = readingData.length - 1; i >= 0 && last9Books.length < 9; i--) {
+      for (let j = readingData[i].books.length - 1; j >= 0 && last9Books.length < 9; j--) {
+        last9Books.push(readingData[i].books[j]);
+      }
+    }
+
+    const currentVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
+    last9Books.forEach(b => b.vibes.forEach(v => { currentVibeCounts[v]++; }));
+    const dominantVibe = insightVibes.reduce((a, b) => currentVibeCounts[a] >= currentVibeCounts[b] ? a : b);
+    const dominantCount = currentVibeCounts[dominantVibe];
+
+    // Count active streams (appeared in last 3 months)
+    const last3Months = readingData.filter(d => {
+      const monthsAgo = (currentYear - d.year) * 12 + (currentMonth - d.month);
+      return monthsAgo >= 0 && monthsAgo <= 3;
+    });
+    const activeStreams = new Set<VibeGroup>();
+    last3Months.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { if (v !== 'current') activeStreams.add(v); })));
+
+    const totalLast9 = last9Books.length;
+    const currentText = totalLast9 > 0
+      ? `Your current runs through ${vibeLabels[dominantVibe]} — ${dominantCount} of your last ${totalLast9} books. ${activeStreams.size >= 4 ? `${activeStreams.size} streams are active right now. Your river is running wide.` : activeStreams.size >= 2 ? `${activeStreams.size} streams are active right now.` : 'A single stream carries you forward.'}`
+      : 'Your river is just beginning. Start reading to see where the current takes you.';
+
+    return { surgeText, showSurge, droughtText, showDrought, floodText, showFlood, seasonText, showSeason, currentText, surgeVibe, worstDrought, floodVibe, dominantVibe, activeStreams: activeStreams.size };
   }, [readingData]);
 
   if (!insights) return null;
+
+  const conditionalCards = [
+    insights.showSurge && insights.surgeText && { key: 'surge', vibe: insights.surgeVibe, title: 'The Surge', text: insights.surgeText, color: riverColors[insights.surgeVibe] },
+    insights.showSeason && insights.seasonText && { key: 'season', vibe: null, title: 'The Season', text: insights.seasonText, color: 'hsl(var(--primary))' },
+    insights.showFlood && insights.floodText && { key: 'flood', vibe: insights.floodVibe, title: 'The Flood', text: insights.floodText, color: riverColors[insights.floodVibe] },
+    insights.showDrought && insights.droughtText && { key: 'drought', vibe: insights.worstDrought.vibe, title: 'The Drought', text: insights.droughtText, color: riverColors[insights.worstDrought.vibe] },
+  ].filter(Boolean) as { key: string; vibe: VibeGroup | null; title: string; text: string; color: string }[];
+
+  const totalCards = 1 + conditionalCards.length;
+  const gridCols = totalCards <= 2 ? 'lg:grid-cols-2' : totalCards === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-10 px-4">
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
         Delta Insights
       </h2>
-      <div className={`grid grid-cols-1 md:grid-cols-2 ${insights.showDrought ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
-        {/* The Surge */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${gridCols} gap-4`}>
+        {/* The Current — always renders */}
         <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.surgeVibe] }} />
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Surge</h3>
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.dominantVibe] }} />
+            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Current</h3>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.surgeText}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{insights.currentText}</p>
         </div>
 
-        {/* The Season */}
-        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: insights.seasonRatio >= 1.3 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Season</h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.seasonText}</p>
-        </div>
-
-        {/* The Flood */}
-        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: insights.floodRatio >= 1.5 ? riverColors[insights.floodVibe] : 'hsl(var(--muted-foreground))' }} />
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Flood</h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.floodText}</p>
-        </div>
-
-        {/* The Drought — only shown when a real drought exists */}
-        {insights.showDrought && insights.droughtText && (
-          <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
+        {conditionalCards.map(card => (
+          <div key={card.key} className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.worstDrought.vibe] }} />
-              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Drought</h3>
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: card.color }} />
+              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">{card.title}</h3>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{insights.droughtText}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{card.text}</p>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
