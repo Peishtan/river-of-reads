@@ -433,7 +433,7 @@ const RiverOfReading = () => {
     /* ── Draw rivers ─────────────────────────────────────── */
 
     const riverOuter = g.append('g').attr('mask', 'url(#river-fade)').attr('filter', 'url(#river-glow)');
-    const riverGroup = riverOuter.append('g').attr('mask', 'url(#river-fade-h)');
+    const riverGroup = riverOuter.append('g').attr('mask', 'url(#river-fade-h)').attr('filter', 'url(#water-shimmer)');
 
     // Store computed paths for hover lookups
     type LayerPoint = { x: number; y0: number; y1: number; center: number };
