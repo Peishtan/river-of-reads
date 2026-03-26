@@ -205,6 +205,18 @@ const RiverOfReading = () => {
       });
     });
 
+    /* ── Global stats (top-left) ────────────────────────── */
+
+    const totalBooks = readingData.reduce((a, m) => a + m.books.length, 0);
+    const yearsLogged = years.length;
+    g.append('text')
+      .attr('x', 0).attr('y', -30)
+      .attr('fill', 'hsl(200, 8%, 40%)')
+      .attr('font-size', '11px').attr('font-weight', '400')
+      .attr('font-family', "'Source Sans 3', sans-serif")
+      .attr('opacity', 0.6)
+      .text(`${totalBooks} books · ${yearsLogged} years`);
+
     /* ── Year labels ─────────────────────────────────────── */
 
     const startYear = years[0];
@@ -228,6 +240,28 @@ const RiverOfReading = () => {
           .attr('letter-spacing', '0.08em')
           .text(yr);
       }
+    });
+
+    /* ── Tide markers (horizontal volume scale) ──────────── */
+
+    const maxBooks = d3.max(series, s => s.data ? s.data.books.length : 0) || 10;
+    [5, 10].forEach(mark => {
+      if (mark > maxBooks + 2) return; // skip if irrelevant
+      // Map book count to Y via the power scale used for stacking
+      const yVal = yScale(yExtent[0] + (yExtent[1] - yExtent[0]) * (mark / Math.max(maxBooks, 12)));
+      g.append('line')
+        .attr('x1', 0).attr('y1', yVal)
+        .attr('x2', innerW).attr('y2', yVal)
+        .attr('stroke', 'hsl(200, 8%, 38%)')
+        .attr('stroke-width', 0.5).attr('opacity', 0.04)
+        .attr('stroke-dasharray', '4,6');
+      g.append('text')
+        .attr('x', -8).attr('y', yVal + 3)
+        .attr('text-anchor', 'end')
+        .attr('fill', 'hsl(200, 8%, 38%)')
+        .attr('font-size', '9px').attr('opacity', 0.25)
+        .attr('font-family', "'Source Sans 3', sans-serif")
+        .text(mark);
     });
 
     /* ── Draw rivers ─────────────────────────────────────── */
@@ -431,13 +465,16 @@ const RiverOfReading = () => {
       </div>
 
       <div className="flex flex-wrap items-center gap-5 mt-4 justify-center px-4">
-        {VIBES.map(v => (
-          <div key={v} className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: riverColors[v], opacity: 0.85 }} />
-            <span className="text-xs text-muted-foreground">{vibeLabels[v]}</span>
-          </div>
-        ))}
-        <span className="text-xs text-muted-foreground italic border-l border-border pl-4">hover any month to explore</span>
+        {VIBES.map(v => {
+          const count = readingData.reduce((a, m) => a + m.books.filter(b => b.vibes.includes(v)).length, 0);
+          return (
+            <div key={v} className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[v], opacity: 0.85 }} />
+              <span className="text-[11px] text-muted-foreground">{vibeLabels[v]}</span>
+              <span className="text-[10px] text-muted-foreground/40">{count}</span>
+            </div>
+          );
+        })}
       </div>
 
       <DeltaInsights />
