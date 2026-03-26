@@ -9,13 +9,19 @@ import MonthTooltip from './MonthTooltip';
 const VIBES: VibeGroup[] = ['escapist', 'ideas', 'nature', 'history'];
 
 const SVG_W = 1400;
-const SVG_H = 480;
+const SVG_H = 560;
 const PAD_L = 60;
-const PAD_R = 140;
+const PAD_R = 150;
 const PAD_T = 70;
-const PAD_B = 60;
-const RIVER_CENTER = SVG_H / 2 + 10;
-const MAX_RIVER_W = 100; // max half-width of main river
+const PAD_B = 50;
+
+// Each vibe gets its own horizontal band
+const STREAM_AREA_TOP = PAD_T + 10;
+const STREAM_AREA_BOT = SVG_H - PAD_B - 10;
+const STREAM_GAP = 12; // gap between streams
+const NUM_STREAMS = VIBES.length;
+const STREAM_BAND_H = (STREAM_AREA_BOT - STREAM_AREA_TOP - STREAM_GAP * (NUM_STREAMS - 1)) / NUM_STREAMS;
+const MAX_STREAM_HALF = STREAM_BAND_H / 2 - 4; // max half-thickness of a single stream
 
 const RiverOfReading = () => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -29,47 +35,50 @@ const RiverOfReading = () => {
     return PAD_L + (monthIdx / totalMonths) * (SVG_W - PAD_L - PAD_R);
   }, [totalMonths]);
 
-  const maxPages = useMemo(() => Math.max(...readingData.map(totalPages)), []);
+  // Center Y for each vibe's lane
+  const vibeCenterY = (vibeIdx: number) =>
+    STREAM_AREA_TOP + STREAM_BAND_H / 2 + vibeIdx * (STREAM_BAND_H + STREAM_GAP);
 
-  // Width of river at each data point (proportional to pages)
-  const riverWidth = useCallback((pages: number) => {
-    return Math.max(12, (pages / maxPages) * MAX_RIVER_W);
-  }, [maxPages]);
-
-  // Build interpolated river points for smooth flow
-  const riverPoints = useMemo(() => {
-    return readingData.map((d) => {
-      const mi = toMonthIndex(d);
-      const x = xScale(mi);
-      const w = riverWidth(totalPages(d));
-
-      // Per-vibe breakdown
-      const tp = totalPages(d) || 1;
-      const vibePages: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0 };
-      d.books.forEach(b => { vibePages[b.vibe] += b.pages; });
-
-      // Stack positions (from top of river downward)
-      let offset = 0;
-      const vibeStacks = VIBES.map(v => {
-        const h = (vibePages[v] / tp) * w * 2;
-        const entry = { vibe: v, yOffset: offset, height: h };
-        offset += h;
-        return entry;
-      }).filter(s => s.height > 0);
-
-      return { x, w, mi, data: d, vibeStacks, vibePages };
+  // Max pages per vibe across all months (for scaling each stream independently)
+  const maxVibePages = useMemo(() => {
+    const maxes: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0 };
+    readingData.forEach(d => {
+      const vp: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0 };
+      d.books.forEach(b => { vp[b.vibe] += b.pages; });
+      VIBES.forEach(v => { maxes[v] = Math.max(maxes[v], vp[v]); });
     });
-  }, [xScale, maxPages]);
+    return maxes;
+  }, []);
 
-  // Catmull-Rom helper
-  const catmullPath = (points: { x: number; y: number }[]) => {
-    if (points.length < 2) return '';
-    let d = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[Math.max(i - 1, 0)];
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const p3 = points[Math.min(i + 2, points.length - 1)];
+  // Build per-vibe stream data at each data point
+  const streamData = useMemo(() => {
+    return VIBES.map((vibe, vi) => {
+      const centerY = vibeCenterY(vi);
+      const maxP = maxVibePages[vibe] || 1;
+
+      const points = readingData.map(d => {
+        const mi = toMonthIndex(d);
+        const x = xScale(mi);
+        const vibeP = d.books.filter(b => b.vibe === vibe).reduce((a, b) => a + b.pages, 0);
+        const halfW = vibeP > 0 ? Math.max(3, (vibeP / maxP) * MAX_STREAM_HALF) : 0;
+        const fiveStars = d.books.filter(b => b.vibe === vibe && b.rating === 5);
+
+        return { x, centerY, halfW, vibeP, fiveStars, monthData: d };
+      });
+
+      return { vibe, vibeIdx: vi, centerY, points };
+    });
+  }, [xScale, maxVibePages]);
+
+  // Catmull-Rom
+  const catmullPath = (pts: { x: number; y: number }[]) => {
+    if (pts.length < 2) return '';
+    let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(i - 1, 0)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(i + 2, pts.length - 1)];
       const cp1x = p1.x + (p2.x - p0.x) / 6;
       const cp1y = p1.y + (p2.y - p0.y) / 6;
       const cp2x = p2.x - (p3.x - p1.x) / 6;
@@ -79,118 +88,99 @@ const RiverOfReading = () => {
     return d;
   };
 
-  // Build main river area (filled between top and bottom curves)
-  const mainRiverPath = useMemo(() => {
-    const topPts = riverPoints.map(p => ({ x: p.x, y: RIVER_CENTER - p.w }));
-    const botPts = riverPoints.map(p => ({ x: p.x, y: RIVER_CENTER + p.w }));
-    const topD = catmullPath(topPts);
-    const botPtsRev = [...botPts].reverse();
-    const botD = catmullPath(botPtsRev);
-    const last = topPts[topPts.length - 1];
-    const firstRev = botPtsRev[0];
-    return `${topD} L${last.x.toFixed(1)},${last.y.toFixed(1)} L${firstRev.x.toFixed(1)},${firstRev.y.toFixed(1)} ${botD.replace(/^M[^ ]+/, '')} Z`;
-  }, [riverPoints]);
+  // Build filled area path for each stream
+  const streamPaths = useMemo(() => {
+    return streamData.map(sd => {
+      // For points with 0 pages, collapse to a thin line (halfW=1)
+      const topPts = sd.points.map(p => ({
+        x: p.x,
+        y: p.centerY - (p.halfW > 0 ? p.halfW : 1),
+      }));
+      const botPts = sd.points.map(p => ({
+        x: p.x,
+        y: p.centerY + (p.halfW > 0 ? p.halfW : 1),
+      }));
 
-  // Tributary paths - each vibe flows as a visible stream branching from edges
-  const tributaryPaths = useMemo(() => {
-    return VIBES.map(vibe => {
-      // This vibe's share at each data point, as offset from river center
-      const tribPts: { x: number; yTop: number; yBot: number }[] = [];
+      const topD = catmullPath(topPts);
+      const botRev = [...botPts].reverse();
+      const botD = catmullPath(botRev);
+      const last = topPts[topPts.length - 1];
+      const firstRev = botRev[0];
+      const path = `${topD} L${last.x.toFixed(1)},${last.y.toFixed(1)} L${firstRev.x.toFixed(1)},${firstRev.y.toFixed(1)} ${botD.replace(/^M[^ ]+/, '')} Z`;
 
-      riverPoints.forEach(rp => {
-        const stack = rp.vibeStacks.find(s => s.vibe === vibe);
-        if (stack && stack.height > 1) {
-          const yTop = RIVER_CENTER - rp.w + stack.yOffset;
-          tribPts.push({ x: rp.x, yTop, yBot: yTop + stack.height });
-        } else {
-          tribPts.push({ x: rp.x, yTop: RIVER_CENTER, yBot: RIVER_CENTER });
-        }
-      });
+      // Center line
+      const centerLine = catmullPath(sd.points.map(p => ({ x: p.x, y: p.centerY })));
 
-      const topPath = catmullPath(tribPts.map(p => ({ x: p.x, y: p.yTop })));
-      const botPtsRev = [...tribPts].reverse();
-      const botPath = catmullPath(botPtsRev.map(p => ({ x: p.x, y: p.yBot })));
-
-      const last = tribPts[tribPts.length - 1];
-      const firstRev = botPtsRev[0];
-      const fullPath = `${topPath} L${last.x.toFixed(1)},${last.yTop.toFixed(1)} L${firstRev.x.toFixed(1)},${firstRev.yBot.toFixed(1)} ${botPath.replace(/^M[^ ]+/, '')} Z`;
-
-      return { vibe, path: fullPath };
+      return { vibe: sd.vibe, vibeIdx: sd.vibeIdx, path, centerLine, centerY: sd.centerY };
     });
-  }, [riverPoints]);
+  }, [streamData]);
 
-  // Annotations (book labels along the river)
-  const annotations = useMemo(() => {
-    const annots: { x: number; y: number; text: string; }[] = [];
-    riverPoints.forEach((rp, idx) => {
-      rp.data.books.forEach((book, bi) => {
-        if (book.annotation) {
-          const side = idx % 2 === 0 ? -1 : 1;
-          const yOff = side * (rp.w + 18 + bi * 14);
-          annots.push({
-            x: rp.x,
-            y: RIVER_CENTER + yOff,
-            text: book.annotation,
-          });
-        }
-      });
-    });
-    return annots;
-  }, [riverPoints]);
-
-  // 5-star books positions for gold pulses
+  // 5-star positions
   const fiveStarPositions = useMemo(() => {
-    const positions: { x: number; y: number; monthDataIdx: number }[] = [];
-    riverPoints.forEach((rp, rpIdx) => {
-      rp.data.books.forEach((book, bi) => {
-        if (book.rating === 5) {
-          const angle = (bi / rp.data.books.length) * Math.PI * 2;
-          const spread = rp.w * 0.5;
+    const positions: { x: number; y: number; rpIdx: number }[] = [];
+    streamData.forEach(sd => {
+      sd.points.forEach((p, pi) => {
+        p.fiveStars.forEach((book, bi) => {
+          const yOff = p.fiveStars.length > 1
+            ? (bi / (p.fiveStars.length - 1) - 0.5) * p.halfW * 1.2
+            : 0;
           positions.push({
-            x: rp.x + Math.cos(angle) * spread * 0.3,
-            y: RIVER_CENTER + Math.sin(angle) * spread,
-            monthDataIdx: rpIdx,
+            x: p.x,
+            y: p.centerY + yOff,
+            rpIdx: pi,
           });
-        }
+        });
       });
     });
     return positions;
-  }, [riverPoints]);
+  }, [streamData]);
 
-  // Year x positions
-  const yearPositions = useMemo(() => {
-    return years.map(y => ({
-      year: y,
-      x: xScale((y - 2021) * 12),
-    }));
-  }, [years, xScale]);
+  // Annotations
+  const annotations = useMemo(() => {
+    const annots: { x: number; y: number; text: string }[] = [];
+    streamData.forEach(sd => {
+      sd.points.forEach((p, pi) => {
+        p.monthData.books
+          .filter(b => b.vibe === sd.vibe && b.annotation)
+          .forEach((book, bi) => {
+            const side = pi % 2 === 0 ? -1 : 1;
+            annots.push({
+              x: p.x,
+              y: p.centerY + side * (p.halfW + 12 + bi * 12),
+              text: book.annotation!,
+            });
+          });
+      });
+    });
+    return annots;
+  }, [streamData]);
 
-  // Tooltip position calculation
+  // Year positions
+  const yearPositions = useMemo(() => years.map(y => ({
+    year: y,
+    x: xScale((y - 2021) * 12),
+  })), [years, xScale]);
+
+  // Year book counts
+  const yearBookCounts = useMemo(() => years.map(y => ({
+    year: y,
+    count: readingData.filter(d => d.year === y).reduce((a, d) => a + d.books.length, 0),
+  })), [years]);
+
   const [tooltipInfo, setTooltipInfo] = useState<{ x: number; y: number } | null>(null);
 
-  const handleHover = (idx: number, e: React.MouseEvent) => {
+  const handleHover = (idx: number) => {
     setHoveredIdx(idx);
-    const rp = riverPoints[idx];
-    // Percentage-based positioning
-    const xPct = (rp.x / SVG_W) * 100;
-    const yPct = ((RIVER_CENTER - rp.w - 20) / SVG_H) * 100;
-    setTooltipInfo({ x: xPct, y: yPct });
+    // Find topmost stream point for this data index to position tooltip above
+    const x = streamData[0].points[idx].x;
+    const topY = STREAM_AREA_TOP - 10;
+    setTooltipInfo({ x: (x / SVG_W) * 100, y: (topY / SVG_H) * 100 });
   };
 
   const handleLeave = () => {
     setHoveredIdx(null);
     setTooltipInfo(null);
   };
-
-  // Per-year book counts at bottom
-  const yearBookCounts = useMemo(() => {
-    return years.map(y => {
-      const count = readingData
-        .filter(d => d.year === y)
-        .reduce((a, d) => a + d.books.length, 0);
-      return { year: y, count };
-    });
-  }, [years]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-2 py-8 overflow-x-auto">
@@ -213,18 +203,13 @@ const RiverOfReading = () => {
           preserveAspectRatio="xMidYMid meet"
         >
           <defs>
-            <filter id="river-glow">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+            <filter id="stream-glow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <linearGradient id="river-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(180, 40%, 22%)" />
-              <stop offset="50%" stopColor="hsl(175, 50%, 30%)" />
-              <stop offset="100%" stopColor="hsl(172, 45%, 35%)" />
-            </linearGradient>
           </defs>
 
           {/* Year markers */}
@@ -233,12 +218,12 @@ const RiverOfReading = () => {
               <line
                 x1={yp.x} y1={PAD_T - 10}
                 x2={yp.x} y2={SVG_H - PAD_B + 10}
-                stroke="hsl(200, 10%, 25%)"
+                stroke="hsl(200, 10%, 20%)"
                 strokeWidth="0.5"
                 strokeDasharray="4 6"
               />
               <text
-                x={yp.x} y={PAD_T - 20}
+                x={yp.x} y={PAD_T - 22}
                 textAnchor="middle"
                 fill="hsl(var(--muted-foreground))"
                 fontSize="15"
@@ -250,36 +235,38 @@ const RiverOfReading = () => {
             </g>
           ))}
 
-          {/* Main river body */}
-          <path
-            d={mainRiverPath}
-            fill="url(#river-grad)"
-            opacity="0.5"
-            filter="url(#river-glow)"
-          />
-
-          {/* Vibe tributary layers */}
-          {tributaryPaths.map(({ vibe, path }) => (
-            <path
-              key={vibe}
-              d={path}
-              fill={vibeHSL[vibe]}
-              opacity={0.65}
-              className="transition-opacity duration-300"
-            />
+          {/* Stream bands — each vibe is its own ribbon */}
+          {streamPaths.map(sp => (
+            <g key={sp.vibe}>
+              {/* Filled stream area */}
+              <path
+                d={sp.path}
+                fill={vibeHSL[sp.vibe]}
+                opacity={0.55}
+                filter="url(#stream-glow)"
+              />
+              {/* Brighter center stroke */}
+              <path
+                d={sp.centerLine}
+                fill="none"
+                stroke={vibeHSL[sp.vibe]}
+                strokeWidth="1.5"
+                opacity="0.7"
+              />
+              {/* Edge highlights */}
+              {(() => {
+                const sd = streamData[sp.vibeIdx];
+                const topPts = sd.points.map(p => ({ x: p.x, y: p.centerY - Math.max(p.halfW, 1) }));
+                const botPts = sd.points.map(p => ({ x: p.x, y: p.centerY + Math.max(p.halfW, 1) }));
+                return (
+                  <>
+                    <path d={catmullPath(topPts)} fill="none" stroke={vibeHSL[sp.vibe]} strokeWidth="0.8" opacity="0.4" />
+                    <path d={catmullPath(botPts)} fill="none" stroke={vibeHSL[sp.vibe]} strokeWidth="0.8" opacity="0.4" />
+                  </>
+                );
+              })()}
+            </g>
           ))}
-
-          {/* River edge highlight lines */}
-          {(() => {
-            const topPts = riverPoints.map(p => ({ x: p.x, y: RIVER_CENTER - p.w }));
-            const botPts = riverPoints.map(p => ({ x: p.x, y: RIVER_CENTER + p.w }));
-            return (
-              <>
-                <path d={catmullPath(topPts)} fill="none" stroke="hsl(176, 50%, 50%)" strokeWidth="1" opacity="0.4" />
-                <path d={catmullPath(botPts)} fill="none" stroke="hsl(176, 50%, 50%)" strokeWidth="1" opacity="0.4" />
-              </>
-            );
-          })()}
 
           {/* Annotations */}
           {annotations.map((a, i) => (
@@ -289,50 +276,38 @@ const RiverOfReading = () => {
               y={a.y}
               textAnchor="middle"
               fill="hsl(var(--muted-foreground))"
-              fontSize="10"
+              fontSize="9"
               fontStyle="italic"
               fontFamily="'Source Sans 3', sans-serif"
-              opacity="0.7"
+              opacity="0.6"
             >
               {a.text.split('\n').map((line, li) => (
-                <tspan key={li} x={a.x} dy={li === 0 ? 0 : 12}>{line}</tspan>
+                <tspan key={li} x={a.x} dy={li === 0 ? 0 : 11}>{line}</tspan>
               ))}
             </text>
           ))}
 
           {/* 5-star gold pulse rings */}
           {fiveStarPositions.map((pos, i) => {
-            const isActive = hoveredIdx === pos.monthDataIdx;
+            const isActive = hoveredIdx === pos.rpIdx;
             return (
               <g key={`star-${i}`}>
                 <circle
                   cx={pos.x} cy={pos.y}
                   r={3}
                   fill="hsl(var(--gold-bright))"
-                  opacity={isActive ? 1 : 0.6}
+                  opacity={isActive ? 1 : 0.5}
                   className="transition-opacity duration-200"
                 />
                 {isActive && (
                   <>
-                    <circle
-                      cx={pos.x} cy={pos.y}
-                      r={4}
-                      fill="none"
-                      stroke="hsl(var(--gold-bright))"
-                      strokeWidth="2"
-                      opacity="0.8"
-                    >
+                    <circle cx={pos.x} cy={pos.y} r={4} fill="none"
+                      stroke="hsl(var(--gold-bright))" strokeWidth="2" opacity="0.8">
                       <animate attributeName="r" from="4" to="16" dur="1.2s" repeatCount="indefinite" />
                       <animate attributeName="opacity" from="0.8" to="0" dur="1.2s" repeatCount="indefinite" />
                     </circle>
-                    <circle
-                      cx={pos.x} cy={pos.y}
-                      r={4}
-                      fill="none"
-                      stroke="hsl(var(--gold-bright))"
-                      strokeWidth="1.5"
-                      opacity="0.6"
-                    >
+                    <circle cx={pos.x} cy={pos.y} r={4} fill="none"
+                      stroke="hsl(var(--gold-bright))" strokeWidth="1.5" opacity="0.6">
                       <animate attributeName="r" from="4" to="16" dur="1.2s" begin="0.4s" repeatCount="indefinite" />
                       <animate attributeName="opacity" from="0.6" to="0" dur="1.2s" begin="0.4s" repeatCount="indefinite" />
                     </circle>
@@ -342,99 +317,90 @@ const RiverOfReading = () => {
             );
           })}
 
-          {/* Month hover hitboxes */}
-          {riverPoints.map((rp, i) => {
+          {/* Hover hitboxes — vertical columns spanning all streams */}
+          {readingData.map((_, i) => {
+            const x = streamData[0].points[i].x;
             const isHovered = hoveredIdx === i;
             return (
               <g
                 key={i}
-                onMouseEnter={(e) => handleHover(i, e)}
+                onMouseEnter={() => handleHover(i)}
                 onMouseLeave={handleLeave}
                 className="cursor-pointer"
               >
-                {/* Wide invisible hit area */}
                 <rect
-                  x={rp.x - 25}
-                  y={RIVER_CENTER - MAX_RIVER_W - 30}
-                  width={50}
-                  height={MAX_RIVER_W * 2 + 60}
+                  x={x - 25} y={STREAM_AREA_TOP - 10}
+                  width={50} height={STREAM_AREA_BOT - STREAM_AREA_TOP + 20}
                   fill="transparent"
                 />
-
-                {/* Vertical scan line on hover */}
                 {isHovered && (
                   <line
-                    x1={rp.x} y1={RIVER_CENTER - rp.w - 15}
-                    x2={rp.x} y2={RIVER_CENTER + rp.w + 15}
+                    x1={x} y1={STREAM_AREA_TOP - 5}
+                    x2={x} y2={STREAM_AREA_BOT + 5}
                     stroke="hsl(var(--foreground))"
                     strokeWidth="1"
-                    opacity="0.4"
+                    opacity="0.25"
                     strokeDasharray="3 3"
                   />
                 )}
-
-                {/* Top/bottom dots on hover */}
-                {isHovered && (
-                  <>
-                    <circle cx={rp.x} cy={RIVER_CENTER - rp.w - 5} r={3} fill="hsl(var(--primary))" />
-                    <circle cx={rp.x} cy={RIVER_CENTER + rp.w + 5} r={3} fill="hsl(var(--primary))" />
-                  </>
-                )}
+                {/* Per-stream dots on hover */}
+                {isHovered && streamData.map(sd => {
+                  const pt = sd.points[i];
+                  if (pt.halfW < 2) return null;
+                  return (
+                    <circle
+                      key={sd.vibe}
+                      cx={x} cy={pt.centerY}
+                      r={3}
+                      fill={vibeHSL[sd.vibe]}
+                      stroke="hsl(var(--foreground))"
+                      strokeWidth="0.5"
+                    />
+                  );
+                })}
               </g>
             );
           })}
 
           {/* Bottom book counts per year */}
-          {yearBookCounts.map(yc => {
-            const x = xScale((yc.year - 2021) * 12 + 6);
-            return (
-              <text
-                key={yc.year}
-                x={x}
-                y={SVG_H - 15}
-                textAnchor="middle"
-                fill="hsl(var(--muted-foreground))"
-                fontSize="11"
-                fontFamily="'Source Sans 3', sans-serif"
-                opacity="0.5"
-              >
-                {yc.count} books
-              </text>
-            );
-          })}
+          {yearBookCounts.map(yc => (
+            <text
+              key={yc.year}
+              x={xScale((yc.year - 2021) * 12 + 6)}
+              y={SVG_H - 12}
+              textAnchor="middle"
+              fill="hsl(var(--muted-foreground))"
+              fontSize="11"
+              fontFamily="'Source Sans 3', sans-serif"
+              opacity="0.4"
+            >
+              {yc.count} books
+            </text>
+          ))}
 
           {/* Right-side vibe labels */}
-          {(() => {
-            const lastRp = riverPoints[riverPoints.length - 1];
-            const labelX = lastRp.x + 30;
-            return VIBES.map((v, i) => {
-              const stack = lastRp.vibeStacks.find(s => s.vibe === v);
-              const y = stack
-                ? RIVER_CENTER - lastRp.w + stack.yOffset + stack.height / 2
-                : RIVER_CENTER - 30 + i * 20;
-              return (
-                <g key={v}>
-                  <line
-                    x1={lastRp.x + 5} y1={y}
-                    x2={labelX - 5} y2={y}
-                    stroke={vibeHSL[v]}
-                    strokeWidth="1"
-                    opacity="0.5"
-                  />
-                  <text
-                    x={labelX}
-                    y={y + 4}
-                    fill={vibeHSL[v]}
-                    fontSize="11"
-                    fontWeight="600"
-                    fontFamily="'Source Sans 3', sans-serif"
-                  >
-                    {vibeLabels[v]}
-                  </text>
-                </g>
-              );
-            });
-          })()}
+          {streamPaths.map((sp, i) => {
+            const lastPt = streamData[i].points[streamData[i].points.length - 1];
+            const labelX = lastPt.x + 25;
+            return (
+              <g key={sp.vibe}>
+                <line
+                  x1={lastPt.x + 3} y1={sp.centerY}
+                  x2={labelX - 4} y2={sp.centerY}
+                  stroke={vibeHSL[sp.vibe]} strokeWidth="1" opacity="0.5"
+                />
+                <text
+                  x={labelX} y={sp.centerY + 4}
+                  fill={vibeHSL[sp.vibe]}
+                  fontSize="12"
+                  fontWeight="600"
+                  fontFamily="'Source Sans 3', sans-serif"
+                >
+                  {vibeLabels[sp.vibe]}
+                </text>
+              </g>
+            );
+          })}
         </svg>
 
         {/* Tooltip */}
@@ -454,11 +420,13 @@ const RiverOfReading = () => {
 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-5 mt-4 justify-center px-4">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-          <span className="text-xs text-muted-foreground">tributary genesis</span>
-        </div>
-        <div className="flex items-center gap-2">
+        {VIBES.map(v => (
+          <div key={v} className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: vibeHSL[v] }} />
+            <span className="text-xs text-muted-foreground">{vibeLabels[v]}</span>
+          </div>
+        ))}
+        <div className="flex items-center gap-2 border-l border-border pl-4">
           <span className="w-2.5 h-2.5 rounded-full bg-gold-bright" />
           <span className="text-xs text-muted-foreground">5★ pulse on hover</span>
         </div>
