@@ -130,7 +130,7 @@ const DeltaInsights = () => {
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
         Delta Insights
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* The Surge */}
         <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-2">
@@ -138,6 +138,15 @@ const DeltaInsights = () => {
             <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Surge</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">{insights.surgeText}</p>
+        </div>
+
+        {/* The Flood */}
+        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: insights.floodRatio >= 1.5 ? riverColors[insights.floodVibe] : 'hsl(var(--muted-foreground))' }} />
+            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Flood</h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">{insights.floodText}</p>
         </div>
 
         {/* The Drought */}
