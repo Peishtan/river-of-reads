@@ -23,7 +23,7 @@ const DeltaInsights = () => {
     const recentVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
     recentMonths.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { recentVibeCounts[v]++; })));
 
-    const surgeVibe = VIBES.reduce((a, b) => recentVibeCounts[a] >= recentVibeCounts[b] ? a : b);
+    const surgeVibe = insightVibes.reduce((a, b) => recentVibeCounts[a] >= recentVibeCounts[b] ? a : b);
     const surgeCount = recentVibeCounts[surgeVibe];
 
     // Find previous peak for that vibe
