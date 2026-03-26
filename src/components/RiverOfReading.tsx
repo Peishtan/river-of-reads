@@ -56,6 +56,12 @@ const RiverOfReading = () => {
 
   /* ── derived data ──────────────────────────────────────── */
 
+  // Only include 'current' vibe if any books actually use it
+  const activeVibes = useMemo(() => {
+    const hasCurrentBooks = readingData.some(m => m.books.some(b => b.vibes.includes('current')));
+    return hasCurrentBooks ? VIBES : VIBES.filter(v => v !== 'current');
+  }, [readingData]);
+
   const years = useMemo(() => {
     const yrs = [...new Set(readingData.map(d => d.year))].sort();
     return yrs.length ? yrs : [2021];
@@ -86,9 +92,9 @@ const RiverOfReading = () => {
   // Smoothed counts with carry-forward so rivers never fully vanish
   const smoothedCounts = useMemo(() => {
     const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
-    series.forEach(s => VIBES.forEach(v => raw[v].push(s.vibeBooks[v])));
+    series.forEach(s => activeVibes.forEach(v => raw[v].push(s.vibeBooks[v])));
     const out: Record<VibeGroup, number[]> = {} as any;
-    VIBES.forEach(v => {
+    activeVibes.forEach(v => {
       const s = smooth(smooth(raw[v], 3), 2);
       let lastSig = 0;
       for (let i = s.length - 1; i >= 0; i--) { if (s[i] > 0.5) { lastSig = i; break; } }
@@ -106,11 +112,11 @@ const RiverOfReading = () => {
   // Average rating per vibe per month
   const avgVibeRating = useMemo(() => {
     const out: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
-    series.forEach(s => VIBES.forEach(v => {
+    series.forEach(s => activeVibes.forEach(v => {
       const c = s.vibeBooks[v];
       out[v].push(c > 0 ? s.vibeRatingSum[v] / c : 3);
     }));
-    VIBES.forEach(v => { out[v] = smooth(out[v], 2); });
+    activeVibes.forEach(v => { out[v] = smooth(out[v], 2); });
     return out;
   }, [series]);
 
@@ -121,7 +127,7 @@ const RiverOfReading = () => {
 
     const currentColors: Record<VibeGroup, string> = {} as any;
     const rippleColors: Record<VibeGroup, string> = {} as any;
-    VIBES.forEach(v => {
+    activeVibes.forEach(v => {
       currentColors[v] = riverColors[v];
       rippleColors[v] = lightenHSL(riverColors[v], 15);
     });
@@ -170,24 +176,24 @@ const RiverOfReading = () => {
     /* ── D3 stack with wiggle + insideOut ─────────────────── */
 
     // Power-scale the counts so thin months still feel substantial
-    const powerScale = d3.scalePow().exponent(0.6).domain([0, d3.max(VIBES, v => d3.max(smoothedCounts[v])!)!]).range([0.15, 1]);
+    const powerScale = d3.scalePow().exponent(0.6).domain([0, d3.max(activeVibes, v => d3.max(smoothedCounts[v])!)!]).range([0.15, 1]);
 
     // Build stack data: array of { idx, escapist, ideas, ... }
     const stackData = series.map((_, i) => {
       const row: Record<string, number> = { idx: i };
-      VIBES.forEach(v => { row[v] = powerScale(smoothedCounts[v][i]); });
+      activeVibes.forEach(v => { row[v] = powerScale(smoothedCounts[v][i]); });
       return row;
     });
 
     // Custom order: 'current' always in the center (highest sum), others branch outward
     const stack = d3.stack<Record<string, number>>()
-      .keys(VIBES as string[])
+      .keys(activeVibes as string[])
       .offset(d3.stackOffsetWiggle)
       .order((series) => {
         // insideOut puts highest-sum keys in the center; force 'current' to have the highest sum
         const sums = series.map((s, i) => ({
           i,
-          sum: VIBES[i] === 'current'
+          sum: activeVibes[i] === 'current'
             ? Infinity
             : d3.sum(s, d => d[1] - d[0]),
         }));
@@ -218,13 +224,13 @@ const RiverOfReading = () => {
 
     // Compute per-vibe meander offsets (organic drift applied to the stack baseline)
     const meanderOffsets: Record<VibeGroup, number[]> = {} as any;
-    VIBES.forEach(vibe => {
+    activeVibes.forEach(vibe => {
       const { f1, f2, a1, a2, p } = MEANDER_CFG[vibe];
       meanderOffsets[vibe] = series.map((_, i) => {
         const t = i / (series.length - 1);
         const rampUp = 1 - Math.exp(-t * 4); // start tight, diverge
         const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 8;
-        const noise = seededNoise(VIBES.indexOf(vibe) + 1, i) * 5;
+        const noise = seededNoise(activeVibes.indexOf(vibe) + 1, i) * 5;
         return (meander + noise) * rampUp;
       });
     });
@@ -332,7 +338,7 @@ const RiverOfReading = () => {
     /* ── Right-side labels ───────────────────────────────── */
 
     const lastIdx = series.length - 1;
-    VIBES.forEach(vibe => {
+    activeVibes.forEach(vibe => {
       const lastPt = layerPaths[vibe][lastIdx];
       const labelX = innerW + 16;
 
@@ -372,7 +378,7 @@ const RiverOfReading = () => {
 
       g.selectAll('.hover-el').remove();
 
-      VIBES.forEach(vibe => {
+      activeVibes.forEach(vibe => {
         if (smoothedCounts[vibe][i] < 0.3) return;
         const c = layerPaths[vibe][i].center;
 
@@ -412,7 +418,7 @@ const RiverOfReading = () => {
         .on('click', (event: MouseEvent) => showHover(i, event));
     });
 
-  }, [series, smoothedCounts, avgVibeRating, years, riverColors]);
+  }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes]);
 
   // Dismiss on tap outside
   useEffect(() => {
@@ -489,7 +495,7 @@ const RiverOfReading = () => {
       </div>
 
       <div className="flex flex-wrap items-center gap-5 mt-4 justify-center px-4">
-        {VIBES.map(v => {
+        {activeVibes.map(v => {
           const count = readingData.reduce((a, m) => a + m.books.filter(b => b.vibes.includes(v)).length, 0);
           return (
             <div key={v} className="flex items-center gap-2">
