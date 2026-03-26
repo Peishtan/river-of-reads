@@ -57,6 +57,7 @@ const RiverOfReading = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredMonth, setHoveredMonth] = useState<MonthData | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { data: readingData, riverColors, session, signOut } = useReadingData();
@@ -154,7 +155,8 @@ const RiverOfReading = () => {
 
     const container = containerRef.current;
     const width = Math.max(container.clientWidth, 1400);
-    const height = 600;
+    // 70vh height
+    const height = Math.max(Math.round(window.innerHeight * 0.7), 500);
     const margin = { top: 55, right: 130, bottom: 40, left: 60 };
 
     const svg = d3.select(svgRef.current);
@@ -169,7 +171,8 @@ const RiverOfReading = () => {
     const x = d3.scaleLinear().domain([0, series.length - 1]).range([0, innerW]);
 
     const maxBooks = d3.max(VIBES, v => d3.max(smoothedCounts[v])!) || 1;
-    const widthScale = d3.scaleLinear().domain([0, maxBooks]).range([1.5, 30]);
+    // Power scale (exponent 0.5) so small streams are still visible
+    const widthScale = d3.scalePow().exponent(0.5).domain([0, maxBooks]).range([2, 45]);
     const maxDrift = innerH * 0.38;
 
     const defs = svg.append('defs');
