@@ -544,7 +544,6 @@ const RiverOfReading = () => {
               </div>
             );
           })()}
-          )}
         </div>
       </div>
 
