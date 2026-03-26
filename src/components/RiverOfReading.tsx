@@ -216,9 +216,11 @@ const RiverOfReading = () => {
 
         const driftAmount = maxDrift * pushStrength * dir * (1 - attractorStrength);
 
-        // Meander scales up from zero at origin to full at the delta
+        // Meander: structured sine + Perlin-like noise for organic sway
         const meanderScale = originPull; // 0 at left, 1 at right
-        const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 14 * meanderScale;
+        const structuredMeander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 14;
+        const noiseDrift = seededNoise(VIBES.indexOf(vibe) + 1, i) * 10; // ±10px organic noise
+        const meander = (structuredMeander + noiseDrift) * meanderScale;
 
         return centerY + driftAmount + meander;
       });
@@ -227,7 +229,7 @@ const RiverOfReading = () => {
 
       riverPaths[vibe] = series.map((_, i) => {
         const c = smoothCenters[i];
-        const halfW = widthScale(Math.max(counts[i], 0.12));
+        const halfW = Math.max(widthScale(Math.max(counts[i], 0.12)), 2); // minimum 2px river width
         return { x: x(i), yTop: c - halfW, yBot: c + halfW, center: c };
       });
     });
