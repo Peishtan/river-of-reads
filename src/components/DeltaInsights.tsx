@@ -158,12 +158,13 @@ const DeltaInsights = () => {
 
   if (!insights) return null;
 
-  const conditionalCards = [
-    insights.showSurge && insights.surgeText && { key: 'surge', vibe: insights.surgeVibe, title: 'The Surge', text: insights.surgeText, color: riverColors[insights.surgeVibe] },
-    insights.showSeason && insights.seasonText && { key: 'season', vibe: null, title: 'The Season', text: insights.seasonText, color: 'hsl(var(--primary))' },
-    insights.showFlood && insights.floodText && { key: 'flood', vibe: insights.floodVibe, title: 'The Flood', text: insights.floodText, color: riverColors[insights.floodVibe] },
-    insights.showDrought && insights.droughtText && { key: 'drought', vibe: insights.worstDrought.vibe, title: 'The Drought', text: insights.droughtText, color: riverColors[insights.worstDrought.vibe] },
-  ].filter(Boolean) as { key: string; vibe: VibeGroup | null; title: string; text: string; color: string }[];
+  const conditionalCards = ([
+    insights.showSurge && insights.surgeText && { key: 'surge', title: 'The Surge', text: insights.surgeText, color: riverColors[insights.surgeVibe], recency: insights.surgeRecency },
+    insights.showFlood && insights.floodText && { key: 'flood', title: 'The Flood', text: insights.floodText, color: riverColors[insights.floodVibe], recency: insights.floodRecency },
+    insights.showDrought && insights.droughtText && { key: 'drought', title: 'The Drought', text: insights.droughtText, color: riverColors[insights.worstDrought.vibe], recency: insights.droughtRecency },
+    insights.showSeason && insights.seasonText && { key: 'season', title: 'The Season', text: insights.seasonText, color: 'hsl(var(--primary))', recency: insights.seasonRecency },
+  ].filter(Boolean) as { key: string; title: string; text: string; color: string; recency: number }[])
+    .sort((a, b) => a.recency - b.recency);
 
   const totalCards = 1 + conditionalCards.length;
   const gridCols = totalCards <= 2 ? 'lg:grid-cols-2' : totalCards === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
