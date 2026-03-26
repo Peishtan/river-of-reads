@@ -327,14 +327,23 @@ const RiverOfReading = () => {
       });
       layerPaths[vibe] = pts;
 
-      // ── Main fill
-      const mainArea = d3.area<LayerPoint>()
-        .x(d => d.x).y0(d => d.y0).y1(d => d.y1)
-        .curve(d3.curveBasis);
+      // ── Main fill — opacity driven by average book rating per month
+      // We slice the stream into segments so each month-span can have its own opacity
+      const ratings = avgVibeRating[vibe];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const segPts = [pts[i], pts[Math.min(i + 1, pts.length - 1)]];
+        // Map rating (1-5) to opacity (0.45-0.92)
+        const avgR = (ratings[i] + ratings[Math.min(i + 1, ratings.length - 1)]) / 2;
+        const opacity = 0.45 + (Math.min(Math.max(avgR, 1), 5) - 1) * (0.47 / 4);
 
-      riverGroup.append('path').datum(pts).attr('d', mainArea)
-        .attr('fill', currentColors[vibe])
-        .attr('opacity', 0.88);
+        const segArea = d3.area<LayerPoint>()
+          .x(d => d.x).y0(d => d.y0).y1(d => d.y1)
+          .curve(d3.curveLinear);
+
+        riverGroup.append('path').datum(segPts).attr('d', segArea)
+          .attr('fill', currentColors[vibe])
+          .attr('opacity', opacity);
+      }
 
       // ── Top edge 'ripple' stroke
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
