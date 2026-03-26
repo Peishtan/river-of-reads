@@ -834,5 +834,5 @@ export const readingData: MonthData[] = [
     b('Kook: What Surfing Taught Me About Love, Life, and Catching the Perfect Wave', ['life', 'nature'], 3, 250, 'Peter Heller'),
     b('The Spies of Shilling Lane', ['history', 'life'], 2, 250, 'Jennifer Ryan'),
     b('Breakneck: China\'s Quest to Engineer the Future', ['ideas', 'history'], 5, 250, 'Dan Wang'),
-
+  ]),
 ];
