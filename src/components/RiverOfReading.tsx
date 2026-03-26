@@ -149,18 +149,21 @@ const RiverOfReading = () => {
     fadeGrad.append('stop').attr('offset', `${fadeStart * 100}%`).attr('stop-color', 'white').attr('stop-opacity', 1);
     fadeGrad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
 
-    // Vertical edge softening — top/bottom fade
+    // Vertical edge softening — top/bottom banks fade
     const fadeVert = defs.append('linearGradient').attr('id', 'fade-vert')
       .attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
-    fadeVert.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    fadeVert.append('stop').attr('offset', '4%').attr('stop-color', 'white').attr('stop-opacity', 1);
-    fadeVert.append('stop').attr('offset', '96%').attr('stop-color', 'white').attr('stop-opacity', 1);
-    fadeVert.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
+    fadeVert.append('stop').attr('offset', '0%').attr('stop-color', 'black').attr('stop-opacity', 1);
+    fadeVert.append('stop').attr('offset', '3%').attr('stop-color', 'white').attr('stop-opacity', 1);
+    fadeVert.append('stop').attr('offset', '97%').attr('stop-color', 'white').attr('stop-opacity', 1);
+    fadeVert.append('stop').attr('offset', '100%').attr('stop-color', 'black').attr('stop-opacity', 1);
 
-    // Combined mask: right fade + vertical edge softening
+    // Combined mask using filter to multiply both gradients
     const fadeMask = defs.append('mask').attr('id', 'river-fade');
-    fadeMask.append('rect').attr('width', innerW).attr('height', innerH).attr('fill', 'url(#fade-right)');
-    fadeMask.append('rect').attr('width', innerW).attr('height', innerH).attr('fill', 'url(#fade-vert)').attr('style', 'mix-blend-mode: multiply');
+    const maskG = fadeMask.append('g');
+    maskG.append('rect').attr('width', innerW).attr('height', innerH).attr('fill', 'url(#fade-vert)');
+    // Apply right fade as a second mask layer
+    const fadeMask2 = defs.append('mask').attr('id', 'river-fade-h');
+    fadeMask2.append('rect').attr('width', innerW).attr('height', innerH).attr('fill', 'url(#fade-right)');
 
 
     /* ── D3 stack with wiggle + insideOut ─────────────────── */
