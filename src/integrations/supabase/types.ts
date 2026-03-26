@@ -24,6 +24,7 @@ export type Database = {
           rating: number | null
           summary: string | null
           title: string
+          user_id: string | null
           vibes: string[]
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           rating?: number | null
           summary?: string | null
           title: string
+          user_id?: string | null
           vibes?: string[]
         }
         Update: {
@@ -46,6 +48,7 @@ export type Database = {
           rating?: number | null
           summary?: string | null
           title?: string
+          user_id?: string | null
           vibes?: string[]
         }
         Relationships: []
@@ -56,6 +59,7 @@ export type Database = {
           created_at: string
           id: string
           updated_at: string
+          user_id: string | null
           vibe_key: string
         }
         Insert: {
@@ -63,6 +67,7 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
+          user_id?: string | null
           vibe_key: string
         }
         Update: {
@@ -70,6 +75,7 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
+          user_id?: string | null
           vibe_key?: string
         }
         Relationships: []
