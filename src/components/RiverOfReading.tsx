@@ -94,27 +94,93 @@ const RiverOfReading = () => {
     return months;
   }, [years, readingData]);
 
-  // Smoothed counts with carry-forward so rivers never fully vanish
+  // Branch lifecycle: compute per-vibe alive mask with birth/death rules
+  const vibeLifecycle = useMemo(() => {
+    const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
+    series.forEach(s => activeVibes.forEach(v => raw[v].push(s.vibeBooks[v])));
+
+    const lifecycle: Record<VibeGroup, number[]> = {} as any;
+    activeVibes.forEach(v => {
+      const counts = raw[v];
+      const mask = new Array(counts.length).fill(0);
+      let alive = false;
+      let birthIdx = -1;
+      let deathIdx = -1;
+
+      for (let i = 0; i < counts.length; i++) {
+        if (!alive) {
+          // Birth rule: 3 months with books in a 6-month window
+          const windowStart = Math.max(0, i - 5);
+          let activeInWindow = 0;
+          for (let j = windowStart; j <= i; j++) {
+            if (counts[j] > 0) activeInWindow++;
+          }
+          if (activeInWindow >= 3) {
+            alive = true;
+            birthIdx = i;
+            deathIdx = -1;
+          }
+        } else {
+          // Death rule: 6 consecutive months with 0 books
+          let consecutiveZero = 0;
+          for (let j = i; j >= Math.max(0, i - 5); j--) {
+            if (counts[j] === 0) consecutiveZero++;
+            else break;
+          }
+          if (consecutiveZero >= 6) {
+            alive = false;
+            deathIdx = i - 5; // death started 6 months ago
+          }
+        }
+        mask[i] = alive ? 1 : 0;
+      }
+
+      // Apply growth ramp on birth (0→1 over 3 months)
+      // Apply fade-out ramp on death (1→0 over 3 months)
+      const ramped = [...mask];
+
+      // Find birth/death transitions and apply ramps
+      for (let i = 1; i < ramped.length; i++) {
+        // Birth ramp: first 3 months after becoming alive
+        if (mask[i] === 1 && mask[i - 1] === 0) {
+          // Ramp up over 3 months
+          for (let r = 0; r < 3 && i + r < ramped.length; r++) {
+            if (mask[i + r] === 1) {
+              ramped[i + r] = Math.min(ramped[i + r], (r + 1) / 3);
+            }
+          }
+        }
+        // Death ramp: 3 months before dying
+        if (mask[i] === 0 && mask[i - 1] === 1) {
+          for (let r = 1; r <= 3; r++) {
+            const idx = i - r;
+            if (idx >= 0 && mask[idx] === 1) {
+              ramped[idx] = Math.min(ramped[idx], r / 3);
+            }
+          }
+        }
+      }
+
+      lifecycle[v] = ramped;
+    });
+    return lifecycle;
+  }, [series, activeVibes]);
+
+  // Smoothed counts multiplied by lifecycle mask
   const smoothedCounts = useMemo(() => {
     const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
     series.forEach(s => activeVibes.forEach(v => raw[v].push(s.vibeBooks[v])));
     const out: Record<VibeGroup, number[]> = {} as any;
     activeVibes.forEach(v => {
       const s = smooth(smooth(raw[v], 3), 2);
-      let lastSig = -1;
-      for (let i = s.length - 1; i >= 0; i--) { if (s[i] > 0.5) { lastSig = i; break; } }
-      if (lastSig >= 0) {
-        for (let i = lastSig + 1; i < s.length; i++) {
-          const monthsSince = i - lastSig;
-          // Dry up within 1 month
-          const fade = Math.max(0, 1 - monthsSince);
-          s[i] = Math.max(s[i], s[lastSig] * 0.2 * fade);
-        }
+      // Apply lifecycle mask
+      for (let i = 0; i < s.length; i++) {
+        s[i] *= vibeLifecycle[v][i];
       }
       out[v] = s;
     });
     return out;
-  }, [series]);
+  }, [series, vibeLifecycle]);
 
   // Average rating per vibe per month
   const avgVibeRating = useMemo(() => {
