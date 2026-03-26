@@ -319,7 +319,7 @@ const RiverOfReading = () => {
       
 
       // Compute points with meander applied
-      const GAP = 6; // px gap between streams
+      const GAP = 10; // px gap between streams
       const pts: LayerPoint[] = layer.map((d, i) => {
         const mx = meanderOff[i];
         const rawY0 = yScale(d[0]) + mx;
