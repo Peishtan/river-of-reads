@@ -128,18 +128,6 @@ const DeltaInsights = () => {
           <p className="text-xs text-muted-foreground leading-relaxed">{insights.droughtText}</p>
         </div>
 
-        {/* Diversity Score */}
-        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex -space-x-0.5">
-              {VIBES.slice(0, 3).map(v => (
-                <span key={v} className="w-2 h-2 rounded-full" style={{ backgroundColor: riverColors[v] }} />
-              ))}
-            </div>
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">Diversity Score</h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.diversityText}</p>
-        </div>
       </div>
     </div>
   );
