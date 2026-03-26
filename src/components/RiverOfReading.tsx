@@ -96,13 +96,17 @@ const RiverOfReading = () => {
     const out: Record<VibeGroup, number[]> = {} as any;
     activeVibes.forEach(v => {
       const s = smooth(smooth(raw[v], 3), 2);
-      let lastSig = 0;
+      let lastSig = -1;
       for (let i = s.length - 1; i >= 0; i--) { if (s[i] > 0.5) { lastSig = i; break; } }
-      const peak = d3.max(s)!;
-      const hold = peak * 0.35;
-      for (let i = lastSig + 1; i < s.length; i++) {
-        const fade = (i - lastSig) / 12;
-        s[i] = Math.max(s[i], hold * Math.max(0.3, 1 - fade * 0.5));
+      if (lastSig >= 0) {
+        const peak = d3.max(s.slice(0, lastSig + 1))!;
+        const hold = peak * 0.25;
+        for (let i = lastSig + 1; i < s.length; i++) {
+          const monthsSince = i - lastSig;
+          // Fade to near-zero over ~18 months after last significant activity
+          const fade = Math.max(0, 1 - monthsSince / 18);
+          s[i] = Math.max(s[i], hold * fade * fade);
+        }
       }
       out[v] = s;
     });
