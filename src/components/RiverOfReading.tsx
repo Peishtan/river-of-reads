@@ -67,11 +67,28 @@ const RiverOfReading = () => {
     return months;
   }, [years]);
 
+  // Double-pass smoothed counts — carry forward last known value so future months don't collapse
   const smoothedCounts = useMemo(() => {
     const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], memoir: [] };
     series.forEach(s => VIBES.forEach(v => raw[v].push(s.vibeBooks[v])));
     const out: Record<VibeGroup, number[]> = {} as any;
-    VIBES.forEach(v => { out[v] = smooth(smooth(raw[v], 3), 2); });
+    VIBES.forEach(v => {
+      const smoothed = smooth(smooth(raw[v], 3), 2);
+      // Carry forward: if a value drops to near-zero after the last real data,
+      // hold the last significant value so rivers don't collapse
+      let lastSignificant = 0;
+      for (let i = smoothed.length - 1; i >= 0; i--) {
+        if (smoothed[i] > 0.5) { lastSignificant = i; break; }
+      }
+      // From lastSignificant onward, hold a gentle fade but never below 40% of peak
+      const peakVal = d3.max(smoothed)!;
+      const holdMin = peakVal * 0.35;
+      for (let i = lastSignificant + 1; i < smoothed.length; i++) {
+        const fadeT = (i - lastSignificant) / 12; // fade over ~12 months
+        smoothed[i] = Math.max(smoothed[i], holdMin * Math.max(0.3, 1 - fadeT * 0.5));
+      }
+      out[v] = smoothed;
+    });
     return out;
   }, [series]);
 
@@ -144,25 +161,29 @@ const RiverOfReading = () => {
       const dir = DRIFT_DIR[vibe];
 
       const rawCenters = series.map((_, i) => {
-        const t = i / (series.length - 1);
+        const t = i / (series.length - 1); // 0 at left (2021), 1 at right (2026)
 
         const volume = counts[i];
         const pushStrength = volume / maxBooks;
 
-        // CONVERGENCE: exponential decay from origin — all rivers start at centerY
-        // First ~8 months: very strong pull to center
-        const originPull = Math.exp(-t * 6); // e^(-6t), ~0.05 at t=0.5
+        // CONVERGENCE at LEFT (origin): strong pull at t=0, releasing rightward
+        // e^(-6*(1-t)) is ~1 when t≈0 (left), ~0.0025 when t=1 (right)
+        const originPull = Math.exp(-(1 - t) * 6);
+        // Flip: we want pull=1 at left, pull=0 at right
+        const convergencePull = 1 - originPull; // ~1 at t=0, ~0 at t=1
 
-        // MAGNETIC CENTER: low volume = pulled to center
-        // High volume = allowed to drift
-        const gravity = (1 - pushStrength) * 0.8;
-        const attractorStrength = Math.max(originPull, gravity);
+        // MAGNETIC CENTER weakens as we go right (delta spreads)
+        // At t=0: full gravity. At t=1: only 20% gravity
+        const gravityDecay = 1 - t * 0.8; // 1.0 → 0.2
+        const gravity = (1 - pushStrength) * 0.5 * gravityDecay;
+
+        const attractorStrength = Math.max(convergencePull, gravity);
 
         const driftAmount = maxDrift * pushStrength * dir * (1 - attractorStrength);
 
-        // Organic meander — scaled by (1 - originPull) so it's zero at origin
-        const meanderScale = 1 - originPull;
-        const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 12 * meanderScale;
+        // Meander scales up from zero at origin to full at the delta
+        const meanderScale = originPull; // 0 at left, 1 at right
+        const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 14 * meanderScale;
 
         return centerY + driftAmount + meander;
       });
