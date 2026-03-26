@@ -137,6 +137,20 @@ const RiverOfReading = () => {
     dm.append('feMergeNode').attr('in', 'blur');
     dm.append('feMergeNode').attr('in', 'SourceGraphic');
 
+    // Horizontal fade-out mask for right edge (delta dissolve)
+    const fadeMask = defs.append('linearGradient')
+      .attr('id', 'fade-right')
+      .attr('x1', '0%').attr('y1', '0%')
+      .attr('x2', '100%').attr('y2', '0%');
+    fadeMask.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 1);
+    fadeMask.append('stop').attr('offset', '85%').attr('stop-color', 'white').attr('stop-opacity', 1);
+    fadeMask.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
+
+    const mask = defs.append('mask').attr('id', 'river-fade');
+    mask.append('rect')
+      .attr('width', innerW).attr('height', innerH)
+      .attr('fill', 'url(#fade-right)');
+
     // 3D cylindrical gradients — bright center, dark edges
     VIBES.forEach(vibe => {
       const lg = defs.append('linearGradient')
