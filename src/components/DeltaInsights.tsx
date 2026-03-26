@@ -3,7 +3,8 @@ import { MonthData, VibeGroup, vibeLabels, VIBES } from '@/data/readingData';
 import { useReadingData } from '@/contexts/ReadingDataContext';
 
 const DeltaInsights = () => {
-  const { data: readingData, riverColors } = useReadingData();
+  const { data: rawReadingData, riverColors } = useReadingData();
+  const readingData = useMemo(() => rawReadingData.filter(d => d.year >= 2021), [rawReadingData]);
 
   const insights = useMemo(() => {
     if (readingData.length < 2) return null;
