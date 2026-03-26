@@ -663,17 +663,32 @@ const RiverOfReading = () => {
 
       {hoveredMonth && mousePos && (() => {
         const vw = window.innerWidth;
-        const flipX = mousePos.x > vw - 280;
-        const flipY = mousePos.y < 180;
-        const tx = flipX ? 'calc(-100% - 16px)' : '16px';
-        const ty = flipY ? '16px' : 'calc(-100% - 8px)';
+        const vh = window.innerHeight;
+        const tooltipW = 260;
+        const tooltipH = 200;
+        // Clamp position so tooltip never leaves viewport
+        let left = mousePos.x + 16;
+        let top = mousePos.y - tooltipH - 8;
+        // Flip right → left if clipped
+        if (left + tooltipW > vw - 8) {
+          left = mousePos.x - tooltipW - 16;
+        }
+        // Clamp left edge
+        if (left < 8) left = 8;
+        // Flip up → down if clipped
+        if (top < 8) {
+          top = mousePos.y + 16;
+        }
+        // Clamp bottom edge
+        if (top + tooltipH > vh - 8) {
+          top = vh - tooltipH - 8;
+        }
         return (
           <div
             className="fixed z-50 pointer-events-none animate-fade-up"
             style={{
-              left: `${mousePos.x}px`,
-              top: `${mousePos.y}px`,
-              transform: `translate(${tx}, ${ty})`,
+              left: `${left}px`,
+              top: `${top}px`,
             }}
           >
             <MonthTooltip data={hoveredMonth} />
