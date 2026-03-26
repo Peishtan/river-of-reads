@@ -56,6 +56,12 @@ const RiverOfReading = () => {
 
   /* ── derived data ──────────────────────────────────────── */
 
+  // Only include 'current' vibe if any books actually use it
+  const activeVibes = useMemo(() => {
+    const hasCurrentBooks = readingData.some(m => m.books.some(b => b.vibes.includes('current')));
+    return hasCurrentBooks ? VIBES : VIBES.filter(v => v !== 'current');
+  }, [readingData]);
+
   const years = useMemo(() => {
     const yrs = [...new Set(readingData.map(d => d.year))].sort();
     return yrs.length ? yrs : [2021];
