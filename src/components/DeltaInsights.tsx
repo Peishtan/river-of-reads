@@ -111,11 +111,39 @@ const DeltaInsights = () => {
     const lowQ = quarterAvgs.reduce((best, val, i) => val < quarterAvgs[best] ? i : best, 0);
     const seasonRatio = quarterAvgs[lowQ] > 0 ? quarterAvgs[peakQ] / quarterAvgs[lowQ] : 0;
 
-    const seasonText = seasonRatio >= 1.3
+    const showSeason = seasonRatio >= 1.3;
+    const seasonText = showSeason
       ? `Your reading peaks in ${quarterNames[peakQ]} — ${quarterAvgs[peakQ].toFixed(1)} books/month vs ${quarterAvgs[lowQ].toFixed(1)} in ${quarterNames[lowQ]}.`
-      : `No strong seasonal pattern — you read steadily year-round.`;
+      : null;
 
-    return { surgeText, droughtText, showDrought, floodText, seasonText, surgeVibe, worstDrought, floodVibe, floodRatio, seasonRatio };
+    // --- THE CURRENT ---
+    // Always renders. Describes where the reader is right now.
+    const last9Books: { vibes: VibeGroup[] }[] = [];
+    for (let i = readingData.length - 1; i >= 0 && last9Books.length < 9; i--) {
+      for (let j = readingData[i].books.length - 1; j >= 0 && last9Books.length < 9; j--) {
+        last9Books.push(readingData[i].books[j]);
+      }
+    }
+
+    const currentVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
+    last9Books.forEach(b => b.vibes.forEach(v => { currentVibeCounts[v]++; }));
+    const dominantVibe = insightVibes.reduce((a, b) => currentVibeCounts[a] >= currentVibeCounts[b] ? a : b);
+    const dominantCount = currentVibeCounts[dominantVibe];
+
+    // Count active streams (appeared in last 3 months)
+    const last3Months = readingData.filter(d => {
+      const monthsAgo = (currentYear - d.year) * 12 + (currentMonth - d.month);
+      return monthsAgo >= 0 && monthsAgo <= 3;
+    });
+    const activeStreams = new Set<VibeGroup>();
+    last3Months.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { if (v !== 'current') activeStreams.add(v); })));
+
+    const totalLast9 = last9Books.length;
+    const currentText = totalLast9 > 0
+      ? `Your current runs through ${vibeLabels[dominantVibe]} — ${dominantCount} of your last ${totalLast9} books. ${activeStreams.size >= 4 ? `${activeStreams.size} streams are active right now. Your river is running wide.` : activeStreams.size >= 2 ? `${activeStreams.size} streams are active right now.` : 'A single stream carries you forward.'}`
+      : 'Your river is just beginning. Start reading to see where the current takes you.';
+
+    return { surgeText, showSurge, droughtText, showDrought, floodText, showFlood, seasonText, showSeason, currentText, surgeVibe, worstDrought, floodVibe, dominantVibe, activeStreams: activeStreams.size };
   }, [readingData]);
 
   if (!insights) return null;
