@@ -433,16 +433,25 @@ const RiverOfReading = () => {
         .attr('fill', 'transparent').attr('cursor', 'pointer')
         .on('mouseenter', () => showHover(i))
         .on('mouseleave', hideHover)
-        .on('touchstart', (event: TouchEvent) => {
-          event.preventDefault();
-          showHover(i);
-        });
+        .on('click', () => showHover(i));
     });
 
   }, [series, smoothedCounts, avgVibeRating, years, riverColors]);
 
+  // Dismiss tooltip on tap outside chart
+  useEffect(() => {
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setHoveredMonth(null);
+        setTooltipPos(null);
+      }
+    };
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center px-2 py-8 overflow-x-auto">
+    <div className="min-h-screen bg-background flex flex-col items-center px-2 py-8">
       <header className="text-center mb-6 max-w-3xl px-4">
         <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-1 font-serif">
           River of Reading
