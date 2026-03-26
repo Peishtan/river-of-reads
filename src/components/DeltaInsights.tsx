@@ -72,36 +72,6 @@ const DeltaInsights = () => {
         ? `Your "${vibeLabels[worstDrought.vibe]}" stream hasn't seen a 5-star book in ${worstDrought.months} months. Time for a high-rated classic?`
         : `All your streams are flowing with great books recently!`;
 
-    // --- DIVERSITY SCORE ---
-    const allYears = [...new Set(readingData.map(d => d.year))].sort();
-    const firstYear = allYears[0];
-    const lastYear = allYears[allYears.length - 1];
-
-    const vibeSpread = (yr: number) => {
-      const yrData = readingData.filter(d => d.year === yr);
-      const counts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
-      yrData.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { counts[v]++; })));
-      const total = Object.values(counts).reduce((a, b) => a + b, 0);
-      if (total === 0) return 0;
-      // Shannon entropy normalized
-      let entropy = 0;
-      insightVibes.forEach(v => {
-        const p = counts[v] / total;
-        if (p > 0) entropy -= p * Math.log2(p);
-      });
-      return entropy / Math.log2(insightVibes.length); // normalize to 0-1
-    };
-
-    const firstSpread = vibeSpread(firstYear);
-    const lastSpread = vibeSpread(lastYear);
-    const spreadDiff = firstSpread > 0 ? Math.round(((lastSpread - firstSpread) / firstSpread) * 100) : 0;
-
-    const diversityText = spreadDiff > 10
-      ? `Your ${lastYear} Delta is ${spreadDiff}% wider than your ${firstYear} Source. Your tastes are expanding!`
-      : spreadDiff < -10
-        ? `Your ${lastYear} Delta is ${Math.abs(spreadDiff)}% narrower than ${firstYear}. You're becoming more focused!`
-        : `Your reading diversity has stayed consistent from ${firstYear} to ${lastYear}. A balanced reader!`;
-
     // --- THE FLOOD ---
     // Find the month with volume far above baseline
     const monthCounts = readingData.map(d => ({ year: d.year, month: d.month, count: d.books.length }));
