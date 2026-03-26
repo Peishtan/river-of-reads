@@ -51,17 +51,14 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load data when session changes
+  // Load books from DB (works for both authenticated and anonymous users)
   useEffect(() => {
-    if (!session) {
-      setDataRaw(dummyData);
-      setIsCustomData(false);
-      setRiverColors({ ...defaultVibeHSL });
-      setVibeHSL({ ...defaultVibeHSL });
-      return;
-    }
-
     const loadColors = async () => {
+      if (!session) {
+        setRiverColors({ ...defaultVibeHSL });
+        setVibeHSL({ ...defaultVibeHSL });
+        return;
+      }
       try {
         const { data: settings } = await supabase
           .from('river_settings')
@@ -112,9 +109,15 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
             setDataRaw(result);
             setIsCustomData(true);
           }
+        } else {
+          // Fallback to demo data if DB is empty
+          setDataRaw(dummyData);
+          setIsCustomData(false);
         }
       } catch (err) {
         console.warn('Could not load books:', err);
+        setDataRaw(dummyData);
+        setIsCustomData(false);
       }
     };
 
