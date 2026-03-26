@@ -90,7 +90,28 @@ const DeltaInsights = () => {
       ? `${monthNames[floodMonth.month]} ${floodMonth.year} was a flood — ${floodMonth.count} books, ${floodRatio.toFixed(1)}× your average of ${avgCount.toFixed(1)}/month. Mostly "${vibeLabels[floodVibe]}".`
       : `Your reading pace is remarkably steady. No major floods detected — you're a consistent reader!`;
 
-    return { surgeText, droughtText, floodText, surgeVibe, worstDrought, floodVibe, floodRatio };
+    // --- THE TIDE ---
+    // Find seasonal pattern: which quarter consistently has the highest volume
+    const quarterNames = ['Winter (Jan–Mar)', 'Spring (Apr–Jun)', 'Summer (Jul–Sep)', 'Autumn (Oct–Dec)'];
+    const quarterCounts = [0, 0, 0, 0];
+    const quarterYears = [new Set<number>(), new Set<number>(), new Set<number>(), new Set<number>()];
+    readingData.forEach(d => {
+      const q = Math.floor(d.month / 3);
+      const count = d.books.length;
+      quarterCounts[q] += count;
+      if (count > 0) quarterYears[q].add(d.year);
+    });
+    // Normalize by number of years with data in that quarter
+    const quarterAvgs = quarterCounts.map((c, i) => quarterYears[i].size > 0 ? c / quarterYears[i].size : 0);
+    const peakQ = quarterAvgs.reduce((best, val, i) => val > quarterAvgs[best] ? i : best, 0);
+    const lowQ = quarterAvgs.reduce((best, val, i) => val < quarterAvgs[best] ? i : best, 0);
+    const tideRatio = quarterAvgs[lowQ] > 0 ? quarterAvgs[peakQ] / quarterAvgs[lowQ] : 0;
+
+    const tideText = tideRatio >= 1.3
+      ? `The tide rises highest in ${quarterNames[peakQ]} — ${quarterAvgs[peakQ].toFixed(1)} books/month vs ${quarterAvgs[lowQ].toFixed(1)} in ${quarterNames[lowQ]}.`
+      : `Your reading tide is steady year-round — no strong seasonal pattern detected.`;
+
+    return { surgeText, droughtText, floodText, tideText, surgeVibe, worstDrought, floodVibe, floodRatio, tideRatio, peakQ };
   }, [readingData]);
 
   if (!insights) return null;
@@ -100,7 +121,7 @@ const DeltaInsights = () => {
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
         Delta Insights
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* The Surge */}
         <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-2">
@@ -108,6 +129,15 @@ const DeltaInsights = () => {
             <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Surge</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">{insights.surgeText}</p>
+        </div>
+
+        {/* The Tide */}
+        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: insights.tideRatio >= 1.3 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Tide</h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">{insights.tideText}</p>
         </div>
 
         {/* The Flood */}
@@ -127,7 +157,6 @@ const DeltaInsights = () => {
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">{insights.droughtText}</p>
         </div>
-
       </div>
     </div>
   );
