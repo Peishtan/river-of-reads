@@ -161,7 +161,7 @@ const DeltaInsights = () => {
   return (
     <div className="w-full max-w-4xl mx-auto mt-10 px-4">
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
-        Delta Insights
+        River Gauge
       </h2>
       <div className={`grid grid-cols-1 md:grid-cols-2 ${gridCols} gap-4`}>
         {/* The Current — always renders */}
