@@ -345,14 +345,14 @@ const RiverOfReading = () => {
       g.append('line')
         .attr('x1', innerW + 2).attr('y1', lastPt.center)
         .attr('x2', labelX - 3).attr('y2', lastPt.center)
-        .attr('stroke', currentColors[vibe]).attr('stroke-width', 0.4).attr('opacity', 0.3);
+        .attr('stroke', rippleColors[vibe]).attr('stroke-width', 0.6).attr('opacity', 0.5);
 
       g.append('text')
-        .attr('x', labelX).attr('y', lastPt.center + 4)
-        .attr('fill', currentColors[vibe])
-        .attr('font-size', '10px').attr('font-weight', '400')
+        .attr('x', labelX).attr('y', lastPt.center + 5)
+        .attr('fill', rippleColors[vibe])
+        .attr('font-size', '12px').attr('font-weight', '500')
         .attr('font-family', "'Source Sans 3', sans-serif")
-        .attr('opacity', 0.7)
+        .attr('opacity', 0.9)
         .text(vibeLabels[vibe]);
     });
 
