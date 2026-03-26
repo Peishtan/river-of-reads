@@ -37,10 +37,11 @@
     --radius: 0.5rem;
 
     /* Vibe group colors */
-    --vibe-escapist: 158 50% 40%;
-    --vibe-ideas: 170 55% 32%;
-    --vibe-nature: 176 50% 42%;
-    --vibe-history: 200 55% 52%;
+    --vibe-escapist: 195 60% 50%;
+    --vibe-ideas: 210 45% 40%;
+    --vibe-nature: 160 35% 45%;
+    --vibe-history: 180 40% 35%;
+    --vibe-memoir: 220 35% 55%;
 
     /* Gold for 5-star */
     --gold: 43 85% 45%;
