@@ -60,7 +60,7 @@ Authenticated users have their books and color preferences saved to the backend 
 src/
 ├── components/
 │   ├── RiverOfReading.tsx    # Main D3 visualization
-│   ├── DeltaInsights.tsx     # Summary stats at the river's end
+│   ├── DeltaInsights.tsx     # River Gauge insight cards
 │   ├── MonthTooltip.tsx      # Hover tooltip for monthly data
 │   ├── RiverSettings.tsx     # Color customization panel
 │   ├── StarRating.tsx        # Star display component
