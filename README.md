@@ -14,11 +14,11 @@ The core visualization is a horizontal stacked-area chart built with **D3.js**. 
 
 | Vibe | Label | What it captures |
 |------|-------|-----------------|
-| `escapist` | The Escape | Adventure, mystery, thriller, dystopian fiction |
-| `ideas` | The Lab | Business, technology, science, psychology |
-| `nature` | The Wild | Nature writing, travel |
-| `history` | The World | History, culture, politics, memoir |
-| `life` | The Hearth | Literary fiction, reflective, warm, hopeful |
+| `escapist` | Escapist & Adventure | Adventure, mystery, thriller, dystopian fiction |
+| `ideas` | Ideas & Technology | Business, technology, science, psychology |
+| `nature` | Nature & Ocean | Nature writing, travel |
+| `history` | History & World | History, culture, politics, memoir |
+| `life` | Life & Reflective | Literary fiction, reflective, warm, hopeful |
 | `current` | The Main Current | The base flow — books that don't fit a specific vibe |
 
 ### Branch Lifecycle
