@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { MonthData, VibeGroup, readingData as dummyData, defaultVibeHSL, setVibeHSL, VIBES } from '@/data/readingData';
+import { MonthData, VibeGroup, readingData as dummyData, defaultVibeHSL, setVibeHSL, VIBES, TAG_TO_VIBE } from '@/data/readingData';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 
@@ -94,7 +94,16 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
             monthMap.get(key)!.push({
               title: b.title,
               author: b.author || '',
-              vibes: (b.vibes && b.vibes.length > 0 ? b.vibes : ['current']) as VibeGroup[],
+              vibes: (() => {
+                const rawTags = b.vibes && b.vibes.length > 0 ? b.vibes : [];
+                const mapped = new Set<VibeGroup>();
+                for (const tag of rawTags) {
+                  const vibe = TAG_TO_VIBE[tag.toLowerCase().trim()];
+                  if (vibe) mapped.add(vibe);
+                  else if (VIBES.includes(tag as VibeGroup)) mapped.add(tag as VibeGroup);
+                }
+                return mapped.size > 0 ? Array.from(mapped) : ['current'] as VibeGroup[];
+              })(),
               rating: b.rating || 3,
               pages: 250,
             });
