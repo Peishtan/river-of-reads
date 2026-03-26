@@ -57,7 +57,7 @@ const RiverOfReading = () => {
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const { data: readingData, riverColors } = useReadingData();
+  const { data: readingData, riverColors, session, signOut } = useReadingData();
 
   const years = useMemo(() => {
     const yrs = [...new Set(readingData.map(d => d.year))].sort();
@@ -367,54 +367,79 @@ const RiverOfReading = () => {
         .text(vibeLabels[vibe]);
     });
 
-    // Hover
+    // Helper: find nearest month with data
+    const findNearestData = (idx: number): { data: MonthData; idx: number } | null => {
+      if (series[idx]?.data) return { data: series[idx].data!, idx };
+      // Search outward ±3 months
+      for (let d = 1; d <= 3; d++) {
+        if (idx - d >= 0 && series[idx - d]?.data) return { data: series[idx - d].data!, idx: idx - d };
+        if (idx + d < series.length && series[idx + d]?.data) return { data: series[idx + d].data!, idx: idx + d };
+      }
+      return null;
+    };
+
+    const showHover = (i: number) => {
+      const nearest = findNearestData(i);
+      if (nearest) {
+        setHoveredMonth(nearest.data);
+        const showIdx = nearest.idx;
+        const topmost = d3.min(VIBES, v => riverPaths[v][showIdx].yTop)!;
+        setTooltipPos({
+          x: ((margin.left + x(showIdx)) / width) * 100,
+          y: ((margin.top + topmost - 10) / height) * 100,
+        });
+      }
+
+      g.selectAll('.hover-el').remove();
+
+      VIBES.forEach(vibe => {
+        if (smoothedCounts[vibe][i] < 0.3) return;
+        const c = riverPaths[vibe][i].center;
+
+        g.append('circle').attr('class', 'hover-el')
+          .attr('cx', x(i)).attr('cy', c).attr('r', 7)
+          .attr('fill', 'none')
+          .attr('stroke', currentBright[vibe])
+          .attr('stroke-width', 1.5).attr('opacity', 0.5)
+          .attr('filter', 'url(#dot-glow)');
+
+        g.append('circle').attr('class', 'hover-el')
+          .attr('cx', x(i)).attr('cy', c).attr('r', 3)
+          .attr('fill', currentBright[vibe]).attr('opacity', 0.9);
+
+        g.append('line').attr('class', 'hover-el')
+          .attr('x1', x(i)).attr('y1', centerY)
+          .attr('x2', x(i)).attr('y2', c)
+          .attr('stroke', currentColors[vibe])
+          .attr('stroke-width', 0.5).attr('opacity', 0.12)
+          .attr('stroke-dasharray', '2 4');
+      });
+    };
+
+    const hideHover = () => {
+      setHoveredMonth(null);
+      setTooltipPos(null);
+      g.selectAll('.hover-el').remove();
+    };
+
+    // Hover hitboxes with both mouse and touch support
     const hitboxes = g.append('g');
     const colW = innerW / series.length;
 
-    series.forEach((s, i) => {
+    series.forEach((_, i) => {
       hitboxes.append('rect')
         .attr('x', x(i) - colW / 2).attr('y', 0)
         .attr('width', colW).attr('height', innerH)
         .attr('fill', 'transparent').attr('cursor', 'pointer')
-        .on('mouseenter', () => {
-          if (s.data) {
-            setHoveredMonth(s.data);
-            const topmost = d3.min(VIBES, v => riverPaths[v][i].yTop)!;
-            setTooltipPos({
-              x: ((margin.left + x(i)) / width) * 100,
-              y: ((margin.top + topmost - 10) / height) * 100,
-            });
-          }
-
-          g.selectAll('.hover-el').remove();
-
-          VIBES.forEach(vibe => {
-            if (smoothedCounts[vibe][i] < 0.3) return;
-            const c = riverPaths[vibe][i].center;
-
-            g.append('circle').attr('class', 'hover-el')
-              .attr('cx', x(i)).attr('cy', c).attr('r', 7)
-              .attr('fill', 'none')
-              .attr('stroke', currentBright[vibe])
-              .attr('stroke-width', 1.5).attr('opacity', 0.5)
-              .attr('filter', 'url(#dot-glow)');
-
-            g.append('circle').attr('class', 'hover-el')
-              .attr('cx', x(i)).attr('cy', c).attr('r', 3)
-              .attr('fill', currentBright[vibe]).attr('opacity', 0.9);
-
-            g.append('line').attr('class', 'hover-el')
-              .attr('x1', x(i)).attr('y1', centerY)
-              .attr('x2', x(i)).attr('y2', c)
-              .attr('stroke', currentColors[vibe])
-              .attr('stroke-width', 0.5).attr('opacity', 0.12)
-              .attr('stroke-dasharray', '2 4');
-          });
+        .on('mouseenter', () => showHover(i))
+        .on('mouseleave', hideHover)
+        .on('touchstart', (event: TouchEvent) => {
+          event.preventDefault();
+          showHover(i);
         })
-        .on('mouseleave', () => {
-          setHoveredMonth(null);
-          setTooltipPos(null);
-          g.selectAll('.hover-el').remove();
+        .on('touchend', () => {
+          // Delay hide so user can see tooltip
+          setTimeout(hideHover, 2000);
         });
     });
 
@@ -439,6 +464,14 @@ const RiverOfReading = () => {
           >
             ⚙ River Settings
           </button>
+          {session && (
+            <button
+              onClick={signOut}
+              className="text-xs text-muted-foreground/50 hover:text-destructive transition-colors underline underline-offset-4"
+            >
+              Sign out
+            </button>
+          )}
         </div>
       </header>
 

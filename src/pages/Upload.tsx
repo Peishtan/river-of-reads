@@ -92,8 +92,11 @@ const UploadPage = () => {
     setSaving(true);
 
     try {
-      // Clear existing books
-      await supabase.from('books').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error('Not authenticated');
+
+      // Clear existing books for this user
+      await supabase.from('books').delete().eq('user_id', userId);
 
       const parsed = parseMappedCSV(rows, mapping as ColumnMapping);
       // Batch insert
@@ -105,6 +108,7 @@ const UploadPage = () => {
           date_read: b.dateRead.toISOString().split('T')[0],
           rating: b.rating,
           vibes: b.vibes,
+          user_id: userId,
         }));
         const { error: insertError } = await supabase.from('books').insert(batch);
         if (insertError) throw insertError;
