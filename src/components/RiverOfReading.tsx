@@ -443,15 +443,18 @@ const RiverOfReading = () => {
       return null;
     };
 
-    const showHover = (i: number) => {
+    const showHover = (i: number, event?: MouseEvent) => {
       const nearest = findNearestData(i);
       if (nearest) {
         setHoveredMonth(nearest.data);
-        const showIdx = nearest.idx;
-        const topmost = d3.min(VIBES, v => riverPaths[v][showIdx].yTop)!;
-        setTooltipPos({
-          x: ((margin.left + x(showIdx)) / width) * 100,
-          y: ((margin.top + topmost - 10) / height) * 100,
+      }
+
+      // Pin tooltip to mouse position relative to container
+      if (event && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setMousePos({
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
         });
       }
 
@@ -483,7 +486,7 @@ const RiverOfReading = () => {
 
     const hideHover = () => {
       setHoveredMonth(null);
-      setTooltipPos(null);
+      setMousePos(null);
       g.selectAll('.hover-el').remove();
     };
 
@@ -496,9 +499,15 @@ const RiverOfReading = () => {
         .attr('x', x(i) - colW / 2).attr('y', 0)
         .attr('width', colW).attr('height', innerH)
         .attr('fill', 'transparent').attr('cursor', 'pointer')
-        .on('mouseenter', () => showHover(i))
+        .on('mouseenter', (event: MouseEvent) => showHover(i, event))
+        .on('mousemove', (event: MouseEvent) => {
+          if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            setMousePos({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+          }
+        })
         .on('mouseleave', hideHover)
-        .on('click', () => showHover(i));
+        .on('click', (event: MouseEvent) => showHover(i, event));
     });
 
   }, [series, smoothedCounts, avgVibeRating, years, riverColors, yearlyFocus]);
