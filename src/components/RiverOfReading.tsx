@@ -401,6 +401,9 @@ const RiverOfReading = () => {
         <p className="text-sm text-muted-foreground font-light tracking-wide font-sans">
           A braided river of taste — 2021 to present · tributaries branch when genres surge · hover to explore
         </p>
+        <a href="/upload" className="inline-block mt-2 text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4">
+          Import your Goodreads data →
+        </a>
       </header>
 
       <div ref={containerRef} className="relative w-full max-w-[1800px]" style={{ minWidth: 1200 }}>
