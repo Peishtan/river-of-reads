@@ -463,9 +463,10 @@ const RiverOfReading = () => {
       const ratings = avgVibeRating[vibe];
       for (let i = 0; i < pts.length - 1; i++) {
         const segPts = [pts[i], pts[Math.min(i + 1, pts.length - 1)]];
-        // Map rating (1-5) to opacity (0.45-0.92)
+        // Map rating (1-5) to opacity (0.45-0.92), but 'current' is more translucent
         const avgR = (ratings[i] + ratings[Math.min(i + 1, ratings.length - 1)]) / 2;
-        const opacity = 0.45 + (Math.min(Math.max(avgR, 1), 5) - 1) * (0.47 / 4);
+        const baseOpacity = 0.45 + (Math.min(Math.max(avgR, 1), 5) - 1) * (0.47 / 4);
+        const opacity = vibe === 'current' ? baseOpacity * 0.45 : baseOpacity;
 
         const segArea = d3.area<LayerPoint>()
           .x(d => d.x).y0(d => d.y0).y1(d => d.y1)
