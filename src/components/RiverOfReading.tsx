@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import {
   readingData, MonthData, VibeGroup, vibeLabels, vibeHSL,
-  totalPages, getYears,
+  getYears,
 } from '@/data/readingData';
 import MonthTooltip from './MonthTooltip';
 
@@ -16,7 +16,6 @@ const RiverOfReading = () => {
 
   const years = useMemo(() => getYears(), []);
 
-  // Build continuous monthly series — value = number of BOOKS (not pages)
   const series = useMemo(() => {
     const startYear = years[0];
     const endYear = years[years.length - 1];
@@ -40,14 +39,12 @@ const RiverOfReading = () => {
     return months;
   }, [years]);
 
-  // D3 stack with silhouette offset
   const stacked = useMemo(() => {
     const stack = d3.stack<typeof series[0], VibeGroup>()
       .keys(VIBES)
       .value((d, key) => d.vibeBooks[key])
       .offset(d3.stackOffsetWiggle)
       .order(d3.stackOrderInsideOut);
-
     return stack(series);
   }, [series]);
 
@@ -56,8 +53,10 @@ const RiverOfReading = () => {
 
     const container = containerRef.current;
     const width = Math.max(container.clientWidth, 1000);
-    const height = 520;
-    const margin = { top: 70, right: 130, bottom: 50, left: 50 };
+    const height = 560;
+    // 15% vertical padding so river can meander
+    const vPad = Math.round(height * 0.15);
+    const margin = { top: 60 + vPad, right: 130, bottom: 40 + vPad, left: 50 };
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
@@ -68,79 +67,76 @@ const RiverOfReading = () => {
 
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Scales
     const x = d3.scaleLinear()
       .domain([0, series.length - 1])
       .range([0, innerW]);
 
-    const yExtent = [
-      d3.min(stacked, layer => d3.min(layer, d => d[0]))!,
-      d3.max(stacked, layer => d3.max(layer, d => d[1]))!,
-    ];
-    const y = d3.scaleLinear().domain(yExtent).range([innerH, 0]);
+    const yMin = d3.min(stacked, layer => d3.min(layer, d => d[0]))!;
+    const yMax = d3.max(stacked, layer => d3.max(layer, d => d[1]))!;
+    const y = d3.scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
 
-    // Defs
     const defs = svg.append('defs');
 
-    // Soft glow filter
-    const filter = defs.append('filter').attr('id', 'stream-glow');
-    filter.append('feGaussianBlur').attr('stdDeviation', '6').attr('result', 'blur');
-    const merge = filter.append('feMerge');
-    merge.append('feMergeNode').attr('in', 'blur');
-    merge.append('feMergeNode').attr('in', 'SourceGraphic');
+    // Soft outer glow
+    const filter = defs.append('filter').attr('id', 'stream-glow')
+      .attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%');
+    filter.append('feGaussianBlur').attr('stdDeviation', '8').attr('result', 'blur');
+    const feMerge = filter.append('feMerge');
+    feMerge.append('feMergeNode').attr('in', 'blur');
+    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-    // Gradients
+    // Gradients — watery, semi-transparent
     VIBES.forEach(vibe => {
       const lg = defs.append('linearGradient')
         .attr('id', `grad-${vibe}`)
         .attr('x1', '0%').attr('y1', '0%')
         .attr('x2', '100%').attr('y2', '0%');
-      lg.append('stop').attr('offset', '0%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.15);
-      lg.append('stop').attr('offset', '25%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.65);
-      lg.append('stop').attr('offset', '75%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.65);
-      lg.append('stop').attr('offset', '100%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.15);
+      lg.append('stop').attr('offset', '0%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.12);
+      lg.append('stop').attr('offset', '15%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.7);
+      lg.append('stop').attr('offset', '85%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.7);
+      lg.append('stop').attr('offset', '100%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.12);
     });
 
-    // Area generator with smooth curves
+    // curveBasis area generator
     const area = d3.area<d3.SeriesPoint<typeof series[0]>>()
       .x((_, i) => x(i))
       .y0(d => y(d[0]))
       .y1(d => y(d[1]))
       .curve(d3.curveBasis);
 
-    // Year grid lines — very faint dashed
+    // Year markers — barely visible
     const startYear = years[0];
     years.forEach(yr => {
       const mi = (yr - startYear) * 12;
       if (mi >= 0 && mi < series.length) {
         g.append('line')
-          .attr('x1', x(mi)).attr('y1', -10)
-          .attr('x2', x(mi)).attr('y2', innerH + 10)
-          .attr('stroke', 'hsl(200, 6%, 18%)')
+          .attr('x1', x(mi)).attr('y1', -vPad)
+          .attr('x2', x(mi)).attr('y2', innerH + vPad)
+          .attr('stroke', 'hsl(200, 5%, 16%)')
           .attr('stroke-width', 0.3)
-          .attr('stroke-dasharray', '2 10');
+          .attr('stroke-dasharray', '1 12');
 
         g.append('text')
-          .attr('x', x(mi)).attr('y', -18)
+          .attr('x', x(mi)).attr('y', -vPad + 14)
           .attr('text-anchor', 'middle')
-          .attr('fill', 'hsl(200, 8%, 40%)')
-          .attr('font-size', '13px')
-          .attr('font-weight', '600')
+          .attr('fill', 'hsl(200, 6%, 32%)')
+          .attr('font-size', '12px')
+          .attr('font-weight', '500')
           .attr('font-family', "'Source Sans 3', sans-serif")
           .text(yr);
       }
     });
 
-    // Draw streams
+    // Draw streams — glow + fill + soft white separator
     stacked.forEach((layer, li) => {
       const vibe = VIBES[li];
 
-      // Glow shadow
+      // Glow under-layer
       g.append('path')
         .datum(layer)
         .attr('d', area)
         .attr('fill', vibeHSL[vibe])
-        .attr('opacity', 0.1)
+        .attr('opacity', 0.08)
         .attr('filter', 'url(#stream-glow)');
 
       // Main fill
@@ -150,7 +146,7 @@ const RiverOfReading = () => {
         .attr('fill', `url(#grad-${vibe})`)
         .attr('opacity', 0.8);
 
-      // Separator stroke between layers — subtle 1.5px
+      // Semi-transparent white separator strokes
       const lineGen = (accessor: (d: d3.SeriesPoint<typeof series[0]>) => number) =>
         d3.line<d3.SeriesPoint<typeof series[0]>>()
           .x((_, i) => x(i))
@@ -161,35 +157,18 @@ const RiverOfReading = () => {
         .datum(layer)
         .attr('d', lineGen(d => y(d[1])))
         .attr('fill', 'none')
-        .attr('stroke', 'hsl(200, 10%, 10%)')
-        .attr('stroke-width', 1.5)
-        .attr('opacity', 0.6);
+        .attr('stroke', 'hsla(0, 0%, 100%, 0.1)')
+        .attr('stroke-width', 1.5);
 
       g.append('path')
         .datum(layer)
         .attr('d', lineGen(d => y(d[0])))
         .attr('fill', 'none')
-        .attr('stroke', 'hsl(200, 10%, 10%)')
-        .attr('stroke-width', 1.5)
-        .attr('opacity', 0.6);
+        .attr('stroke', 'hsla(0, 0%, 100%, 0.1)')
+        .attr('stroke-width', 1.5);
     });
 
-    // 5-star gold markers
-    stacked.forEach((layer, li) => {
-      const vibe = VIBES[li];
-      layer.forEach((pt, i) => {
-        const md = series[i].data;
-        if (!md) return;
-        const fiveStars = md.books.filter(b => b.vibe === vibe && b.rating === 5);
-        if (fiveStars.length === 0) return;
-        const midY = (y(pt[0]) + y(pt[1])) / 2;
-        g.append('circle')
-          .attr('cx', x(i)).attr('cy', midY).attr('r', 2.5)
-          .attr('fill', 'hsl(43, 90%, 58%)')
-          .attr('opacity', 0.5)
-          .attr('class', `star-marker star-${i}`);
-      });
-    });
+    // NO gold markers in default view — only on hover
 
     // Right-side vibe labels
     const lastIdx = series.length - 1;
@@ -203,8 +182,8 @@ const RiverOfReading = () => {
         .attr('x1', innerW + 3).attr('y1', midY)
         .attr('x2', labelX - 4).attr('y2', midY)
         .attr('stroke', vibeHSL[vibe])
-        .attr('stroke-width', 0.8)
-        .attr('opacity', 0.4);
+        .attr('stroke-width', 0.6)
+        .attr('opacity', 0.35);
 
       g.append('text')
         .attr('x', labelX).attr('y', midY + 4)
@@ -212,6 +191,7 @@ const RiverOfReading = () => {
         .attr('font-size', '10px')
         .attr('font-weight', '600')
         .attr('font-family', "'Source Sans 3', sans-serif")
+        .attr('opacity', 0.8)
         .text(vibeLabels[vibe]);
     });
 
@@ -221,12 +201,12 @@ const RiverOfReading = () => {
       const mi = (yr - startYear) * 12 + 6;
       if (mi < series.length) {
         g.append('text')
-          .attr('x', x(mi)).attr('y', innerH + 28)
+          .attr('x', x(mi)).attr('y', innerH + vPad - 6)
           .attr('text-anchor', 'middle')
-          .attr('fill', 'hsl(200, 8%, 35%)')
+          .attr('fill', 'hsl(200, 6%, 30%)')
           .attr('font-size', '10px')
           .attr('font-family', "'Source Sans 3', sans-serif")
-          .attr('opacity', 0.5)
+          .attr('opacity', 0.4)
           .text(`${count} books`);
       }
     });
@@ -238,9 +218,9 @@ const RiverOfReading = () => {
     series.forEach((s, i) => {
       const hitbox = hitboxes.append('rect')
         .attr('x', x(i) - colW / 2)
-        .attr('y', -10)
+        .attr('y', -vPad)
         .attr('width', colW)
-        .attr('height', innerH + 20)
+        .attr('height', innerH + vPad * 2)
         .attr('fill', 'transparent')
         .attr('cursor', 'pointer');
 
@@ -248,39 +228,52 @@ const RiverOfReading = () => {
         if (s.data) {
           setHoveredMonth(s.data);
           const px = margin.left + x(i);
-          const py = margin.top - 10;
+          const py = margin.top - vPad;
           setTooltipPos({ x: (px / width) * 100, y: (py / height) * 100 });
         }
 
-        // Hover line
+        // Faint hover line
         g.selectAll('.hover-line').remove();
         g.append('line')
           .attr('class', 'hover-line')
-          .attr('x1', x(i)).attr('y1', -5)
-          .attr('x2', x(i)).attr('y2', innerH + 5)
-          .attr('stroke', 'hsl(180, 10%, 70%)')
-          .attr('stroke-width', 0.8)
-          .attr('opacity', 0.15)
-          .attr('stroke-dasharray', '3 3');
+          .attr('x1', x(i)).attr('y1', -vPad)
+          .attr('x2', x(i)).attr('y2', innerH + vPad)
+          .attr('stroke', 'hsla(0, 0%, 100%, 0.08)')
+          .attr('stroke-width', 1);
 
-        // Hover dots
+        // Show gold dots ONLY on hover for 5-star books
         g.selectAll('.hover-dot').remove();
         stacked.forEach((layer, li) => {
+          const vibe = VIBES[li];
           const pt = layer[i];
           const thickness = y(pt[0]) - y(pt[1]);
           if (thickness < 2) return;
           const midY = (y(pt[0]) + y(pt[1])) / 2;
+
+          // Stream dot
           g.append('circle')
             .attr('class', 'hover-dot')
             .attr('cx', x(i)).attr('cy', midY)
-            .attr('r', 3)
-            .attr('fill', vibeHSL[VIBES[li]])
-            .attr('stroke', 'hsl(180, 10%, 88%)')
-            .attr('stroke-width', 0.5);
-        });
+            .attr('r', 3.5)
+            .attr('fill', vibeHSL[vibe])
+            .attr('stroke', 'hsla(0, 0%, 100%, 0.3)')
+            .attr('stroke-width', 0.8);
 
-        // Pulse 5-star markers
-        g.selectAll(`.star-${i}`).attr('opacity', 1).attr('r', 5);
+          // Gold 5-star markers on hover only
+          if (s.data) {
+            const fiveStars = s.data.books.filter(b => b.vibe === vibe && b.rating === 5);
+            if (fiveStars.length > 0) {
+              g.append('circle')
+                .attr('class', 'hover-dot')
+                .attr('cx', x(i)).attr('cy', midY)
+                .attr('r', 5)
+                .attr('fill', 'none')
+                .attr('stroke', 'hsl(43, 90%, 58%)')
+                .attr('stroke-width', 1.5)
+                .attr('opacity', 0.8);
+            }
+          }
+        });
       });
 
       hitbox.on('mouseleave', () => {
@@ -288,7 +281,6 @@ const RiverOfReading = () => {
         setTooltipPos(null);
         g.selectAll('.hover-line').remove();
         g.selectAll('.hover-dot').remove();
-        g.selectAll(`.star-${i}`).attr('opacity', 0.5).attr('r', 2.5);
       });
     });
 
@@ -329,10 +321,7 @@ const RiverOfReading = () => {
             <span className="text-xs text-muted-foreground">{vibeLabels[v]}</span>
           </div>
         ))}
-        <div className="flex items-center gap-2 border-l border-border pl-4">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'hsl(43, 90%, 58%)' }} />
-          <span className="text-xs text-muted-foreground">5★ pulse on hover</span>
-        </div>
+        <span className="text-xs text-muted-foreground italic border-l border-border pl-4">hover to reveal 5★ markers</span>
       </div>
     </div>
   );
