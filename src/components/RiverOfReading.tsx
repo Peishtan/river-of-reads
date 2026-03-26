@@ -457,7 +457,7 @@ const RiverOfReading = () => {
           River of Reading
         </h1>
         <p className="text-sm text-muted-foreground font-light tracking-wide font-sans">
-          A braided river of taste — tributaries branch when genres surge · hover to explore
+          Tributaries emerge when genres surge · hover to explore
         </p>
         <div className="flex items-center justify-center gap-4 mt-2">
           {session && (
