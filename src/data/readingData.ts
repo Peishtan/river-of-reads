@@ -11,11 +11,11 @@ export const vibeLabels: Record<VibeGroup, string> = {
 };
 
 export const defaultVibeHSL: Record<VibeGroup, string> = {
-  escapist: 'hsl(30, 65%, 60%)',
-  ideas:    'hsl(55, 55%, 72%)',
-  nature:   'hsl(160, 50%, 45%)',
-  history:  'hsl(185, 55%, 40%)',
-  life:     'hsl(225, 50%, 58%)',
+  nature:   'hsl(175, 25%, 42%)',   // The Wild — Muted Teal
+  history:  'hsl(220, 35%, 30%)',   // The World — Deep Navy
+  ideas:    'hsl(215, 18%, 55%)',   // The Lab — Slate Blue
+  escapist: 'hsl(18, 45%, 52%)',    // The Escape — Terracotta
+  life:     'hsl(130, 15%, 52%)',   // The Hearth — Sage Green
 };
 
 // Kept as mutable reference that can be overridden by river settings

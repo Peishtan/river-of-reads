@@ -11,18 +11,18 @@ import DeltaInsights from './DeltaInsights';
 /* ── helpers ─────────────────────────────────────────────── */
 
 const seededNoise = (seed: number, i: number): number => (
-  Math.sin(i * 0.137 + seed * 7.31) * 0.4 +
-  Math.sin(i * 0.071 + seed * 13.7) * 0.3 +
-  Math.sin(i * 0.213 + seed * 3.19) * 0.2 +
-  Math.sin(i * 0.043 + seed * 19.1) * 0.1
+  Math.sin(i * 0.08 + seed * 7.31) * 0.4 +
+  Math.sin(i * 0.04 + seed * 13.7) * 0.3 +
+  Math.sin(i * 0.12 + seed * 3.19) * 0.2 +
+  Math.sin(i * 0.025 + seed * 19.1) * 0.1
 );
 
 const MEANDER_CFG: Record<VibeGroup, { f1: number; f2: number; a1: number; a2: number; p: number }> = {
-  escapist: { f1: 0.065, f2: 0.11, a1: 1, a2: 0.4, p: 0 },
-  ideas:    { f1: 0.05,  f2: 0.09, a1: 0.8, a2: 0.35, p: 1.4 },
-  nature:   { f1: 0.045, f2: 0.08, a1: 0.9, a2: 0.5, p: 2.9 },
-  history:  { f1: 0.055, f2: 0.10, a1: 0.7, a2: 0.3, p: 4.2 },
-  life:     { f1: 0.07,  f2: 0.12, a1: 0.85, a2: 0.45, p: 5.6 },
+  escapist: { f1: 0.035, f2: 0.06, a1: 1, a2: 0.4, p: 0 },
+  ideas:    { f1: 0.03,  f2: 0.05, a1: 0.8, a2: 0.35, p: 1.4 },
+  nature:   { f1: 0.025, f2: 0.045, a1: 0.9, a2: 0.5, p: 2.9 },
+  history:  { f1: 0.032, f2: 0.055, a1: 0.7, a2: 0.3, p: 4.2 },
+  life:     { f1: 0.038, f2: 0.065, a1: 0.85, a2: 0.45, p: 5.6 },
 };
 
 const smooth = (arr: number[], radius = 3): number[] =>
@@ -36,20 +36,10 @@ const smooth = (arr: number[], radius = 3): number[] =>
     return sum / wt;
   });
 
-function saturateHSL(hsl: string, extraS = 15, extraL = 0): string {
+function lightenHSL(hsl: string, amount = 12): string {
   const m = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
   if (!m) return hsl;
-  return `hsl(${m[1]}, ${Math.min(100, parseInt(m[2]) + extraS)}%, ${Math.min(100, parseInt(m[3]) + extraL)}%)`;
-}
-
-function brightenHSL(hsl: string): string {
-  return saturateHSL(hsl, 10, 13);
-}
-
-function parseHSL(hsl: string): [number, number, number] | null {
-  const m = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-  if (!m) return null;
-  return [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])];
+  return `hsl(${m[1]}, ${Math.max(0, parseInt(m[2]) - 5)}%, ${Math.min(95, parseInt(m[3]) + amount)}%)`;
 }
 
 /* ── component ───────────────────────────────────────────── */
@@ -129,12 +119,10 @@ const RiverOfReading = () => {
     if (!svgRef.current || !containerRef.current) return;
 
     const currentColors: Record<VibeGroup, string> = {} as any;
-    const currentBright: Record<VibeGroup, string> = {} as any;
-    const currentSaturated: Record<VibeGroup, string> = {} as any;
+    const rippleColors: Record<VibeGroup, string> = {} as any;
     VIBES.forEach(v => {
-      currentColors[v] = saturateHSL(riverColors[v], 12, 0);   // bump saturation
-      currentBright[v] = brightenHSL(currentColors[v]);
-      currentSaturated[v] = saturateHSL(riverColors[v], 25, 5); // extra punch
+      currentColors[v] = riverColors[v];
+      rippleColors[v] = lightenHSL(riverColors[v], 15);
     });
 
     const container = containerRef.current;
@@ -153,49 +141,6 @@ const RiverOfReading = () => {
     const xScale = d3.scaleLinear().domain([0, series.length - 1]).range([0, innerW]);
     const defs = svg.append('defs');
 
-    /* ── SVG filters ─────────────────────────────────────── */
-
-    // Outer glow per vibe (faint drop-shadow so paths pop off black bg)
-    VIBES.forEach(vibe => {
-      const hsl = parseHSL(currentSaturated[vibe]);
-      const f = defs.append('filter').attr('id', `outer-glow-${vibe}`)
-        .attr('x', '-40%').attr('y', '-40%').attr('width', '180%').attr('height', '180%');
-      f.append('feGaussianBlur').attr('stdDeviation', '6').attr('in', 'SourceGraphic').attr('result', 'blur');
-      if (hsl) {
-        f.append('feFlood')
-          .attr('flood-color', `hsl(${hsl[0]}, ${Math.min(100, hsl[1] + 20)}%, ${Math.min(90, hsl[2] + 10)}%)`)
-          .attr('flood-opacity', '0.35').attr('result', 'color');
-        f.append('feComposite').attr('in', 'color').attr('in2', 'blur').attr('operator', 'in').attr('result', 'glow');
-      }
-      const merge = f.append('feMerge');
-      merge.append('feMergeNode').attr('in', hsl ? 'glow' : 'blur');
-      merge.append('feMergeNode').attr('in', 'SourceGraphic');
-    });
-
-    // Loved-glow for high-rated segments
-    VIBES.forEach(vibe => {
-      const hsl = parseHSL(currentSaturated[vibe]);
-      const f = defs.append('filter').attr('id', `loved-glow-${vibe}`)
-        .attr('x', '-50%').attr('y', '-50%').attr('width', '200%').attr('height', '200%');
-      f.append('feGaussianBlur').attr('stdDeviation', '10').attr('result', 'blur');
-      if (hsl) {
-        f.append('feFlood')
-          .attr('flood-color', `hsl(${hsl[0]}, ${Math.min(100, hsl[1] + 30)}%, ${Math.min(95, hsl[2] + 18)}%)`)
-          .attr('flood-opacity', '0.5').attr('result', 'color');
-        f.append('feComposite').attr('in', 'color').attr('in2', 'blur').attr('operator', 'in').attr('result', 'glow');
-      }
-      const merge = f.append('feMerge');
-      merge.append('feMergeNode').attr('in', hsl ? 'glow' : 'blur');
-      merge.append('feMergeNode').attr('in', 'SourceGraphic');
-    });
-
-    const dotGlow = defs.append('filter').attr('id', 'dot-glow')
-      .attr('x', '-100%').attr('y', '-100%').attr('width', '300%').attr('height', '300%');
-    dotGlow.append('feGaussianBlur').attr('stdDeviation', '5').attr('result', 'blur');
-    const dm = dotGlow.append('feMerge');
-    dm.append('feMergeNode').attr('in', 'blur');
-    dm.append('feMergeNode').attr('in', 'SourceGraphic');
-
     // Right-edge feathered fade
     const fadeStart = Math.max(0, (innerW - 60) / innerW);
     const fadeGrad = defs.append('linearGradient').attr('id', 'fade-right')
@@ -206,17 +151,6 @@ const RiverOfReading = () => {
     const fadeMask = defs.append('mask').attr('id', 'river-fade');
     fadeMask.append('rect').attr('width', innerW).attr('height', innerH).attr('fill', 'url(#fade-right)');
 
-    // Cylindrical gradients per vibe
-    VIBES.forEach(vibe => {
-      const lg = defs.append('linearGradient').attr('id', `cyl-${vibe}`)
-        .attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
-      lg.append('stop').attr('offset', '0%').attr('stop-color', currentColors[vibe]).attr('stop-opacity', 0.2);
-      lg.append('stop').attr('offset', '25%').attr('stop-color', currentColors[vibe]).attr('stop-opacity', 0.6);
-      lg.append('stop').attr('offset', '45%').attr('stop-color', currentBright[vibe]).attr('stop-opacity', 0.9);
-      lg.append('stop').attr('offset', '55%').attr('stop-color', currentBright[vibe]).attr('stop-opacity', 0.9);
-      lg.append('stop').attr('offset', '75%').attr('stop-color', currentColors[vibe]).attr('stop-opacity', 0.6);
-      lg.append('stop').attr('offset', '100%').attr('stop-color', currentColors[vibe]).attr('stop-opacity', 0.2);
-    });
 
     /* ── D3 stack with wiggle + insideOut ─────────────────── */
 
