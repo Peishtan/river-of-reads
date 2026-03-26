@@ -253,6 +253,7 @@ const RiverOfReading = () => {
         .attr('stroke', rippleColors[vibe])
         .attr('stroke-width', 0.5)
         .attr('opacity', 0.5);
+    });
 
     /* ── Right-side labels ───────────────────────────────── */
 
