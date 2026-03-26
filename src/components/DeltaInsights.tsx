@@ -133,13 +133,13 @@ const DeltaInsights = () => {
           <p className="text-xs text-muted-foreground leading-relaxed">{insights.surgeText}</p>
         </div>
 
-        {/* The Tide */}
+        {/* The Season */}
         <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: insights.tideRatio >= 1.3 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Tide</h3>
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: insights.seasonRatio >= 1.3 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Season</h3>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.tideText}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{insights.seasonText}</p>
         </div>
 
         {/* The Flood */}
@@ -151,14 +151,16 @@ const DeltaInsights = () => {
           <p className="text-xs text-muted-foreground leading-relaxed">{insights.floodText}</p>
         </div>
 
-        {/* The Drought */}
-        <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.worstDrought.vibe] }} />
-            <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Drought</h3>
+        {/* The Drought — only shown when a real drought exists */}
+        {insights.showDrought && insights.droughtText && (
+          <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.worstDrought.vibe] }} />
+              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Drought</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">{insights.droughtText}</p>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{insights.droughtText}</p>
-        </div>
+        )}
       </div>
     </div>
   );
