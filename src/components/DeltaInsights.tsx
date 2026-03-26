@@ -90,7 +90,7 @@ const DeltaInsights = () => {
       ? `${monthNames[floodMonth.month]} ${floodMonth.year} was a flood — ${floodMonth.count} books, ${floodRatio.toFixed(1)}× your average of ${avgCount.toFixed(1)}/month. Mostly "${vibeLabels[floodVibe]}".`
       : `Your reading pace is remarkably steady. No major floods detected — you're a consistent reader!`;
 
-    return { surgeText, droughtText, diversityText, floodText, surgeVibe, worstDrought, floodVibe, floodRatio };
+    return { surgeText, droughtText, floodText, surgeVibe, worstDrought, floodVibe, floodRatio };
   }, [readingData]);
 
   if (!insights) return null;
