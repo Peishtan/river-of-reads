@@ -320,13 +320,18 @@ const RiverOfReading = () => {
         </svg>
 
         {/* Tooltip overlay */}
-        {hoveredMonth !== null && (
-          <MonthTooltip
-            data={readingData[hoveredMonth]}
-            x={monthX(hoveredMonth) / SVG_W * 100 + '%' as unknown as number}
-            y={tooltipPos.y}
-          />
-        )}
+        {hoveredMonth !== null && (() => {
+          const pct = (monthX(hoveredMonth) / SVG_W) * 100;
+          const stack = monthStacks[hoveredMonth];
+          const topY = (centerY - stack.totalW / 2 - 10) / SVG_H * 100;
+          return (
+            <MonthTooltip
+              data={readingData[hoveredMonth]}
+              x={`${pct}%`}
+              y={`${topY}%` as unknown as number}
+            />
+          );
+        })()}
       </div>
 
       {/* Summary stats */}

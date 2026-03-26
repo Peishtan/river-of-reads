@@ -3,7 +3,7 @@ import StarRating from './StarRating';
 
 interface MonthTooltipProps {
   data: MonthData;
-  x: number;
+  x: number | string;
   y: number;
 }
 
