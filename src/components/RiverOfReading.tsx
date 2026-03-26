@@ -45,7 +45,7 @@ const RiverOfReading = () => {
     const stack = d3.stack<typeof series[0], VibeGroup>()
       .keys(VIBES)
       .value((d, key) => d.vibeBooks[key])
-      .offset(d3.stackOffsetSilhouette)
+      .offset(d3.stackOffsetWiggle)
       .order(d3.stackOrderInsideOut);
 
     return stack(series);
@@ -95,10 +95,10 @@ const RiverOfReading = () => {
         .attr('id', `grad-${vibe}`)
         .attr('x1', '0%').attr('y1', '0%')
         .attr('x2', '100%').attr('y2', '0%');
-      lg.append('stop').attr('offset', '0%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.25);
-      lg.append('stop').attr('offset', '20%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.75);
-      lg.append('stop').attr('offset', '80%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.75);
-      lg.append('stop').attr('offset', '100%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.25);
+      lg.append('stop').attr('offset', '0%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.15);
+      lg.append('stop').attr('offset', '25%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.65);
+      lg.append('stop').attr('offset', '75%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.65);
+      lg.append('stop').attr('offset', '100%').attr('stop-color', vibeHSL[vibe]).attr('stop-opacity', 0.15);
     });
 
     // Area generator with smooth curves
@@ -116,9 +116,9 @@ const RiverOfReading = () => {
         g.append('line')
           .attr('x1', x(mi)).attr('y1', -10)
           .attr('x2', x(mi)).attr('y2', innerH + 10)
-          .attr('stroke', 'hsl(200, 8%, 22%)')
-          .attr('stroke-width', 0.5)
-          .attr('stroke-dasharray', '3 8');
+          .attr('stroke', 'hsl(200, 6%, 18%)')
+          .attr('stroke-width', 0.3)
+          .attr('stroke-dasharray', '2 10');
 
         g.append('text')
           .attr('x', x(mi)).attr('y', -18)
@@ -150,7 +150,7 @@ const RiverOfReading = () => {
         .attr('fill', `url(#grad-${vibe})`)
         .attr('opacity', 0.8);
 
-      // Top edge
+      // Separator stroke between layers — subtle 1.5px
       const lineGen = (accessor: (d: d3.SeriesPoint<typeof series[0]>) => number) =>
         d3.line<d3.SeriesPoint<typeof series[0]>>()
           .x((_, i) => x(i))
@@ -161,18 +161,17 @@ const RiverOfReading = () => {
         .datum(layer)
         .attr('d', lineGen(d => y(d[1])))
         .attr('fill', 'none')
-        .attr('stroke', vibeHSL[vibe])
-        .attr('stroke-width', 0.6)
-        .attr('opacity', 0.4);
+        .attr('stroke', 'hsl(200, 10%, 10%)')
+        .attr('stroke-width', 1.5)
+        .attr('opacity', 0.6);
 
-      // Bottom edge
       g.append('path')
         .datum(layer)
         .attr('d', lineGen(d => y(d[0])))
         .attr('fill', 'none')
-        .attr('stroke', vibeHSL[vibe])
-        .attr('stroke-width', 0.6)
-        .attr('opacity', 0.4);
+        .attr('stroke', 'hsl(200, 10%, 10%)')
+        .attr('stroke-width', 1.5)
+        .attr('opacity', 0.6);
     });
 
     // 5-star gold markers
