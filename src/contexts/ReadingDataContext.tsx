@@ -97,7 +97,7 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
             monthMap.get(key)!.push({
               title: b.title,
               author: b.author || '',
-              vibes: (b.vibes || []) as VibeGroup[],
+              vibes: (b.vibes && b.vibes.length > 0 ? b.vibes : ['current']) as VibeGroup[],
               rating: b.rating || 3,
               pages: 250,
             });
