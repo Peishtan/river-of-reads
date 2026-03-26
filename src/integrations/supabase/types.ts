@@ -14,7 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      books: {
+        Row: {
+          author: string | null
+          created_at: string
+          date_read: string | null
+          format: string | null
+          id: string
+          rating: number | null
+          summary: string | null
+          title: string
+          vibes: string[]
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string
+          date_read?: string | null
+          format?: string | null
+          id?: string
+          rating?: number | null
+          summary?: string | null
+          title: string
+          vibes?: string[]
+        }
+        Update: {
+          author?: string | null
+          created_at?: string
+          date_read?: string | null
+          format?: string | null
+          id?: string
+          rating?: number | null
+          summary?: string | null
+          title?: string
+          vibes?: string[]
+        }
+        Relationships: []
+      }
+      river_settings: {
+        Row: {
+          color_hsl: string
+          created_at: string
+          id: string
+          updated_at: string
+          vibe_key: string
+        }
+        Insert: {
+          color_hsl: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          vibe_key: string
+        }
+        Update: {
+          color_hsl?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          vibe_key?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
