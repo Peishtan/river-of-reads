@@ -123,7 +123,7 @@ const DeltaInsights = () => {
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
         Delta Insights
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${insights.showDrought ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
         {/* The Surge */}
         <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-2">
