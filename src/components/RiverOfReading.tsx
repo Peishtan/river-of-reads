@@ -359,6 +359,55 @@ const RiverOfReading = () => {
         .attr('opacity', 0.5);
     });
 
+    /* ── Decorative ambient tributaries ───────────────────── */
+    // Thin, faint streams that branch off main rivers for organic feel
+    const ambientStreams = [
+      { parentVibe: 'escapist' as VibeGroup, seed: 42, yOff: -18, side: 'top' },
+      { parentVibe: 'ideas' as VibeGroup, seed: 77, yOff: 14, side: 'bottom' },
+      { parentVibe: 'nature' as VibeGroup, seed: 23, yOff: -12, side: 'top' },
+      { parentVibe: 'life' as VibeGroup, seed: 91, yOff: 16, side: 'bottom' },
+    ];
+
+    ambientStreams.forEach(({ parentVibe, seed, yOff, side }) => {
+      const parent = layerPaths[parentVibe];
+      if (!parent || parent.length < 4) return;
+
+      // Branch off partway through
+      const branchStart = Math.floor(parent.length * (0.15 + (seed % 30) / 100));
+      const branchEnd = Math.min(parent.length - 1, branchStart + Math.floor(parent.length * 0.55));
+
+      const tributaryPts: { x: number; y: number }[] = [];
+      for (let i = branchStart; i <= branchEnd; i++) {
+        const t = (i - branchStart) / (branchEnd - branchStart);
+        // Ramp up from parent, meander, then fade out
+        const ramp = Math.sin(t * Math.PI); // 0→1→0 envelope
+        const baseY = side === 'top' ? parent[i].y0 : parent[i].y1;
+        const drift = yOff * ramp * (1 + Math.sin(i * 0.15 + seed) * 0.4);
+        const wiggle = Math.sin(i * 0.08 + seed * 3.7) * 6 * ramp
+          + Math.sin(i * 0.13 + seed * 1.9) * 3 * ramp;
+        tributaryPts.push({ x: parent[i].x, y: baseY + drift + wiggle });
+      }
+
+      const line = d3.line<{ x: number; y: number }>()
+        .x(d => d.x).y(d => d.y).curve(d3.curveBasis);
+
+      // Thin fill stroke to give it slight width
+      riverGroup.append('path').datum(tributaryPts).attr('d', line)
+        .attr('fill', 'none')
+        .attr('stroke', currentColors[parentVibe])
+        .attr('stroke-width', 2.5)
+        .attr('opacity', 0.25)
+        .attr('stroke-linecap', 'round');
+
+      // Even thinner bright edge
+      riverGroup.append('path').datum(tributaryPts).attr('d', line)
+        .attr('fill', 'none')
+        .attr('stroke', rippleColors[parentVibe])
+        .attr('stroke-width', 0.7)
+        .attr('opacity', 0.3)
+        .attr('stroke-linecap', 'round');
+    });
+
 
     /* ── Hover interaction ───────────────────────────────── */
 
