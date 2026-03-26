@@ -148,8 +148,19 @@ const RiverOfReading = () => {
     fadeGrad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 1);
     fadeGrad.append('stop').attr('offset', `${fadeStart * 100}%`).attr('stop-color', 'white').attr('stop-opacity', 1);
     fadeGrad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
+
+    // Vertical edge softening — top/bottom fade
+    const fadeVert = defs.append('linearGradient').attr('id', 'fade-vert')
+      .attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
+    fadeVert.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
+    fadeVert.append('stop').attr('offset', '4%').attr('stop-color', 'white').attr('stop-opacity', 1);
+    fadeVert.append('stop').attr('offset', '96%').attr('stop-color', 'white').attr('stop-opacity', 1);
+    fadeVert.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
+
+    // Combined mask: right fade + vertical edge softening
     const fadeMask = defs.append('mask').attr('id', 'river-fade');
     fadeMask.append('rect').attr('width', innerW).attr('height', innerH).attr('fill', 'url(#fade-right)');
+    fadeMask.append('rect').attr('width', innerW).attr('height', innerH).attr('fill', 'url(#fade-vert)').attr('style', 'mix-blend-mode: multiply');
 
 
     /* ── D3 stack with wiggle + insideOut ─────────────────── */
@@ -197,21 +208,22 @@ const RiverOfReading = () => {
     years.forEach(yr => {
       const mi = (yr - startYear) * 12;
       if (mi >= 0 && mi < series.length) {
+        // Tick line — ultra-faint vertical marker
+        g.append('line')
+          .attr('x1', xScale(mi)).attr('y1', -4)
+          .attr('x2', xScale(mi)).attr('y2', innerH)
+          .attr('stroke', 'hsl(200, 8%, 38%)')
+          .attr('stroke-width', 0.5).attr('opacity', 0.08);
+
+        // Year label — close to the river
         g.append('text')
-          .attr('x', xScale(mi)).attr('y', -20)
+          .attr('x', xScale(mi)).attr('y', -6)
           .attr('text-anchor', 'middle')
-          .attr('fill', 'hsl(200, 8%, 38%)')
-          .attr('font-size', '13px').attr('font-weight', '600')
+          .attr('fill', 'hsl(200, 8%, 45%)')
+          .attr('font-size', '11px').attr('font-weight', '600')
           .attr('font-family', "'Playfair Display', 'Georgia', serif")
           .attr('letter-spacing', '0.08em')
           .text(yr);
-
-        // Tide line
-        g.append('line')
-          .attr('x1', xScale(mi)).attr('y1', -8)
-          .attr('x2', xScale(mi)).attr('y2', innerH)
-          .attr('stroke', 'hsl(200, 8%, 38%)')
-          .attr('stroke-width', 0.5).attr('opacity', 0.05);
       }
     });
 
