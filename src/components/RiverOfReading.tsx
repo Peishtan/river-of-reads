@@ -99,13 +99,11 @@ const RiverOfReading = () => {
       let lastSig = -1;
       for (let i = s.length - 1; i >= 0; i--) { if (s[i] > 0.5) { lastSig = i; break; } }
       if (lastSig >= 0) {
-        const peak = d3.max(s.slice(0, lastSig + 1))!;
-        const hold = peak * 0.25;
         for (let i = lastSig + 1; i < s.length; i++) {
           const monthsSince = i - lastSig;
-          // Fade to near-zero over ~18 months after last significant activity
-          const fade = Math.max(0, 1 - monthsSince / 18);
-          s[i] = Math.max(s[i], hold * fade * fade);
+          // Dry up within 1 month
+          const fade = Math.max(0, 1 - monthsSince);
+          s[i] = Math.max(s[i], s[lastSig] * 0.2 * fade);
         }
       }
       out[v] = s;
