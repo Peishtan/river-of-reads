@@ -317,7 +317,7 @@ const RiverOfReading = () => {
       for (let si = 0; si < pts.length - 1; si += segSize) {
         const end = Math.min(si + segSize + 1, pts.length);
         const seg = pts.slice(si, end);
-        const avgRat = seg.reduce((a, _, j) => a + ratings[si + j] ?? 3, 0) / seg.length;
+        const avgRat = seg.reduce((a, _, j) => a + (ratings[si + j] || 3), 0) / seg.length;
         const ratingNorm = Math.max(0.35, (avgRat - 1) / 4);
 
         const segArea = d3.area<LayerPoint>()
