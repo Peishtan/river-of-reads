@@ -408,6 +408,67 @@ const RiverOfReading = () => {
         .attr('stroke-linecap', 'round');
     });
 
+    /* ── Flow particles ──────────────────────────────────── */
+    // Animated dots drifting along each river's center line
+    const flowGroup = riverOuter.append('g').attr('class', 'flow-particles');
+
+    activeVibes.forEach((vibe, vi) => {
+      const pts = layerPaths[vibe];
+      if (!pts || pts.length < 4) return;
+
+      // Build a center-line path for motion
+      const centerLine = d3.line<LayerPoint>()
+        .x(d => d.x).y(d => d.center).curve(d3.curveBasis);
+      const pathData = centerLine(pts);
+      if (!pathData) return;
+
+      // Hidden motion path
+      const motionPath = defs.append('path')
+        .attr('id', `flow-path-${vibe}`)
+        .attr('d', pathData);
+
+      // Get path length for duration calc
+      const pathNode = motionPath.node() as SVGPathElement;
+      if (!pathNode) return;
+      const pathLen = pathNode.getTotalLength();
+
+      // Spawn a few particles per stream, staggered
+      const particleCount = 3;
+      for (let p = 0; p < particleCount; p++) {
+        const dur = 12 + vi * 1.5 + p * 2; // seconds, varied per stream
+        const delay = -(dur / particleCount) * p; // stagger evenly
+
+        const particle = flowGroup.append('circle')
+          .attr('r', 1.8)
+          .attr('fill', rippleColors[vibe])
+          .attr('opacity', 0);
+
+        // Use SMIL animate for smooth GPU-friendly motion
+        particle.append('animateMotion')
+          .attr('dur', `${dur}s`)
+          .attr('repeatCount', 'indefinite')
+          .attr('begin', `${delay}s`)
+          .append('mpath')
+          .attr('xlink:href', `#flow-path-${vibe}`);
+
+        // Fade in at start, fade out at end
+        particle.append('animate')
+          .attr('attributeName', 'opacity')
+          .attr('values', '0;0.4;0.5;0.4;0')
+          .attr('keyTimes', '0;0.1;0.5;0.9;1')
+          .attr('dur', `${dur}s`)
+          .attr('repeatCount', 'indefinite')
+          .attr('begin', `${delay}s`);
+
+        // Subtle size pulse
+        particle.append('animate')
+          .attr('attributeName', 'r')
+          .attr('values', '1.2;2;1.5;2.2;1.2')
+          .attr('dur', `${dur * 0.7}s`)
+          .attr('repeatCount', 'indefinite')
+          .attr('begin', `${delay}s`);
+      }
+    });
 
     /* ── Hover interaction ───────────────────────────────── */
 
