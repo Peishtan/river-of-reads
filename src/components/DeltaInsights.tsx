@@ -77,12 +77,17 @@ const DeltaInsights = () => {
         : null;
 
     // --- THE FLOOD ---
-    // Find the month with volume far above baseline
+    // Find the most recent month with volume far above baseline
     const monthCounts = readingData.map(d => ({ year: d.year, month: d.month, count: d.books.length }));
     const avgCount = monthCounts.reduce((sum, m) => sum + m.count, 0) / monthCounts.length;
-    const floodMonth = monthCounts.reduce((a, b) => b.count > a.count ? b : a);
-    const floodRatio = avgCount > 0 ? floodMonth.count / avgCount : 0;
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Filter to flood-qualifying months (≥1.5× average), pick most recent
+    const floodCandidates = monthCounts
+      .filter(m => avgCount > 0 && m.count / avgCount >= 1.5)
+      .sort((a, b) => b.year - a.year || b.month - a.month);
+    const floodMonth = floodCandidates[0] || monthCounts.reduce((a, b) => b.count > a.count ? b : a);
+    const floodRatio = avgCount > 0 ? floodMonth.count / avgCount : 0;
 
     // Find dominant vibe in that month
     const floodData = readingData.find(d => d.year === floodMonth.year && d.month === floodMonth.month);
