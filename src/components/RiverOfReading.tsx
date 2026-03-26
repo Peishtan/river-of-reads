@@ -183,7 +183,10 @@ const RiverOfReading = () => {
     // Build stack data: array of { idx, escapist, ideas, ... }
     const stackData = series.map((_, i) => {
       const row: Record<string, number> = { idx: i };
-      activeVibes.forEach(v => { row[v] = powerScale(smoothedCounts[v][i]); });
+      activeVibes.forEach(v => {
+        const count = smoothedCounts[v][i];
+        row[v] = count < 0.05 ? 0 : powerScale(count);
+      });
       return row;
     });
 
