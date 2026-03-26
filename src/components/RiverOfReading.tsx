@@ -651,7 +651,7 @@ const RiverOfReading = () => {
           )}
         </div>
         {!session && (
-          <p className="text-[10px] text-muted-foreground/50 mt-1 italic">Viewing demo data</p>
+          <p className="text-[10px] text-muted-foreground/50 mt-1 italic">Viewing Peishan's books</p>
         )}
       </header>
 
