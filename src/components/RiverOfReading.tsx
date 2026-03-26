@@ -237,54 +237,22 @@ const RiverOfReading = () => {
       });
       layerPaths[vibe] = pts;
 
-      // ── Glow shadow layer (behind)
-      const glowArea = d3.area<LayerPoint>()
+      // ── Main matte fill
+      const mainArea = d3.area<LayerPoint>()
         .x(d => d.x).y0(d => d.y0).y1(d => d.y1)
         .curve(d3.curveBasis);
 
-      riverGroup.append('path').datum(pts).attr('d', glowArea)
-        .attr('fill', currentSaturated[vibe]).attr('opacity', 0.08)
-        .attr('filter', `url(#outer-glow-${vibe})`);
+      riverGroup.append('path').datum(pts).attr('d', mainArea)
+        .attr('fill', currentColors[vibe])
+        .attr('opacity', 0.75);
 
-      // ── Main fill: segmented for rating-based opacity + loved glow
-      const segSize = 4;
-      for (let si = 0; si < pts.length - 1; si += segSize) {
-        const end = Math.min(si + segSize + 1, pts.length);
-        const seg = pts.slice(si, end);
-        const avgRat = seg.reduce((a, _, j) => a + (ratings[si + j] || 3), 0) / seg.length;
-        const ratingNorm = Math.max(0.35, (avgRat - 1) / 4);
-
-        const segArea = d3.area<LayerPoint>()
-          .x(d => d.x).y0(d => d.y0).y1(d => d.y1)
-          .curve(d3.curveBasis);
-
-        const path = riverGroup.append('path').datum(seg).attr('d', segArea)
-          .attr('fill', `url(#cyl-${vibe})`)
-          .attr('opacity', 0.3 + ratingNorm * 0.55);
-
-        if (avgRat > 4.2) {
-          path.attr('filter', `url(#loved-glow-${vibe})`);
-        }
-      }
-
-      // ── Bright center highlight stroke
-      const centerLine = d3.line<LayerPoint>()
-        .x(d => d.x).y(d => d.center)
-        .curve(d3.curveBasis);
-
-      riverGroup.append('path').datum(pts).attr('d', centerLine)
-        .attr('fill', 'none')
-        .attr('stroke', currentBright[vibe])
-        .attr('stroke-width', 1)
-        .attr('opacity', 0.15);
-
-      // ── Top edge highlight
+      // ── Top edge 'ripple' stroke
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
       riverGroup.append('path').datum(pts).attr('d', topLine)
         .attr('fill', 'none')
-        .attr('stroke', 'hsla(0, 0%, 100%, 0.06)')
-        .attr('stroke-width', 0.5);
-    });
+        .attr('stroke', rippleColors[vibe])
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.5);
 
     /* ── Right-side labels ───────────────────────────────── */
 
@@ -334,14 +302,13 @@ const RiverOfReading = () => {
         const c = layerPaths[vibe][i].center;
 
         g.append('circle').attr('class', 'hover-el')
-          .attr('cx', xScale(i)).attr('cy', c).attr('r', 7)
-          .attr('fill', 'none').attr('stroke', currentBright[vibe])
-          .attr('stroke-width', 1.5).attr('opacity', 0.5)
-          .attr('filter', 'url(#dot-glow)');
+          .attr('cx', xScale(i)).attr('cy', c).attr('r', 5)
+          .attr('fill', 'none').attr('stroke', rippleColors[vibe])
+          .attr('stroke-width', 1).attr('opacity', 0.6);
 
         g.append('circle').attr('class', 'hover-el')
-          .attr('cx', xScale(i)).attr('cy', c).attr('r', 3)
-          .attr('fill', currentBright[vibe]).attr('opacity', 0.9);
+          .attr('cx', xScale(i)).attr('cy', c).attr('r', 2)
+          .attr('fill', rippleColors[vibe]).attr('opacity', 0.8);
       });
     };
 
