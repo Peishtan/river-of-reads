@@ -359,26 +359,6 @@ const RiverOfReading = () => {
         .attr('opacity', 0.5);
     });
 
-    /* ── Right-side labels ───────────────────────────────── */
-
-    const lastIdx = series.length - 1;
-    activeVibes.forEach(vibe => {
-      const lastPt = layerPaths[vibe][lastIdx];
-      const labelX = innerW + 16;
-
-      g.append('line')
-        .attr('x1', innerW + 2).attr('y1', lastPt.center)
-        .attr('x2', labelX - 3).attr('y2', lastPt.center)
-        .attr('stroke', rippleColors[vibe]).attr('stroke-width', 0.6).attr('opacity', 0.5);
-
-      g.append('text')
-        .attr('x', labelX).attr('y', lastPt.center + 5)
-        .attr('fill', rippleColors[vibe])
-        .attr('font-size', '12px').attr('font-weight', '500')
-        .attr('font-family', "'Source Sans 3', sans-serif")
-        .attr('opacity', 0.9)
-        .text(vibeLabels[vibe]);
-    });
 
     /* ── Hover interaction ───────────────────────────────── */
 
