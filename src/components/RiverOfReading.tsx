@@ -712,9 +712,8 @@ const RiverOfReading = () => {
               they emerge when a category surges, meander through time, and fade when the current shifts elsewhere.
             </p>
             <p>
-              <strong className="text-foreground/80">How it stays up to date:</strong> My personal river is automatically
-              updated from <span className="text-foreground/70">Goodreads</span> via an automation pipeline. Every time I
-              finish a book, it flows into the river without lifting a finger.
+              <strong className="text-foreground/80">How it stays up to date:</strong> My rivers are updated automatically
+              via an n8n pipeline I've created from Goodreads.
             </p>
             <p>
               <strong className="text-foreground/80">Make your own:</strong> You don't need Goodreads or any automation —
