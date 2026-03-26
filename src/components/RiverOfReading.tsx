@@ -337,7 +337,7 @@ const RiverOfReading = () => {
           .attr('x1', xScale(mi)).attr('y1', -4)
           .attr('x2', xScale(mi)).attr('y2', innerH)
           .attr('stroke', 'hsl(200, 8%, 38%)')
-          .attr('stroke-width', 0.5).attr('opacity', 0.08);
+          .attr('stroke-width', 0.5).attr('opacity', 0.14);
 
         // Year label — close to the river
         g.append('text')
@@ -351,27 +351,6 @@ const RiverOfReading = () => {
       }
     });
 
-    /* ── Tide markers (horizontal volume scale) ──────────── */
-
-    const maxBooks = d3.max(series, s => s.data ? s.data.books.length : 0) || 10;
-    [5, 10].forEach(mark => {
-      if (mark > maxBooks + 2) return; // skip if irrelevant
-      // Map book count to Y via the power scale used for stacking
-      const yVal = yScale(yExtent[0] + (yExtent[1] - yExtent[0]) * (mark / Math.max(maxBooks, 12)));
-      g.append('line')
-        .attr('x1', 0).attr('y1', yVal)
-        .attr('x2', innerW).attr('y2', yVal)
-        .attr('stroke', 'hsl(200, 8%, 38%)')
-        .attr('stroke-width', 0.5).attr('opacity', 0.04)
-        .attr('stroke-dasharray', '4,6');
-      g.append('text')
-        .attr('x', -8).attr('y', yVal + 3)
-        .attr('text-anchor', 'end')
-        .attr('fill', 'hsl(200, 10%, 55%)')
-        .attr('font-size', '10px').attr('opacity', 0.5)
-        .attr('font-family', "'Source Sans 3', sans-serif")
-        .text(mark);
-    });
 
     /* ── Glow filter ────────────────────────────────────── */
     const glow = defs.append('filter').attr('id', 'river-glow')
@@ -400,7 +379,7 @@ const RiverOfReading = () => {
     waterFilter.append('feDisplacementMap')
       .attr('in', 'SourceGraphic')
       .attr('in2', 'noise')
-      .attr('scale', '3')
+      .attr('scale', '1.5')
       .attr('xChannelSelector', 'R')
       .attr('yChannelSelector', 'G');
 
