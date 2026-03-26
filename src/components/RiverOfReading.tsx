@@ -640,7 +640,7 @@ const RiverOfReading = () => {
           {session ? (
             <button
               onClick={signOut}
-              className="text-xs text-muted-foreground/50 hover:text-destructive transition-colors underline underline-offset-4"
+              className="text-xs text-muted-foreground/70 hover:text-destructive transition-colors underline underline-offset-4"
             >
               Sign out
             </button>
@@ -651,7 +651,7 @@ const RiverOfReading = () => {
           )}
         </div>
         {!session && (
-          <p className="text-[10px] text-muted-foreground/50 mt-1 italic">Viewing Peishan's books</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1 italic">Viewing Peishan's books</p>
         )}
       </header>
 
