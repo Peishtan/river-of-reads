@@ -143,7 +143,17 @@ const DeltaInsights = () => {
       ? `Your current runs through ${vibeLabels[dominantVibe]} — ${dominantCount} of your last ${totalLast9} books. ${activeStreams.size >= 4 ? `${activeStreams.size} streams are active right now. Your river is running wide.` : activeStreams.size >= 2 ? `${activeStreams.size} streams are active right now.` : 'A single stream carries you forward.'}`
       : 'Your river is just beginning. Start reading to see where the current takes you.';
 
-    return { surgeText, showSurge, droughtText, showDrought, floodText, showFlood, seasonText, showSeason, currentText, surgeVibe, worstDrought, floodVibe, dominantVibe, activeStreams: activeStreams.size };
+    // Recency scores for ordering (lower = more recent = higher priority)
+    // Surge: based on last 6 months, so recency = 3 (midpoint)
+    const surgeRecency = 3;
+    // Flood: how many months ago was the flood month
+    const floodRecency = (currentYear - floodMonth.year) * 12 + (currentMonth - floodMonth.month);
+    // Drought: it's about absence, recency = when the stream dried up (invert: longer drought = less recent)
+    const droughtRecency = worstDrought.months;
+    // Season: structural pattern, no single moment — always least recent
+    const seasonRecency = 999;
+
+    return { surgeText, showSurge, surgeRecency, droughtText, showDrought, droughtRecency, floodText, showFlood, floodRecency, seasonText, showSeason, seasonRecency, currentText, surgeVibe, worstDrought, floodVibe, dominantVibe, activeStreams: activeStreams.size };
   }, [readingData]);
 
   if (!insights) return null;
