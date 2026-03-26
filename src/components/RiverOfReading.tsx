@@ -701,16 +701,6 @@ const RiverOfReading = () => {
 
       <DeltaInsights />
 
-      {!session && (
-        <div className="w-full max-w-2xl mx-auto mt-10 px-4">
-          <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg px-6 py-4 text-center">
-            <p className="text-sm text-foreground/80 font-serif">
-              Love this? <a href="/auth" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors font-semibold">Create a free account</a> to map your own Reading River.
-            </p>
-          </div>
-        </div>
-      )}
-
       <div className="w-full max-w-2xl mx-auto mt-10 px-4 mb-8">
         <div className="bg-card/40 backdrop-blur-sm border border-border rounded-lg px-6 py-5">
           <h2 className="text-lg font-serif font-bold text-foreground mb-3">About this River</h2>
