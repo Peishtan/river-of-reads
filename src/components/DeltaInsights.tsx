@@ -19,10 +19,11 @@ const DeltaInsights = () => {
       return monthsAgo >= 0 && monthsAgo <= 6;
     });
 
+    const insightVibes = VIBES.filter(v => v !== 'current');
     const recentVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
     recentMonths.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { recentVibeCounts[v]++; })));
 
-    const surgeVibe = VIBES.reduce((a, b) => recentVibeCounts[a] >= recentVibeCounts[b] ? a : b);
+    const surgeVibe = insightVibes.reduce((a, b) => recentVibeCounts[a] >= recentVibeCounts[b] ? a : b);
     const surgeCount = recentVibeCounts[surgeVibe];
 
     // Find previous peak for that vibe
@@ -47,7 +48,7 @@ const DeltaInsights = () => {
     // --- THE DROUGHT ---
     // Find which vibe hasn't seen a 5-star book in the longest time
     let worstDrought: { vibe: VibeGroup; months: number } = { vibe: 'life', months: 0 };
-    VIBES.forEach(v => {
+    insightVibes.forEach(v => {
       let lastFiveStar = -1;
       readingData.forEach(d => {
         d.books.forEach(b => {
@@ -83,11 +84,11 @@ const DeltaInsights = () => {
       if (total === 0) return 0;
       // Shannon entropy normalized
       let entropy = 0;
-      VIBES.forEach(v => {
+      insightVibes.forEach(v => {
         const p = counts[v] / total;
         if (p > 0) entropy -= p * Math.log2(p);
       });
-      return entropy / Math.log2(5); // normalize to 0-1
+      return entropy / Math.log2(insightVibes.length); // normalize to 0-1
     };
 
     const firstSpread = vibeSpread(firstYear);
