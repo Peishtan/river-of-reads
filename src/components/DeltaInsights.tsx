@@ -117,19 +117,7 @@ const DeltaInsights = () => {
       : null;
 
     // --- THE CURRENT ---
-    // Always renders. Describes where the reader is right now.
-    const last9Books: { vibes: VibeGroup[] }[] = [];
-    for (let i = readingData.length - 1; i >= 0 && last9Books.length < 9; i--) {
-      for (let j = readingData[i].books.length - 1; j >= 0 && last9Books.length < 9; j--) {
-        last9Books.push(readingData[i].books[j]);
-      }
-    }
-
-    const currentVibeCounts: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
-    last9Books.forEach(b => b.vibes.forEach(v => { currentVibeCounts[v]++; }));
-    const dominantVibe = insightVibes.reduce((a, b) => currentVibeCounts[a] >= currentVibeCounts[b] ? a : b);
-    const dominantCount = currentVibeCounts[dominantVibe];
-
+    // Always renders. Describes breadth — how many streams, overall pace. NOT dominant vibe (that's The Surge's job).
     // Count active streams (appeared in last 3 months)
     const last3Months = readingData.filter(d => {
       const monthsAgo = (currentYear - d.year) * 12 + (currentMonth - d.month);
@@ -138,10 +126,27 @@ const DeltaInsights = () => {
     const activeStreams = new Set<VibeGroup>();
     last3Months.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { if (v !== 'current') activeStreams.add(v); })));
 
-    const totalLast9 = last9Books.length;
-    const currentText = totalLast9 > 0
-      ? `Your current runs through ${vibeLabels[dominantVibe]} — ${dominantCount} of your last ${totalLast9} books. ${activeStreams.size >= 4 ? `${activeStreams.size} streams are active right now. Your river is running wide.` : activeStreams.size >= 2 ? `${activeStreams.size} streams are active right now.` : 'A single stream carries you forward.'}`
+    // Recent pace
+    const recentBookCount = last3Months.reduce((sum, m) => sum + m.books.length, 0);
+    const recentMonthCount = last3Months.length || 1;
+    const recentPace = (recentBookCount / recentMonthCount).toFixed(1);
+
+    const streamDescriptor = activeStreams.size >= 4
+      ? `${activeStreams.size} streams are active. Your river is running wide.`
+      : activeStreams.size >= 2
+        ? `${activeStreams.size} streams are active right now.`
+        : activeStreams.size === 1
+          ? 'A single stream carries you forward.'
+          : 'The river is quiet.';
+
+    const currentText = recentBookCount > 0
+      ? `${recentPace} books/month over the last quarter. ${streamDescriptor}`
       : 'Your river is just beginning. Start reading to see where the current takes you.';
+
+    // Pick a representative color — use the most active stream's color
+    const streamActivity: Record<VibeGroup, number> = { escapist: 0, ideas: 0, nature: 0, history: 0, life: 0, current: 0 };
+    last3Months.forEach(m => m.books.forEach(b => b.vibes.forEach(v => { streamActivity[v]++; })));
+    const mostActiveStream = insightVibes.reduce((a, b) => streamActivity[a] >= streamActivity[b] ? a : b);
 
     // Recency scores for ordering (lower = more recent = higher priority)
     // Surge: based on last 6 months, so recency = 3 (midpoint)
@@ -153,7 +158,7 @@ const DeltaInsights = () => {
     // Season: structural pattern, no single moment — always least recent
     const seasonRecency = 999;
 
-    return { surgeText, showSurge, surgeRecency, droughtText, showDrought, droughtRecency, floodText, showFlood, floodRecency, seasonText, showSeason, seasonRecency, currentText, surgeVibe, worstDrought, floodVibe, dominantVibe, activeStreams: activeStreams.size };
+    return { surgeText, showSurge, surgeRecency, droughtText, showDrought, droughtRecency, floodText, showFlood, floodRecency, seasonText, showSeason, seasonRecency, currentText, surgeVibe, worstDrought, floodVibe, mostActiveStream, activeStreams: activeStreams.size };
   }, [readingData]);
 
   if (!insights) return null;
@@ -178,7 +183,7 @@ const DeltaInsights = () => {
         {/* The Current — always renders */}
         <div className="bg-card/60 backdrop-blur-sm border border-border rounded-lg p-5">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.dominantVibe] }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[insights.mostActiveStream] }} />
             <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">The Current</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">{insights.currentText}</p>
