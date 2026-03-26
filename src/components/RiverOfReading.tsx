@@ -241,10 +241,10 @@ const RiverOfReading = () => {
     const yearsLogged = years.length;
     g.append('text')
       .attr('x', 0).attr('y', -30)
-      .attr('fill', 'hsl(200, 8%, 40%)')
-      .attr('font-size', '11px').attr('font-weight', '400')
+      .attr('fill', 'hsl(200, 10%, 58%)')
+      .attr('font-size', '12px').attr('font-weight', '400')
       .attr('font-family', "'Source Sans 3', sans-serif")
-      .attr('opacity', 0.6)
+      .attr('opacity', 0.85)
       .text(`${totalBooks} books · ${yearsLogged} years`);
 
     /* ── Year labels ─────────────────────────────────────── */
@@ -264,8 +264,8 @@ const RiverOfReading = () => {
         g.append('text')
           .attr('x', xScale(mi)).attr('y', -6)
           .attr('text-anchor', 'middle')
-          .attr('fill', 'hsl(200, 8%, 45%)')
-          .attr('font-size', '11px').attr('font-weight', '600')
+          .attr('fill', 'hsl(200, 10%, 60%)')
+          .attr('font-size', '12px').attr('font-weight', '600')
           .attr('font-family', "'Playfair Display', 'Georgia', serif")
           .attr('letter-spacing', '0.08em')
           .text(yr);
@@ -288,8 +288,8 @@ const RiverOfReading = () => {
       g.append('text')
         .attr('x', -8).attr('y', yVal + 3)
         .attr('text-anchor', 'end')
-        .attr('fill', 'hsl(200, 8%, 38%)')
-        .attr('font-size', '9px').attr('opacity', 0.25)
+        .attr('fill', 'hsl(200, 10%, 55%)')
+        .attr('font-size', '10px').attr('opacity', 0.5)
         .attr('font-family', "'Source Sans 3', sans-serif")
         .text(mark);
     });
@@ -500,8 +500,8 @@ const RiverOfReading = () => {
           return (
             <div key={v} className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[v], opacity: 0.85 }} />
-              <span className="text-[11px] text-muted-foreground">{vibeLabels[v]}</span>
-              <span className="text-[10px] text-muted-foreground/40">{count}</span>
+              <span className="text-[12px] text-muted-foreground">{vibeLabels[v]}</span>
+              <span className="text-[11px] text-muted-foreground/70">{count}</span>
             </div>
           );
         })}
