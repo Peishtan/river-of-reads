@@ -36,6 +36,20 @@ Branches don't just exist from the start — they have organic birth and death r
 - **Tooltips:** Hover over any month to see the books read, their ratings, and vibe tags.
 - **Customizable colors:** Each tributary color can be customized via the settings panel.
 
+### River Gauge
+
+Below the river, a set of **insight cards** surface patterns in your reading. Cards are ordered by recency — the most recent phenomenon appears first.
+
+| Card | Trigger | Description |
+|------|---------|-------------|
+| **The Current** | Always shows | Where you are right now — dominant vibe and number of active streams. The anchor card. |
+| **The Surge** | Recent spike in one vibe | A single tributary is running unusually strong compared to its historical average. |
+| **The Flood** | Anomalous month volume ≥ 1.5× average | A single month where you read far more than your baseline. |
+| **The Drought** | A stream dry for 6+ months | A tributary that once flowed has gone completely silent. Only fires when real. |
+| **The Season** | Quarterly volume ratio ≥ 1.3× | A recurring seasonal pattern — one quarter consistently outpaces the others. |
+
+Cards that don't trigger simply don't render. The Current always appears first; the rest sort by how recently the phenomenon occurred.
+
 ## Data
 
 ### CSV Upload
@@ -60,7 +74,7 @@ Authenticated users have their books and color preferences saved to the backend 
 src/
 ├── components/
 │   ├── RiverOfReading.tsx    # Main D3 visualization
-│   ├── DeltaInsights.tsx     # Summary stats at the river's end
+│   ├── DeltaInsights.tsx     # River Gauge insight cards
 │   ├── MonthTooltip.tsx      # Hover tooltip for monthly data
 │   ├── RiverSettings.tsx     # Color customization panel
 │   ├── StarRating.tsx        # Star display component
