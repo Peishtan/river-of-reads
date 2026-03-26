@@ -3,11 +3,11 @@ export type VibeGroup = 'escapist' | 'ideas' | 'nature' | 'history' | 'life' | '
 export const VIBES: VibeGroup[] = ['escapist', 'ideas', 'current', 'nature', 'history', 'life'];
 
 export const vibeLabels: Record<VibeGroup, string> = {
-  escapist: 'The Escape',
-  ideas: 'The Lab',
-  nature: 'The Wild',
-  history: 'The World',
-  life: 'The Hearth',
+  escapist: 'Escapist & Adventure',
+  ideas: 'Ideas & Technology',
+  nature: 'Nature & Ocean',
+  history: 'History & World',
+  life: 'Life & Reflective',
   current: 'The Main Current',
 };
 
