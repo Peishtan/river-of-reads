@@ -1,4 +1,4 @@
-import { MonthData, VibeGroup, vibeLabels, vibeHSL, totalPages, avgRating, monthLabelFull } from '@/data/readingData';
+import { MonthData, vibeLabels, vibeHSL, totalPages, avgRating, monthLabelFull } from '@/data/readingData';
 import StarRating from './StarRating';
 
 interface MonthTooltipProps {
@@ -7,7 +7,6 @@ interface MonthTooltipProps {
 
 const MonthTooltip = ({ data }: MonthTooltipProps) => {
   const avg = avgRating(data);
-  const tp = totalPages(data);
 
   return (
     <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-2xl px-5 py-4 min-w-[220px] max-w-[280px]">
@@ -25,7 +24,11 @@ const MonthTooltip = ({ data }: MonthTooltipProps) => {
       <div className="space-y-1.5">
         {data.books.map((book, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: vibeHSL[book.vibe] }} />
+            <div className="flex gap-0.5 shrink-0">
+              {book.vibes.map((v, vi) => (
+                <span key={vi} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: vibeHSL[v] }} />
+              ))}
+            </div>
             <span className="text-xs text-foreground/80 truncate">{book.title}</span>
             {book.rating === 5 && (
               <span className="text-[9px] font-bold ml-auto" style={{ color: 'hsl(43, 90%, 58%)' }}>★5</span>
