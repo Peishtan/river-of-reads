@@ -42,9 +42,10 @@ const DeltaInsights = () => {
       if (count > previousPeakCount) { previousPeakCount = count; previousPeakYear = yr; }
     });
 
+    const showSurge = surgeCount > 0 && previousPeakYear > 0;
     const surgeText = surgeCount > 0
       ? `You are currently in a heavy "${vibeLabels[surgeVibe]}" surge. ${previousPeakYear ? `This is your strongest interest since early ${previousPeakYear}.` : 'This is a new frontier for you!'}`
-      : `Your reading has been quiet recently. Time to dive back in!`;
+      : null;
 
     // --- THE DROUGHT ---
     // Find streams that have gone dry — no books at all in recent months
