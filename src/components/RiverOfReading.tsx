@@ -436,10 +436,6 @@ const RiverOfReading = () => {
         .on('touchstart', (event: TouchEvent) => {
           event.preventDefault();
           showHover(i);
-        })
-        .on('touchend', () => {
-          // Delay hide so user can see tooltip
-          setTimeout(hideHover, 2000);
         });
     });
 
@@ -475,7 +471,8 @@ const RiverOfReading = () => {
         </div>
       </header>
 
-      <div ref={containerRef} className="relative w-full max-w-[1800px]" style={{ minWidth: 1200 }}>
+      <div className="w-full max-w-[1800px] overflow-x-auto">
+      <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
         <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
 
         {hoveredMonth && tooltipPos && (
@@ -490,6 +487,7 @@ const RiverOfReading = () => {
             <MonthTooltip data={hoveredMonth} />
           </div>
         )}
+      </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-5 mt-4 justify-center px-4">
