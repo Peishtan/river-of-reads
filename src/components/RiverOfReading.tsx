@@ -1,12 +1,28 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import {
-  readingData, MonthData, VibeGroup, vibeLabels, vibeHSL,
-  getYears,
+  MonthData, VibeGroup, vibeLabels, vibeHSL,
+  getYears, readingData as defaultData,
 } from '@/data/readingData';
+import { useReadingData } from '@/contexts/ReadingDataContext';
 import MonthTooltip from './MonthTooltip';
 
 const VIBES: VibeGroup[] = ['escapist', 'ideas', 'nature', 'history', 'memoir'];
+
+/**
+ * Simple seeded pseudo-random noise for deterministic organic drift.
+ * Returns values between -1 and 1 that vary smoothly.
+ */
+const seededNoise = (seed: number, i: number): number => {
+  // Layer multiple sine waves with irrational-ish frequencies for pseudo-Perlin feel
+  const s = seed;
+  return (
+    Math.sin(i * 0.137 + s * 7.31) * 0.4 +
+    Math.sin(i * 0.071 + s * 13.7) * 0.3 +
+    Math.sin(i * 0.213 + s * 3.19) * 0.2 +
+    Math.sin(i * 0.043 + s * 19.1) * 0.1
+  );
+};
 
 const DRIFT_DIR: Record<VibeGroup, number> = {
   escapist: -1, ideas: -0.55, nature: 0.7, history: 0.4, memoir: 1,
@@ -46,7 +62,12 @@ const RiverOfReading = () => {
   const [hoveredMonth, setHoveredMonth] = useState<MonthData | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
-  const years = useMemo(() => getYears(), []);
+  const { data: readingData } = useReadingData();
+
+  const years = useMemo(() => {
+    const yrs = [...new Set(readingData.map(d => d.year))].sort();
+    return yrs.length ? yrs : [2021];
+  }, [readingData]);
 
   const series = useMemo(() => {
     const startYear = years[0];
@@ -195,9 +216,11 @@ const RiverOfReading = () => {
 
         const driftAmount = maxDrift * pushStrength * dir * (1 - attractorStrength);
 
-        // Meander scales up from zero at origin to full at the delta
+        // Meander: structured sine + Perlin-like noise for organic sway
         const meanderScale = originPull; // 0 at left, 1 at right
-        const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 14 * meanderScale;
+        const structuredMeander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 14;
+        const noiseDrift = seededNoise(VIBES.indexOf(vibe) + 1, i) * 10; // ±10px organic noise
+        const meander = (structuredMeander + noiseDrift) * meanderScale;
 
         return centerY + driftAmount + meander;
       });
@@ -206,7 +229,7 @@ const RiverOfReading = () => {
 
       riverPaths[vibe] = series.map((_, i) => {
         const c = smoothCenters[i];
-        const halfW = widthScale(Math.max(counts[i], 0.12));
+        const halfW = Math.max(widthScale(Math.max(counts[i], 0.12)), 2); // minimum 2px river width
         return { x: x(i), yTop: c - halfW, yBot: c + halfW, center: c };
       });
     });
@@ -378,6 +401,9 @@ const RiverOfReading = () => {
         <p className="text-sm text-muted-foreground font-light tracking-wide font-sans">
           A braided river of taste — 2021 to present · tributaries branch when genres surge · hover to explore
         </p>
+        <a href="/upload" className="inline-block mt-2 text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4">
+          Import your Goodreads data →
+        </a>
       </header>
 
       <div ref={containerRef} className="relative w-full max-w-[1800px]" style={{ minWidth: 1200 }}>
