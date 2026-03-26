@@ -1,0 +1,1 @@
+DELETE FROM books WHERE id IN ('6a9c6859-bca1-4c41-befc-c484ebc12018', '2a03d971-d698-45cd-b2cc-5f2b895f5dd3', 'bb9fe9b6-f641-408e-878f-ffdbe3cba3a0');
