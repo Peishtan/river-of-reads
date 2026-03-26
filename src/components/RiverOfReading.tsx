@@ -659,14 +659,16 @@ const RiverOfReading = () => {
         )}
       </header>
 
-      <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
+      <div className="w-full max-w-[1800px] overflow-x-auto overflow-y-visible px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div ref={containerRef} className="relative" style={{ minWidth: 1200, overflow: 'visible' }}>
           <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
 
           {hoveredMonth && mousePos && containerRef.current && (() => {
-            const cw = containerRef.current!.clientWidth;
-            const ch = containerRef.current!.clientHeight;
-            const flipX = mousePos.x > cw - 260;
+            const scrollParent = containerRef.current!.parentElement;
+            const visibleWidth = scrollParent ? scrollParent.clientWidth : containerRef.current!.clientWidth;
+            const scrollLeft = scrollParent ? scrollParent.scrollLeft : 0;
+            const visibleRight = scrollLeft + visibleWidth;
+            const flipX = mousePos.x > visibleRight - 280;
             const flipY = mousePos.y < 180;
             const tx = flipX ? 'calc(-100% - 16px)' : '16px';
             const ty = flipY ? '16px' : 'calc(-100% - 8px)';
