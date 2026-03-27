@@ -21,6 +21,8 @@ The core visualization is a horizontal stacked-area chart built with **D3.js**. 
 | `life` | Life & Reflective | hope, memoir, philosophy-lite, psychology, reflective, warm |
 | `current` | The Main Current | The base flow — books that don't match any recognized tag |
 
+> **How tags work:** Tags describe a book's *themes and moods*, not its genre or format. A novel can be tagged `reflective` (→ Life & Reflective) or `dark` (→ Escapist & Adventure) based on its feel. Fiction vs non-fiction doesn't determine the stream — a memoir about adventure could be `escapist`, while a thriller with psychological depth might be both `thriller` + `reflective`. When a book has tags mapping to multiple streams, it contributes to all of them. Books with no recognized tags fall into The Main Current.
+
 ### Branch Lifecycle
 
 Branches don't just exist from the start — they have organic birth and death rules:

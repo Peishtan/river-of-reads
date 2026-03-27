@@ -3,14 +3,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import StarRating from '@/components/StarRating';
-import { Book, VibeGroup, vibeLabels, vibeHSL, VIBES } from '@/data/readingData';
+import { Book, VibeGroup, vibeLabels, vibeHSL, VIBES, TAG_TO_VIBE } from '@/data/readingData';
 import { ExternalLink, Pencil, Check, X } from 'lucide-react';
 import { useReadingData } from '@/contexts/ReadingDataContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface BookDetailSheetProps {
-  book: (Book & { dateRead?: string; format?: string; summary?: string; bookId?: string }) | null;
+  book: (Book & { dateRead?: string; format?: string; summary?: string; bookId?: string; rawTags?: string[] }) | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBookUpdated?: () => void;
@@ -202,6 +202,34 @@ const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetail
               </div>
             )}
           </div>
+
+          {/* Source Tags */}
+          {book.rawTags && book.rawTags.length > 0 && (
+            <div>
+              <p className="text-xs text-muted-foreground/70 uppercase tracking-widest mb-2">Source Tags</p>
+              <div className="flex flex-wrap gap-1.5">
+                {book.rawTags.map(tag => {
+                  const mappedVibe = TAG_TO_VIBE[tag.toLowerCase().trim()];
+                  const isVibeKey = VIBES.includes(tag as VibeGroup);
+                  const color = mappedVibe ? vibeHSL[mappedVibe] : isVibeKey ? vibeHSL[tag as VibeGroup] : 'hsl(var(--muted-foreground))';
+                  return (
+                    <span
+                      key={tag}
+                      className="text-[11px] px-2 py-0.5 rounded-full border"
+                      style={{
+                        borderColor: color,
+                        color: color,
+                        opacity: 0.8,
+                      }}
+                    >
+                      {tag}
+                      {mappedVibe && <span className="ml-1 opacity-60">→ {vibeLabels[mappedVibe]}</span>}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Summary */}
           <div>
