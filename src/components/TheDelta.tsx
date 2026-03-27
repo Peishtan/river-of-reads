@@ -76,53 +76,74 @@ const TheDelta = () => {
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-2 text-center">
         The Delta
       </h2>
-      <p className="text-xs text-muted-foreground text-center max-w-xl mx-auto mb-6 leading-relaxed">
-        Where your current interests fan out into the unexplored. These are the diverging paths and upcoming confluences: books that bridge your strongest streams or pull you toward new horizons.
+      <p className="text-xs text-muted-foreground text-center max-w-xl mx-auto mb-6">
+        Books at the confluence of your strongest streams.
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {tributaries.map((t) => (
-          <div key={t.id} className="group bg-card/60 backdrop-blur-sm border border-border rounded-lg p-6 relative">
-            {session && (
-              <button
-                onClick={() => dismiss(t.id)}
-                className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
-                title="Dismiss"
-              >
-                <X className="w-3.5 h-3.5 text-muted-foreground" />
-              </button>
-            )}
-            <div className="flex items-center gap-2 mb-2">
-              {t.source_streams.length > 0 && (
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStreamColor(t.source_streams[0]) }} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {tributaries.map((t) => {
+          const streamColors = t.source_streams.map(s => getStreamColor(s));
+          const gradientDot = streamColors.length >= 2
+            ? `linear-gradient(135deg, ${streamColors[0]} 0%, ${streamColors[1]} 100%)`
+            : streamColors[0] || 'hsl(var(--muted-foreground))';
+          const primaryStream = t.source_streams[0] || 'Suggested Read';
+
+          return (
+            <div
+              key={t.id}
+              className="group relative rounded-xl px-6 pt-5 pb-6"
+              style={{
+                background: `linear-gradient(145deg, color-mix(in srgb, ${streamColors[0] || 'hsl(var(--muted))'} 8%, hsl(var(--card))) 0%, hsl(var(--card) / 0.5) 100%)`,
+                borderLeft: `2px solid color-mix(in srgb, ${streamColors[0] || 'hsl(var(--muted))'} 30%, transparent)`,
+              }}
+            >
+              {session && (
+                <button
+                  onClick={() => dismiss(t.id)}
+                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
+                  title="Dismiss"
+                >
+                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
               )}
-              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">Suggested Read</h3>
-            </div>
-            <p className="text-sm font-medium text-foreground">{t.title}</p>
-            {t.author && (
-              <p className="text-xs text-muted-foreground mt-0.5">{t.author}</p>
-            )}
-            {t.reason && (
-              <p className="text-xs text-muted-foreground leading-relaxed mt-2">{t.reason}</p>
-            )}
-            {t.source_streams.length > 0 && (
-              <div className="flex gap-1.5 mt-3 flex-wrap">
-                {t.source_streams.map((stream) => (
-                  <span
-                    key={stream}
-                    className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
-                    style={{
-                      backgroundColor: `color-mix(in srgb, ${getStreamColor(stream)} 20%, transparent)`,
-                      color: `color-mix(in srgb, ${getStreamColor(stream)} 60%, white)`,
-                      borderColor: `color-mix(in srgb, ${getStreamColor(stream)} 35%, transparent)`,
-                    }}
-                  >
-                    {stream}
-                  </span>
-                ))}
+              <div className="flex items-center gap-2 mb-3">
+                <span
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ background: gradientDot }}
+                />
+                <h3
+                  className="text-[11px] font-bold font-serif uppercase tracking-widest"
+                  style={{ color: `color-mix(in srgb, ${streamColors[0] || 'hsl(var(--muted-foreground))'} 70%, white)` }}
+                >
+                  From {primaryStream}
+                </h3>
               </div>
-            )}
-          </div>
-        ))}
+              <p className="text-sm font-medium text-foreground leading-snug">{t.title}</p>
+              {t.author && (
+                <p className="text-xs text-muted-foreground mt-1">{t.author}</p>
+              )}
+              {t.reason && (
+                <p className="text-xs text-muted-foreground leading-relaxed mt-3">{t.reason}</p>
+              )}
+              {t.source_streams.length > 1 && (
+                <div className="flex gap-1.5 mt-4 flex-wrap">
+                  {t.source_streams.slice(1).map((stream) => (
+                    <span
+                      key={stream}
+                      className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${getStreamColor(stream)} 20%, transparent)`,
+                        color: `color-mix(in srgb, ${getStreamColor(stream)} 60%, white)`,
+                        borderColor: `color-mix(in srgb, ${getStreamColor(stream)} 35%, transparent)`,
+                      }}
+                    >
+                      {stream}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
