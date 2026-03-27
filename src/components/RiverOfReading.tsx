@@ -723,12 +723,9 @@ const RiverOfReading = () => {
               Sign out
             </button>
           ) : (
-            <>
-              <a href="/auth" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
-                Sign in →
-              </a>
-              <span className="text-[10px] text-muted-foreground/80 italic">Viewing Peishan's books</span>
-            </>
+            <span className="text-[10px] text-muted-foreground/80">
+              Viewing Peishan's books · <a href="/auth" className="text-primary/70 hover:text-primary transition-colors underline underline-offset-4">Sign in for your own →</a>
+            </span>
           )}
         </div>
       </header>
