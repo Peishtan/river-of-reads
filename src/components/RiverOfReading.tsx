@@ -316,17 +316,7 @@ const RiverOfReading = () => {
       });
     });
 
-    /* ── Global stats (top-left) ────────────────────────── */
-
-    const totalBooks = readingData.reduce((a, m) => a + m.books.length, 0);
-    const yearsLogged = years.length;
-    g.append('text')
-      .attr('x', 0).attr('y', -30)
-      .attr('fill', 'hsl(200, 10%, 58%)')
-      .attr('font-size', '12px').attr('font-weight', '400')
-      .attr('font-family', "'Source Sans 3', sans-serif")
-      .attr('opacity', 0.85)
-      .text(`${totalBooks} books · ${yearsLogged} years`);
+    /* ── (stats moved to JSX header) ───────────────────── */
 
     /* ── Year labels ─────────────────────────────────────── */
 
@@ -709,6 +699,12 @@ const RiverOfReading = () => {
           River of Reading
         </h1>
         <ReaderArchetype />
+        <p className="text-xs text-muted-foreground/70 mt-2 tracking-wide">
+          {readingData.reduce((a, m) => a + m.books.length, 0)} books · {(() => {
+            const yrs = new Set(readingData.map(m => m.year));
+            return yrs.size;
+          })()} years
+        </p>
       </header>
 
       <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
