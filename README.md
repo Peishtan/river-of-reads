@@ -104,6 +104,8 @@ src/
 ├── components/
 │   ├── RiverOfReading.tsx    # Main D3 visualization
 │   ├── DeltaInsights.tsx     # River Gauge insight cards
+│   ├── TheDelta.tsx          # AI-powered book recommendations
+│   ├── ReaderArchetype.tsx   # Reader personality badge
 │   ├── MonthTooltip.tsx      # Hover tooltip for monthly data
 │   ├── RiverSettings.tsx     # Color customization panel
 │   ├── StarRating.tsx        # Star display component
@@ -119,6 +121,11 @@ src/
 │   ├── Upload.tsx             # CSV upload page
 │   └── Auth.tsx               # Login / signup
 └── index.css                  # Design tokens and theme
+
+supabase/
+└── functions/
+    └── generate-tributaries/
+        └── index.ts           # AI recommendation edge function
 ```
 
 ## Running Locally
