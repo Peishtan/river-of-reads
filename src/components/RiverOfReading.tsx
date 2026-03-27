@@ -54,7 +54,7 @@ const RiverOfReading = () => {
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   
 
-  const { data: rawReadingData, riverColors, session, signOut } = useReadingData();
+  const { data: rawReadingData, riverColors } = useReadingData();
 
   // Filter to 2021+ for visualization
   const readingData = useMemo(() => rawReadingData.filter(d => d.year >= 2021), [rawReadingData]);
