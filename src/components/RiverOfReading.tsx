@@ -711,23 +711,23 @@ const RiverOfReading = () => {
         <ReaderArchetype />
         <div className="flex items-center justify-center gap-3 mt-2">
           {session && (
-            <a href="/upload" className="text-[10px] text-primary/50 hover:text-primary transition-colors underline underline-offset-4">
+            <a href="/upload" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
               Import →
             </a>
           )}
           {session ? (
             <button
               onClick={signOut}
-              className="text-[10px] text-muted-foreground/50 hover:text-destructive transition-colors underline underline-offset-4"
+              className="text-[10px] text-muted-foreground/80 hover:text-destructive transition-colors underline underline-offset-4"
             >
               Sign out
             </button>
           ) : (
             <>
-              <a href="/auth" className="text-[10px] text-primary/50 hover:text-primary transition-colors underline underline-offset-4">
+              <a href="/auth" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
                 Sign in →
               </a>
-              <span className="text-[10px] text-muted-foreground/50 italic">Viewing Peishan's books</span>
+              <span className="text-[10px] text-muted-foreground/80 italic">Viewing Peishan's books</span>
             </>
           )}
         </div>
