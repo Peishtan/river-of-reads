@@ -89,6 +89,9 @@ serve(async (req) => {
 
     const existingTitles = new Set((existing || []).map((t: { title: string }) => t.title.toLowerCase()));
 
+    // Also build a set of already-read book titles for hard dedup against AI suggestions
+    const readTitles = new Set((books || []).map((b) => b.title.toLowerCase()));
+
     // Count vibe frequencies to identify strongest streams
     const vibeCounts: Record<string, number> = {};
     for (const book of books) {
@@ -225,7 +228,7 @@ Do NOT suggest books they've already read.`;
 
     // Filter out duplicates and insert
     const newTributaries = recommendations
-      .filter((r: { title: string }) => !existingTitles.has(r.title.toLowerCase()))
+      .filter((r: { title: string }) => !existingTitles.has(r.title.toLowerCase()) && !readTitles.has(r.title.toLowerCase()))
       .map((r: { title: string; author: string; source_streams: string[]; reason: string }) => ({
         title: r.title,
         author: r.author,
