@@ -384,23 +384,33 @@ const RiverOfReading = () => {
       .attr('xChannelSelector', 'R')
       .attr('yChannelSelector', 'G');
 
-    /* ── Animated shimmer gradients (multiple passes at varied speeds for organic feel) ── */
-    const shimmerConfigs = [
-      { id: 'shimmer-sweep', peakOpacity: 0.22, peakPos: 25, width: 14, dur: 6.5, fromMul: -0.5, toMul: 1.2 },
-      { id: 'shimmer-sweep-2', peakOpacity: 0.14, peakPos: 50, width: 10, dur: 9.3, fromMul: -0.8, toMul: 1.0 },
-      { id: 'shimmer-sweep-3', peakOpacity: 0.10, peakPos: 35, width: 18, dur: 14, fromMul: -0.3, toMul: 1.4 },
-    ];
+    /* ── Per-stream shimmer gradients (only top 2-3 streams by volume get shimmer) ── */
+    const vibeVolumes: Record<string, number> = {};
+    activeVibes.forEach((vibe, i) => {
+      vibeVolumes[vibe] = stackData.reduce((sum, row) => sum + (row[i + 1] as number || 0), 0);
+    });
+    const rankedVibes = Object.entries(vibeVolumes).sort((a, b) => b[1] - a[1]);
+    const shimmerVibes = new Set(rankedVibes.slice(0, Math.min(3, Math.max(1, rankedVibes.length - 1))).map(([v]) => v));
 
-    shimmerConfigs.forEach(({ id, peakOpacity, peakPos, width, dur, fromMul, toMul }) => {
-      const grad = defs.append('linearGradient').attr('id', id)
+    // Each shimmering stream gets its own gradient at a unique speed
+    const shimmerSpeeds = [7, 11, 16]; // seconds — varied so they drift out of phase
+    let shimmerIdx = 0;
+    shimmerVibes.forEach(vibe => {
+      const dur = shimmerSpeeds[shimmerIdx % shimmerSpeeds.length];
+      const peakPos = 20 + shimmerIdx * 18;
+      const peakOpacity = 0.20 - shimmerIdx * 0.04;
+      const fromMul = -0.4 - shimmerIdx * 0.15;
+      const toMul = 1.1 + shimmerIdx * 0.15;
+
+      const grad = defs.append('linearGradient').attr('id', `shimmer-${vibe}`)
         .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%')
         .attr('gradientUnits', 'userSpaceOnUse');
       grad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
-      grad.append('stop').attr('offset', `${peakPos - width}%`).attr('stop-color', 'white').attr('stop-opacity', 0);
-      grad.append('stop').attr('offset', `${peakPos - width / 2}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity * 0.3);
+      grad.append('stop').attr('offset', `${peakPos - 12}%`).attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('stop').attr('offset', `${peakPos - 5}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity * 0.3);
       grad.append('stop').attr('offset', `${peakPos}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity);
-      grad.append('stop').attr('offset', `${peakPos + width / 2}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity * 0.3);
-      grad.append('stop').attr('offset', `${peakPos + width}%`).attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('stop').attr('offset', `${peakPos + 5}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity * 0.3);
+      grad.append('stop').attr('offset', `${peakPos + 12}%`).attr('stop-color', 'white').attr('stop-opacity', 0);
       grad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
       grad.append('animateTransform')
         .attr('attributeName', 'gradientTransform')
@@ -409,6 +419,8 @@ const RiverOfReading = () => {
         .attr('to', `${innerW * toMul} 0`)
         .attr('dur', `${dur}s`)
         .attr('repeatCount', 'indefinite');
+
+      shimmerIdx++;
     });
 
     /* ── Per-stream specular highlight gradient (top-edge gloss) ── */
@@ -478,20 +490,14 @@ const RiverOfReading = () => {
         .attr('fill', `url(#gloss-${vibe})`)
         .attr('opacity', 0.85);
 
-      // ── Primary shimmer sweep (left→right)
+      // ── Per-stream shimmer (only the top 2-3 streams shimmer — others stay still)
       const fullArea = d3.area<LayerPoint>()
         .x(d => d.x).y0(d => d.y0).y1(d => d.y1).curve(d3.curveBasis);
-      riverGroup.append('path').datum(pts).attr('d', fullArea)
-        .attr('fill', 'url(#shimmer-sweep)')
-        .attr('opacity', 0.7);
-
-      // ── Secondary + tertiary shimmer sweeps (varied speeds for organic feel)
-      riverGroup.append('path').datum(pts).attr('d', fullArea)
-        .attr('fill', 'url(#shimmer-sweep-2)')
-        .attr('opacity', 0.5);
-      riverGroup.append('path').datum(pts).attr('d', fullArea)
-        .attr('fill', 'url(#shimmer-sweep-3)')
-        .attr('opacity', 0.4);
+      if (shimmerVibes.has(vibe)) {
+        riverGroup.append('path').datum(pts).attr('d', fullArea)
+          .attr('fill', `url(#shimmer-${vibe})`)
+          .attr('opacity', 0.65);
+      }
 
       // ── Top edge 'ripple' stroke (bright specular edge)
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
