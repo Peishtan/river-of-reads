@@ -259,6 +259,8 @@ const ReaderArchetype = () => {
           icon: icons[rule.iconKey](color1, color2),
           color1,
           color2,
+          textColor1,
+          textColor2,
         };
       }
     }
