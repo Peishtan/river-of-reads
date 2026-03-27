@@ -14,6 +14,7 @@ interface ReadingDataContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshData: () => void;
 }
 
 const ReadingDataContext = createContext<ReadingDataContextType>({
@@ -25,6 +26,7 @@ const ReadingDataContext = createContext<ReadingDataContextType>({
   session: null,
   loading: true,
   signOut: async () => {},
+  refreshData: () => {},
 });
 
 export const useReadingData = () => useContext(ReadingDataContext);
