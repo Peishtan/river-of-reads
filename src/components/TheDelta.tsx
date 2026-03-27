@@ -73,9 +73,12 @@ const TheDelta = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-10 px-4">
-      <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
+      <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-2 text-center">
         The Delta
       </h2>
+      <p className="text-xs text-muted-foreground text-center max-w-xl mx-auto mb-6 leading-relaxed">
+        Where your current interests fan out into the unexplored. These are the diverging paths and upcoming confluences: books that bridge your strongest streams or pull you toward new horizons.
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {tributaries.map((t) => (
           <div key={t.id} className="group bg-card/60 backdrop-blur-sm border border-border rounded-lg p-6 relative">
@@ -92,7 +95,7 @@ const TheDelta = () => {
               {t.source_streams.length > 0 && (
                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStreamColor(t.source_streams[0]) }} />
               )}
-              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">Incoming</h3>
+              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">Suggested Read</h3>
             </div>
             <p className="text-sm font-medium text-foreground">{t.title}</p>
             {t.author && (
