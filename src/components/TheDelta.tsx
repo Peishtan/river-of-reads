@@ -121,9 +121,9 @@ const TheDelta = () => {
               {t.reason && (
                 <p className="text-xs text-muted-foreground leading-relaxed mt-3">{t.reason}</p>
               )}
-              {t.source_streams.length > 1 && (
-                <div className="flex gap-1.5 mt-4 flex-wrap">
-                  {t.source_streams.slice(1).map((stream) => (
+            {t.source_streams.length > 0 && (
+              <div className="flex gap-1.5 mt-4 flex-wrap">
+                {t.source_streams.map((stream) => (
                     <span
                       key={stream}
                       className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
