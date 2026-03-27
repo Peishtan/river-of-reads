@@ -710,6 +710,9 @@ const RiverOfReading = () => {
         </h1>
         <ReaderArchetype />
         <div className="flex items-center justify-center gap-3 mt-2">
+          <a href="/library" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
+            Library →
+          </a>
           {session && (
             <a href="/upload" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
               Import →
