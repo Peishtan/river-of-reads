@@ -63,7 +63,9 @@ const TheDelta = () => {
 
   const getStreamColor = (stream: string) => {
     const vibe = STREAM_TO_VIBE[stream];
-    return vibe ? `hsl(${riverColors[vibe]})` : 'hsl(var(--muted-foreground))';
+    if (!vibe) return 'hsl(var(--muted-foreground))';
+    const c = riverColors[vibe];
+    return c.startsWith('hsl') ? c : `hsl(${c})`;
   };
 
   if (loading) return null;
