@@ -53,6 +53,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          book_title: string | null
+          created_at: string
+          feedback_type: string
+          id: string
+          message: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          book_title?: string | null
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          message: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          book_title?: string | null
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          message?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       river_settings: {
         Row: {
           color_hsl: string
