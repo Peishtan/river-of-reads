@@ -100,10 +100,10 @@ const Library = () => {
       {/* Header */}
       <header className="text-center mb-8 max-w-3xl">
         <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-1 font-serif">
-          The Library
+          The Basin
         </h1>
         <p className="text-sm text-muted-foreground">
-          {allBooks.length} books · Every title that shaped the river
+          {allBooks.length} books · Where the river settles
         </p>
       </header>
 
