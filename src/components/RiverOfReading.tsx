@@ -612,7 +612,7 @@ const RiverOfReading = () => {
       }
 
       const line = d3.line<{ x: number; y: number }>()
-        .x(d => d.x).y(d => d.y).curve(d3.curveBasis);
+        .x(d => d.x).y(d => d.y).curve(d3.curveCatmullRom.alpha(0.5));
 
       // Thin fill stroke to give it slight width
       riverGroup.append('path').datum(tributaryPts).attr('d', line)
@@ -641,7 +641,7 @@ const RiverOfReading = () => {
 
       // Build a center-line path for motion
       const centerLine = d3.line<LayerPoint>()
-        .x(d => d.x).y(d => d.center).curve(d3.curveBasis);
+        .x(d => d.x).y(d => d.center).curve(d3.curveCatmullRom.alpha(0.5));
       const pathData = centerLine(pts);
       if (!pathData) return;
 
