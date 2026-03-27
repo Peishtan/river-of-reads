@@ -788,7 +788,7 @@ const RiverOfReading = () => {
 
       <TheDelta />
 
-      <div className="w-full max-w-2xl mx-auto mt-12 px-4 mb-8">
+      <div className="w-full max-w-2xl mx-auto mt-12 px-4 mb-8 text-center">
         <div className="border-t border-border/40 pt-8">
           <h2 className="text-xs font-serif font-bold text-muted-foreground tracking-widest uppercase mb-4">About this River</h2>
           <div className="space-y-3 text-sm text-muted-foreground/80 leading-relaxed">
@@ -797,6 +797,10 @@ const RiverOfReading = () => {
               they emerge when a category surges, meander through time, and fade when the current shifts elsewhere.
               The depth of each stream reflects your ratings — stretches of highly-rated books run richer and more vivid,
               while lower-rated books fade back, so your favourites literally shine through.
+            </p>
+            <p>
+              <strong className="text-foreground/70">Your reader archetype</strong> is determined by the blend of your
+              strongest streams — it shifts as your reading evolves.
             </p>
             <p>
               <strong className="text-foreground/70">How it stays up to date:</strong> My rivers are updated automatically
