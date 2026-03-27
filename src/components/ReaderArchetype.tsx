@@ -278,7 +278,7 @@ const ReaderArchetype = () => {
           background: `linear-gradient(135deg, ${result.color1}, ${result.color2})`,
         }}
       >
-        <div className="w-full h-full rounded-full bg-background flex items-center justify-center p-1">
+        <div className="w-full h-full rounded-full bg-background flex items-center justify-center p-0.5">
           {result.icon}
         </div>
       </div>
