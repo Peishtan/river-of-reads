@@ -485,10 +485,13 @@ const RiverOfReading = () => {
         .attr('fill', 'url(#shimmer-sweep)')
         .attr('opacity', 0.7);
 
-      // ── Secondary shimmer sweep (slower, offset — layered reflections)
+      // ── Secondary + tertiary shimmer sweeps (varied speeds for organic feel)
       riverGroup.append('path').datum(pts).attr('d', fullArea)
         .attr('fill', 'url(#shimmer-sweep-2)')
         .attr('opacity', 0.5);
+      riverGroup.append('path').datum(pts).attr('d', fullArea)
+        .attr('fill', 'url(#shimmer-sweep-3)')
+        .attr('opacity', 0.4);
 
       // ── Top edge 'ripple' stroke (bright specular edge)
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
