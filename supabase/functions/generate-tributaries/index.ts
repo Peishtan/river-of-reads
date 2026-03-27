@@ -33,9 +33,19 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseServiceRoleKey) {
+      return new Response(JSON.stringify({ error: "SUPABASE_SERVICE_ROLE_KEY not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
+
+    const adminSupabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
@@ -47,7 +57,7 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    // Fetch user's books (most recent 50) — check user_id match OR null (legacy data)
+    // Fetch user's books (most recent 50)
     let { data: books, error: booksError } = await supabase
       .from("books")
       .select("title, author, vibes, rating, date_read")
@@ -55,16 +65,22 @@ serve(async (req) => {
       .order("date_read", { ascending: false })
       .limit(50);
 
-    // Fallback: if no books found for this user, try books with null user_id
-    if (!booksError && (!books || books.length === 0)) {
-      const fallback = await supabase
+    // Fallback: enrich with legacy demo books (user_id IS NULL) via admin client when needed
+    if (!booksError && (!books || books.length < 3)) {
+      const fallback = await adminSupabase
         .from("books")
         .select("title, author, vibes, rating, date_read")
         .is("user_id", null)
         .order("date_read", { ascending: false })
         .limit(50);
-      books = fallback.data;
-      booksError = fallback.error;
+
+      if (fallback.error) {
+        booksError = fallback.error;
+      } else {
+        const existingTitles = new Set((books || []).map((b) => b.title.toLowerCase()));
+        const fallbackBooks = (fallback.data || []).filter((b) => !existingTitles.has(b.title.toLowerCase()));
+        books = [...(books || []), ...fallbackBooks].slice(0, 50);
+      }
     }
 
     if (booksError) {
