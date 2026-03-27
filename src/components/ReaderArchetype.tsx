@@ -250,6 +250,9 @@ const ReaderArchetype = () => {
         const c2 = riverColors[top2Vibes[1]] || 'hsl(200, 30%, 40%)';
         const color1 = c1.startsWith('hsl') ? c1 : `hsl(${c1})`;
         const color2 = c2.startsWith('hsl') ? c2 : `hsl(${c2})`;
+        // Lightened versions for readable text
+        const textColor1 = `color-mix(in srgb, ${color1} 55%, white)`;
+        const textColor2 = `color-mix(in srgb, ${color2} 55%, white)`;
 
         return {
           ...rule.archetype,
