@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ReadingDataProvider, useReadingData } from "@/contexts/ReadingDataContext";
+import TopBar from "@/components/TopBar";
 import Index from "./pages/Index.tsx";
 import Upload from "./pages/Upload.tsx";
 import Auth from "./pages/Auth.tsx";
@@ -27,13 +28,16 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRoutes = () => (
-  <Routes>
-    <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
-    <Route path="/" element={<Index />} />
-    <Route path="/library" element={<Library />} />
-    <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
+  <>
+    <TopBar />
+    <Routes>
+      <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+      <Route path="/" element={<Index />} />
+      <Route path="/library" element={<Library />} />
+      <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </>
 );
 
 const App = () => (

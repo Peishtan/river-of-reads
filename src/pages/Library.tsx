@@ -26,7 +26,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep
 type SortKey = 'date-desc' | 'date-asc' | 'rating-desc' | 'rating-asc' | 'title-asc';
 
 const Library = () => {
-  const { data, session, signOut } = useReadingData();
+  const { data } = useReadingData();
   const [search, setSearch] = useState('');
   const [vibeFilter, setVibeFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<SortKey>('date-desc');
