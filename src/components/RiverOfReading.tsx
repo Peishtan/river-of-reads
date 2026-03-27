@@ -303,16 +303,68 @@ const RiverOfReading = () => {
     ];
     const yScale = d3.scaleLinear().domain(yExtent).range([innerH * 0.05, innerH * 0.95]);
 
-    // Compute per-vibe meander offsets (organic drift applied to the stack baseline)
+    // ── Vibe co-occurrence matrix (for force-directed bundling) ──
+    // Counts how often two vibes appear together on the same book
+    const coOccurrence: Record<VibeGroup, Record<VibeGroup, number>> = {} as any;
+    activeVibes.forEach(v1 => {
+      coOccurrence[v1] = {} as any;
+      activeVibes.forEach(v2 => { coOccurrence[v1][v2] = 0; });
+    });
+    readingData.forEach(m => m.books.forEach(b => {
+      for (let a = 0; a < b.vibes.length; a++) {
+        for (let c = a + 1; c < b.vibes.length; c++) {
+          const v1 = b.vibes[a], v2 = b.vibes[c];
+          if (coOccurrence[v1] && coOccurrence[v1][v2] !== undefined) {
+            coOccurrence[v1][v2]++;
+            coOccurrence[v2][v1]++;
+          }
+        }
+      }
+    }));
+    // Normalize co-occurrence to 0..1
+    const maxCoOcc = Math.max(1, d3.max(activeVibes, v1 => d3.max(activeVibes, v2 => coOccurrence[v1][v2]))!);
+
+    // Per-month diversity score: how spread out are the vibes this month? (0 = focused, 1 = diverse)
+    const monthDiversity = series.map(s => {
+      const total = activeVibes.reduce((sum, v) => sum + s.vibeBooks[v], 0);
+      if (total === 0) return 0.5;
+      const active = activeVibes.filter(v => s.vibeBooks[v] > 0).length;
+      return active / activeVibes.length;
+    });
+
+    // Compute per-vibe meander offsets with force-directed bundling
     const meanderOffsets: Record<VibeGroup, number[]> = {} as any;
     activeVibes.forEach(vibe => {
       const { f1, f2, a1, a2, p } = MEANDER_CFG[vibe];
       meanderOffsets[vibe] = series.map((_, i) => {
         const t = i / (series.length - 1);
         const rampUp = 1 - Math.exp(-t * 4); // start tight, diverge
+
+        // Base organic meander
         const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 8;
         const noise = seededNoise(activeVibes.indexOf(vibe) + 1, i) * 5;
-        return (meander + noise) * rampUp;
+
+        // Force-directed attraction: pull toward co-occurring vibes
+        // When diversity is low (focused reading), streams cluster tighter ("rapids")
+        // When diversity is high, streams spread apart ("delta")
+        const diversityFactor = monthDiversity[i];
+        const spreadForce = (diversityFactor - 0.3) * 12; // negative = cluster, positive = spread
+
+        // Attraction toward strongly co-occurring vibes
+        let attractionPull = 0;
+        activeVibes.forEach(otherVibe => {
+          if (otherVibe === vibe) return;
+          const affinity = coOccurrence[vibe][otherVibe] / maxCoOcc;
+          if (affinity > 0.1) {
+            // Pull this vibe's meander toward the other vibe's natural position
+            const otherCfg = MEANDER_CFG[otherVibe];
+            const otherMeander = (Math.sin(i * otherCfg.f1 + otherCfg.p) * otherCfg.a1) * 8;
+            const thisMeander = (Math.sin(i * f1 + p) * a1) * 8;
+            attractionPull += (otherMeander - thisMeander) * affinity * 0.15;
+          }
+        });
+
+        return (meander + noise + spreadForce + attractionPull) * rampUp;
       });
     });
 
@@ -358,20 +410,41 @@ const RiverOfReading = () => {
       .attr('x', '-5%').attr('y', '-5%').attr('width', '110%').attr('height', '110%');
     const turb = waterFilter.append('feTurbulence')
       .attr('type', 'fractalNoise')
-      .attr('baseFrequency', '0.015 0.04')
-      .attr('numOctaves', '3')
+      .attr('baseFrequency', '0.012 0.035')
+      .attr('numOctaves', '4')
       .attr('seed', '5')
       .attr('result', 'noise');
-    // Animate the turbulence seed to create water movement
+    // Animate the turbulence to create living water movement
     turb.append('animate')
       .attr('attributeName', 'baseFrequency')
-      .attr('values', '0.015 0.04;0.018 0.045;0.012 0.035;0.015 0.04')
-      .attr('dur', '8s')
+      .attr('values', '0.012 0.035;0.016 0.042;0.010 0.030;0.014 0.038;0.012 0.035')
+      .attr('dur', '12s')
       .attr('repeatCount', 'indefinite');
     waterFilter.append('feDisplacementMap')
       .attr('in', 'SourceGraphic')
       .attr('in2', 'noise')
-      .attr('scale', '1.5')
+      .attr('scale', '3')
+      .attr('xChannelSelector', 'R')
+      .attr('yChannelSelector', 'G');
+
+    /* ── Edge roughness filter (gives stream edges an organic, non-vector feel) ── */
+    const edgeFilter = defs.append('filter').attr('id', 'edge-rough')
+      .attr('x', '-2%').attr('y', '-2%').attr('width', '104%').attr('height', '104%');
+    const edgeTurb = edgeFilter.append('feTurbulence')
+      .attr('type', 'turbulence')
+      .attr('baseFrequency', '0.03 0.06')
+      .attr('numOctaves', '2')
+      .attr('seed', '12')
+      .attr('result', 'edgeNoise');
+    edgeTurb.append('animate')
+      .attr('attributeName', 'seed')
+      .attr('values', '12;15;10;14;12')
+      .attr('dur', '20s')
+      .attr('repeatCount', 'indefinite');
+    edgeFilter.append('feDisplacementMap')
+      .attr('in', 'SourceGraphic')
+      .attr('in2', 'edgeNoise')
+      .attr('scale', '1.8')
       .attr('xChannelSelector', 'R')
       .attr('yChannelSelector', 'G');
 
