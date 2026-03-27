@@ -67,6 +67,7 @@ export interface Book {
   dateRead?: string;
   format?: string;
   bookId?: string; // DB id for editing
+  rawTags?: string[]; // Original tags from DB before vibe mapping
 }
 
 export interface MonthData {

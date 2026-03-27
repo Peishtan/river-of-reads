@@ -88,6 +88,7 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
             dateRead: b.date_read || undefined,
             format: b.format || undefined,
             bookId: b.id,
+            rawTags: b.vibes && b.vibes.length > 0 ? b.vibes : [],
           });
         });
         const result: MonthData[] = [];
