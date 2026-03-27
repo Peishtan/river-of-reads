@@ -181,6 +181,11 @@ const RiverOfReading = () => {
       // Apply lifecycle mask
       for (let i = 0; i < s.length; i++) {
         s[i] *= vibeLifecycle[v][i];
+        // Prevent visual bleed: if there are no raw 'current' books in a month,
+        // keep Main Current at zero even after smoothing.
+        if (v === 'current' && raw[v][i] === 0) {
+          s[i] = 0;
+        }
       }
       out[v] = s;
     });
