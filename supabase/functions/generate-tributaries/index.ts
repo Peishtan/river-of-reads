@@ -89,6 +89,9 @@ serve(async (req) => {
 
     const existingTitles = new Set((existing || []).map((t: { title: string }) => t.title.toLowerCase()));
 
+    // Also build a set of already-read book titles for hard dedup against AI suggestions
+    const readTitles = new Set((books || []).map((b) => b.title.toLowerCase()));
+
     // Count vibe frequencies to identify strongest streams
     const vibeCounts: Record<string, number> = {};
     for (const book of books) {
