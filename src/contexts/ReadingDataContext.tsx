@@ -102,6 +102,10 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
                   if (vibe) mapped.add(vibe);
                   else if (VIBES.includes(tag as VibeGroup)) mapped.add(tag as VibeGroup);
                 }
+                // If any non-current vibes were found, remove 'current' (it was a fallback)
+                if (mapped.size > 0 && mapped.has('current') && mapped.size > 1) {
+                  mapped.delete('current');
+                }
                 return mapped.size > 0 ? Array.from(mapped) : ['current'] as VibeGroup[];
               })(),
               rating: b.rating || 3,
