@@ -270,27 +270,21 @@ const ReaderArchetype = () => {
   if (!result) return null;
 
   return (
-    <div className="group relative flex items-center justify-center gap-2.5 mt-1">
+    <div className="group relative flex items-center justify-center gap-3 mt-1">
       {/* Circle avatar with gradient border */}
       <div
-        className="w-10 h-10 rounded-full p-[1.5px] flex-shrink-0"
+        className="w-12 h-12 rounded-full p-[1.5px] flex-shrink-0"
         style={{
           background: `linear-gradient(135deg, ${result.color1}, ${result.color2})`,
         }}
       >
-        <div className="w-full h-full rounded-full bg-background flex items-center justify-center p-1.5">
+        <div className="w-full h-full rounded-full bg-background flex items-center justify-center p-1">
           {result.icon}
         </div>
       </div>
-      {/* Archetype name */}
+      {/* Archetype name — plain light text for readability */}
       <span
-        className="text-xs font-serif font-bold tracking-widest uppercase cursor-default"
-        style={{
-          background: `linear-gradient(135deg, ${result.textColor1}, ${result.textColor2})`,
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.15))',
-        }}
+        className="text-sm font-serif font-bold tracking-wider uppercase cursor-default text-foreground/90"
       >
         {result.name}
       </span>
