@@ -490,7 +490,9 @@ const RiverOfReading = () => {
         .attr('fill', `url(#gloss-${vibe})`)
         .attr('opacity', 0.85);
 
-      // ── Per-stream shimmer (only active streams get shimmer — others stay still)
+      // ── Per-stream shimmer (only the top 2-3 streams shimmer — others stay still)
+      const fullArea = d3.area<LayerPoint>()
+        .x(d => d.x).y0(d => d.y0).y1(d => d.y1).curve(d3.curveBasis);
       if (shimmerVibes.has(vibe)) {
         riverGroup.append('path').datum(pts).attr('d', fullArea)
           .attr('fill', `url(#shimmer-${vibe})`)
