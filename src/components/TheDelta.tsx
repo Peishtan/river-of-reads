@@ -109,11 +109,12 @@ const TheDelta = () => {
                 {t.source_streams.map((stream) => (
                   <span
                     key={stream}
-                    className="text-[10px] px-2 py-0.5 rounded-full border"
+                    className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
                     style={{
-                      backgroundColor: `${getStreamColor(stream)}20`,
+                      backgroundColor: `${getStreamColor(stream)}25`,
                       color: getStreamColor(stream),
-                      borderColor: `${getStreamColor(stream)}30`,
+                      borderColor: `${getStreamColor(stream)}40`,
+                      textShadow: `0 0 8px ${getStreamColor(stream)}60`,
                     }}
                   >
                     {stream}
