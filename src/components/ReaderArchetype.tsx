@@ -250,12 +250,17 @@ const ReaderArchetype = () => {
         const c2 = riverColors[top2Vibes[1]] || 'hsl(200, 30%, 40%)';
         const color1 = c1.startsWith('hsl') ? c1 : `hsl(${c1})`;
         const color2 = c2.startsWith('hsl') ? c2 : `hsl(${c2})`;
+        // Lightened versions for readable text
+        const textColor1 = `color-mix(in srgb, ${color1} 55%, white)`;
+        const textColor2 = `color-mix(in srgb, ${color2} 55%, white)`;
 
         return {
           ...rule.archetype,
           icon: icons[rule.iconKey](color1, color2),
           color1,
           color2,
+          textColor1,
+          textColor2,
         };
       }
     }
@@ -281,9 +286,10 @@ const ReaderArchetype = () => {
       <span
         className="text-xs font-serif font-bold tracking-widest uppercase cursor-default"
         style={{
-          background: `linear-gradient(135deg, ${result.color1}, ${result.color2})`,
+          background: `linear-gradient(135deg, ${result.textColor1}, ${result.textColor2})`,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
+          filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.15))',
         }}
       >
         {result.name}
