@@ -384,42 +384,32 @@ const RiverOfReading = () => {
       .attr('xChannelSelector', 'R')
       .attr('yChannelSelector', 'G');
 
-    /* ── Animated shimmer gradient (flows left→right like particles) ── */
-    const shimmerGrad = defs.append('linearGradient').attr('id', 'shimmer-sweep')
-      .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%')
-      .attr('gradientUnits', 'userSpaceOnUse');
-    shimmerGrad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad.append('stop').attr('offset', '8%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad.append('stop').attr('offset', '18%').attr('stop-color', 'white').attr('stop-opacity', 0.06);
-    shimmerGrad.append('stop').attr('offset', '25%').attr('stop-color', 'white').attr('stop-opacity', 0.22);
-    shimmerGrad.append('stop').attr('offset', '32%').attr('stop-color', 'white').attr('stop-opacity', 0.06);
-    shimmerGrad.append('stop').attr('offset', '42%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    // Sweep left→right only, then reset
-    shimmerGrad.append('animateTransform')
-      .attr('attributeName', 'gradientTransform')
-      .attr('type', 'translate')
-      .attr('from', `${-innerW * 0.5} 0`)
-      .attr('to', `${innerW * 1.2} 0`)
-      .attr('dur', '5s')
-      .attr('repeatCount', 'indefinite');
+    /* ── Animated shimmer gradients (multiple passes at varied speeds for organic feel) ── */
+    const shimmerConfigs = [
+      { id: 'shimmer-sweep', peakOpacity: 0.22, peakPos: 25, width: 14, dur: 6.5, fromMul: -0.5, toMul: 1.2 },
+      { id: 'shimmer-sweep-2', peakOpacity: 0.14, peakPos: 50, width: 10, dur: 9.3, fromMul: -0.8, toMul: 1.0 },
+      { id: 'shimmer-sweep-3', peakOpacity: 0.10, peakPos: 35, width: 18, dur: 14, fromMul: -0.3, toMul: 1.4 },
+    ];
 
-    // Second shimmer pass — offset timing for layered light
-    const shimmerGrad2 = defs.append('linearGradient').attr('id', 'shimmer-sweep-2')
-      .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%')
-      .attr('gradientUnits', 'userSpaceOnUse');
-    shimmerGrad2.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad2.append('stop').attr('offset', '40%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad2.append('stop').attr('offset', '50%').attr('stop-color', 'white').attr('stop-opacity', 0.15);
-    shimmerGrad2.append('stop').attr('offset', '60%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad2.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad2.append('animateTransform')
-      .attr('attributeName', 'gradientTransform')
-      .attr('type', 'translate')
-      .attr('from', `${-innerW * 0.8} 0`)
-      .attr('to', `${innerW * 1.0} 0`)
-      .attr('dur', '8s')
-      .attr('repeatCount', 'indefinite');
+    shimmerConfigs.forEach(({ id, peakOpacity, peakPos, width, dur, fromMul, toMul }) => {
+      const grad = defs.append('linearGradient').attr('id', id)
+        .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%')
+        .attr('gradientUnits', 'userSpaceOnUse');
+      grad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('stop').attr('offset', `${peakPos - width}%`).attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('stop').attr('offset', `${peakPos - width / 2}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity * 0.3);
+      grad.append('stop').attr('offset', `${peakPos}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity);
+      grad.append('stop').attr('offset', `${peakPos + width / 2}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity * 0.3);
+      grad.append('stop').attr('offset', `${peakPos + width}%`).attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('animateTransform')
+        .attr('attributeName', 'gradientTransform')
+        .attr('type', 'translate')
+        .attr('from', `${innerW * fromMul} 0`)
+        .attr('to', `${innerW * toMul} 0`)
+        .attr('dur', `${dur}s`)
+        .attr('repeatCount', 'indefinite');
+    });
 
     /* ── Per-stream specular highlight gradient (top-edge gloss) ── */
     activeVibes.forEach(vibe => {
