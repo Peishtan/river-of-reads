@@ -303,16 +303,68 @@ const RiverOfReading = () => {
     ];
     const yScale = d3.scaleLinear().domain(yExtent).range([innerH * 0.05, innerH * 0.95]);
 
-    // Compute per-vibe meander offsets (organic drift applied to the stack baseline)
+    // ── Vibe co-occurrence matrix (for force-directed bundling) ──
+    // Counts how often two vibes appear together on the same book
+    const coOccurrence: Record<VibeGroup, Record<VibeGroup, number>> = {} as any;
+    activeVibes.forEach(v1 => {
+      coOccurrence[v1] = {} as any;
+      activeVibes.forEach(v2 => { coOccurrence[v1][v2] = 0; });
+    });
+    readingData.forEach(m => m.books.forEach(b => {
+      for (let a = 0; a < b.vibes.length; a++) {
+        for (let c = a + 1; c < b.vibes.length; c++) {
+          const v1 = b.vibes[a], v2 = b.vibes[c];
+          if (coOccurrence[v1] && coOccurrence[v1][v2] !== undefined) {
+            coOccurrence[v1][v2]++;
+            coOccurrence[v2][v1]++;
+          }
+        }
+      }
+    }));
+    // Normalize co-occurrence to 0..1
+    const maxCoOcc = Math.max(1, d3.max(activeVibes, v1 => d3.max(activeVibes, v2 => coOccurrence[v1][v2]))!);
+
+    // Per-month diversity score: how spread out are the vibes this month? (0 = focused, 1 = diverse)
+    const monthDiversity = series.map(s => {
+      const total = activeVibes.reduce((sum, v) => sum + s.vibeBooks[v], 0);
+      if (total === 0) return 0.5;
+      const active = activeVibes.filter(v => s.vibeBooks[v] > 0).length;
+      return active / activeVibes.length;
+    });
+
+    // Compute per-vibe meander offsets with force-directed bundling
     const meanderOffsets: Record<VibeGroup, number[]> = {} as any;
     activeVibes.forEach(vibe => {
       const { f1, f2, a1, a2, p } = MEANDER_CFG[vibe];
       meanderOffsets[vibe] = series.map((_, i) => {
         const t = i / (series.length - 1);
         const rampUp = 1 - Math.exp(-t * 4); // start tight, diverge
+
+        // Base organic meander
         const meander = (Math.sin(i * f1 + p) * a1 + Math.sin(i * f2 + p * 1.3) * a2) * 8;
         const noise = seededNoise(activeVibes.indexOf(vibe) + 1, i) * 5;
-        return (meander + noise) * rampUp;
+
+        // Force-directed attraction: pull toward co-occurring vibes
+        // When diversity is low (focused reading), streams cluster tighter ("rapids")
+        // When diversity is high, streams spread apart ("delta")
+        const diversityFactor = monthDiversity[i];
+        const spreadForce = (diversityFactor - 0.3) * 12; // negative = cluster, positive = spread
+
+        // Attraction toward strongly co-occurring vibes
+        let attractionPull = 0;
+        activeVibes.forEach(otherVibe => {
+          if (otherVibe === vibe) return;
+          const affinity = coOccurrence[vibe][otherVibe] / maxCoOcc;
+          if (affinity > 0.1) {
+            // Pull this vibe's meander toward the other vibe's natural position
+            const otherCfg = MEANDER_CFG[otherVibe];
+            const otherMeander = (Math.sin(i * otherCfg.f1 + otherCfg.p) * otherCfg.a1) * 8;
+            const thisMeander = (Math.sin(i * f1 + p) * a1) * 8;
+            attractionPull += (otherMeander - thisMeander) * affinity * 0.15;
+          }
+        });
+
+        return (meander + noise + spreadForce + attractionPull) * rampUp;
       });
     });
 
@@ -358,20 +410,41 @@ const RiverOfReading = () => {
       .attr('x', '-5%').attr('y', '-5%').attr('width', '110%').attr('height', '110%');
     const turb = waterFilter.append('feTurbulence')
       .attr('type', 'fractalNoise')
-      .attr('baseFrequency', '0.015 0.04')
-      .attr('numOctaves', '3')
+      .attr('baseFrequency', '0.012 0.035')
+      .attr('numOctaves', '4')
       .attr('seed', '5')
       .attr('result', 'noise');
-    // Animate the turbulence seed to create water movement
+    // Animate the turbulence to create living water movement
     turb.append('animate')
       .attr('attributeName', 'baseFrequency')
-      .attr('values', '0.015 0.04;0.018 0.045;0.012 0.035;0.015 0.04')
-      .attr('dur', '8s')
+      .attr('values', '0.012 0.035;0.016 0.042;0.010 0.030;0.014 0.038;0.012 0.035')
+      .attr('dur', '12s')
       .attr('repeatCount', 'indefinite');
     waterFilter.append('feDisplacementMap')
       .attr('in', 'SourceGraphic')
       .attr('in2', 'noise')
-      .attr('scale', '1.5')
+      .attr('scale', '3')
+      .attr('xChannelSelector', 'R')
+      .attr('yChannelSelector', 'G');
+
+    /* ── Edge roughness filter (gives stream edges an organic, non-vector feel) ── */
+    const edgeFilter = defs.append('filter').attr('id', 'edge-rough')
+      .attr('x', '-2%').attr('y', '-2%').attr('width', '104%').attr('height', '104%');
+    const edgeTurb = edgeFilter.append('feTurbulence')
+      .attr('type', 'turbulence')
+      .attr('baseFrequency', '0.03 0.06')
+      .attr('numOctaves', '2')
+      .attr('seed', '12')
+      .attr('result', 'edgeNoise');
+    edgeTurb.append('animate')
+      .attr('attributeName', 'seed')
+      .attr('values', '12;15;10;14;12')
+      .attr('dur', '20s')
+      .attr('repeatCount', 'indefinite');
+    edgeFilter.append('feDisplacementMap')
+      .attr('in', 'SourceGraphic')
+      .attr('in2', 'edgeNoise')
+      .attr('scale', '1.8')
       .attr('xChannelSelector', 'R')
       .attr('yChannelSelector', 'G');
 
@@ -476,35 +549,37 @@ const RiverOfReading = () => {
         .x(d => d.x)
         .y0(d => d.y1)
         .y1(d => d.y1 - (d.y1 - d.y0) * 0.4)
-        .curve(d3.curveBasis);
+        .curve(d3.curveCatmullRom.alpha(0.5));
       riverGroup.append('path').datum(pts).attr('d', glossArea)
         .attr('fill', `url(#gloss-${vibe})`)
         .attr('opacity', 0.85);
 
       // ── Per-stream shimmer (only the top 2-3 streams shimmer — others stay still)
       const fullArea = d3.area<LayerPoint>()
-        .x(d => d.x).y0(d => d.y0).y1(d => d.y1).curve(d3.curveBasis);
+        .x(d => d.x).y0(d => d.y0).y1(d => d.y1).curve(d3.curveCatmullRom.alpha(0.5));
       if (shimmerVibes.has(vibe)) {
         riverGroup.append('path').datum(pts).attr('d', fullArea)
           .attr('fill', `url(#shimmer-${vibe})`)
           .attr('opacity', 0.65);
       }
 
-      // ── Top edge 'ripple' stroke (bright specular edge)
-      const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
+      // ── Top edge 'ripple' stroke (bright specular edge) — with edge roughness
+      const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveCatmullRom.alpha(0.5));
       riverGroup.append('path').datum(pts).attr('d', topLine)
         .attr('fill', 'none')
         .attr('stroke', rippleColors[vibe])
         .attr('stroke-width', 0.8)
-        .attr('opacity', 0.7);
+        .attr('opacity', 0.7)
+        .attr('filter', 'url(#edge-rough)');
 
-      // ── Bottom edge subtle dark line (depth)
-      const bottomLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y0).curve(d3.curveBasis);
+      // ── Bottom edge subtle dark line (depth) — with edge roughness
+      const bottomLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y0).curve(d3.curveCatmullRom.alpha(0.5));
       riverGroup.append('path').datum(pts).attr('d', bottomLine)
         .attr('fill', 'none')
         .attr('stroke', 'rgba(0,0,0,0.3)')
         .attr('stroke-width', 0.6)
-        .attr('opacity', 0.5);
+        .attr('opacity', 0.5)
+        .attr('filter', 'url(#edge-rough)');
     });
 
     /* ── Decorative ambient tributaries ───────────────────── */
@@ -537,7 +612,7 @@ const RiverOfReading = () => {
       }
 
       const line = d3.line<{ x: number; y: number }>()
-        .x(d => d.x).y(d => d.y).curve(d3.curveBasis);
+        .x(d => d.x).y(d => d.y).curve(d3.curveCatmullRom.alpha(0.5));
 
       // Thin fill stroke to give it slight width
       riverGroup.append('path').datum(tributaryPts).attr('d', line)
@@ -566,7 +641,7 @@ const RiverOfReading = () => {
 
       // Build a center-line path for motion
       const centerLine = d3.line<LayerPoint>()
-        .x(d => d.x).y(d => d.center).curve(d3.curveBasis);
+        .x(d => d.x).y(d => d.center).curve(d3.curveCatmullRom.alpha(0.5));
       const pathData = centerLine(pts);
       if (!pathData) return;
 
@@ -683,7 +758,7 @@ const RiverOfReading = () => {
         });
     });
 
-  }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes, navigate]);
+  }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes, navigate, readingData]);
 
   // Dismiss on tap outside
   useEffect(() => {
