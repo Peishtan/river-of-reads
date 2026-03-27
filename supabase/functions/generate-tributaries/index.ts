@@ -228,7 +228,7 @@ Do NOT suggest books they've already read.`;
 
     // Filter out duplicates and insert
     const newTributaries = recommendations
-      .filter((r: { title: string }) => !existingTitles.has(r.title.toLowerCase()))
+      .filter((r: { title: string }) => !existingTitles.has(r.title.toLowerCase()) && !readTitles.has(r.title.toLowerCase()))
       .map((r: { title: string; author: string; source_streams: string[]; reason: string }) => ({
         title: r.title,
         author: r.author,
