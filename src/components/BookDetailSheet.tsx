@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import StarRating from '@/components/StarRating';
-import { Book, VibeGroup, vibeLabels, vibeHSL, VIBES } from '@/data/readingData';
+import { Book, VibeGroup, vibeLabels, vibeHSL, VIBES, TAG_TO_VIBE } from '@/data/readingData';
 import { ExternalLink, Pencil, Check, X } from 'lucide-react';
 import { useReadingData } from '@/contexts/ReadingDataContext';
 import { supabase } from '@/integrations/supabase/client';
