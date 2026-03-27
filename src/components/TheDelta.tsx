@@ -106,10 +106,20 @@ const TheDelta = () => {
                 </button>
               )}
               <div className="flex items-center gap-2 mb-3">
-                <span
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ background: gradientDot }}
-                />
+                <div className="flex flex-shrink-0" style={{ width: `${Math.max(10, 6 + streamColors.length * 6)}px` }}>
+                  {streamColors.map((color, i) => (
+                    <span
+                      key={i}
+                      className="w-2.5 h-2.5 rounded-full border border-card"
+                      style={{
+                        backgroundColor: color,
+                        marginLeft: i === 0 ? 0 : '-4px',
+                        zIndex: streamColors.length - i,
+                        position: 'relative',
+                      }}
+                    />
+                  ))}
+                </div>
                 <h3 className="text-[11px] font-bold font-serif text-foreground uppercase tracking-widest">
                   Suggested Read
                 </h3>
