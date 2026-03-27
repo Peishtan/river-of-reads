@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useReadingData } from '@/contexts/ReadingDataContext';
+import { VibeGroup, vibeLabels } from '@/data/readingData';
 import { X } from 'lucide-react';
 
 interface Tributary {
@@ -13,8 +14,14 @@ interface Tributary {
   created_at: string;
 }
 
+// Map display stream names back to vibe keys for color lookup
+const STREAM_TO_VIBE: Record<string, VibeGroup> = {};
+for (const [key, label] of Object.entries(vibeLabels)) {
+  STREAM_TO_VIBE[label] = key as VibeGroup;
+}
+
 const TheDelta = () => {
-  const { session } = useReadingData();
+  const { session, riverColors } = useReadingData();
   const [tributaries, setTributaries] = useState<Tributary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,65 +61,63 @@ const TheDelta = () => {
     }
   };
 
+  const getStreamColor = (stream: string) => {
+    const vibe = STREAM_TO_VIBE[stream];
+    return vibe ? `hsl(${riverColors[vibe]})` : 'hsl(var(--muted-foreground))';
+  };
+
   if (loading) return null;
   if (tributaries.length === 0) return null;
 
   return (
-    <div className="w-full max-w-2xl mx-auto mt-10 px-4">
+    <div className="w-full max-w-4xl mx-auto mt-10 px-4">
       <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
         The Delta
       </h2>
-      <div className="bg-card/40 backdrop-blur-sm border border-border rounded-lg px-6 py-5">
-        <p className="text-xs text-muted-foreground/70 mb-4 leading-relaxed">
-          Incoming tributaries — books discovered at the intersection of your most active streams, before they've joined the river.
-        </p>
-
-        <div className="space-y-3">
-          {tributaries.map((t) => (
-            <div
-              key={t.id}
-              className="group relative bg-background/50 border border-border/50 rounded-md px-4 py-3 transition-colors hover:border-primary/30"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {t.title}
-                  </p>
-                  {t.author && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{t.author}</p>
-                  )}
-                  {t.reason && (
-                    <p className="text-xs text-muted-foreground/70 mt-1.5 leading-relaxed italic">
-                      {t.reason}
-                    </p>
-                  )}
-                  {t.source_streams.length > 0 && (
-                    <div className="flex gap-1.5 mt-2 flex-wrap">
-                      {t.source_streams.map((stream) => (
-                        <span
-                          key={stream}
-                          className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary/80 border border-primary/15"
-                        >
-                          {stream}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {session && (
-                  <button
-                    onClick={() => dismiss(t.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
-                    title="Dismiss"
-                  >
-                    <X className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                )}
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {tributaries.map((t) => (
+          <div key={t.id} className="group bg-card/60 backdrop-blur-sm border border-border rounded-lg p-6 relative">
+            {session && (
+              <button
+                onClick={() => dismiss(t.id)}
+                className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
+                title="Dismiss"
+              >
+                <X className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
+            <div className="flex items-center gap-2 mb-2">
+              {t.source_streams.length > 0 && (
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStreamColor(t.source_streams[0]) }} />
+              )}
+              <h3 className="text-sm font-bold font-serif text-foreground uppercase tracking-wider">Incoming</h3>
             </div>
-          ))}
-        </div>
+            <p className="text-sm font-medium text-foreground">{t.title}</p>
+            {t.author && (
+              <p className="text-xs text-muted-foreground mt-0.5">{t.author}</p>
+            )}
+            {t.reason && (
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2">{t.reason}</p>
+            )}
+            {t.source_streams.length > 0 && (
+              <div className="flex gap-1.5 mt-3 flex-wrap">
+                {t.source_streams.map((stream) => (
+                  <span
+                    key={stream}
+                    className="text-[10px] px-2 py-0.5 rounded-full border"
+                    style={{
+                      backgroundColor: `${getStreamColor(stream)}20`,
+                      color: getStreamColor(stream),
+                      borderColor: `${getStreamColor(stream)}30`,
+                    }}
+                  >
+                    {stream}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
