@@ -758,7 +758,7 @@ const RiverOfReading = () => {
         });
     });
 
-  }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes, navigate]);
+  }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes, navigate, readingData]);
 
   // Dismiss on tap outside
   useEffect(() => {
