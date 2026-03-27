@@ -77,7 +77,7 @@ const TheDelta = () => {
         The Delta
       </h2>
       <p className="text-xs text-muted-foreground text-center max-w-xl mx-auto mb-6">
-        Books at the confluence of your strongest streams.
+        Next suggested reads based on your strongest streams.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {tributaries.map((t) => {
