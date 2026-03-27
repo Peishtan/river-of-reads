@@ -7,6 +7,7 @@ import { ReadingDataProvider, useReadingData } from "@/contexts/ReadingDataConte
 import Index from "./pages/Index.tsx";
 import Upload from "./pages/Upload.tsx";
 import Auth from "./pages/Auth.tsx";
+import Library from "./pages/Library.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
     <Route path="/" element={<Index />} />
+    <Route path="/library" element={<Library />} />
     <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
