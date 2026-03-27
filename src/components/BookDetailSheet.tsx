@@ -48,8 +48,12 @@ const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetail
     if (!book.bookId) return;
     setSaving(true);
     try {
+      // If non-current vibes are selected, remove 'current' fallback
+      const cleanedVibes = editVibes.filter(v => v !== 'current');
+      const finalVibes = cleanedVibes.length > 0 ? cleanedVibes : ['current'];
       const updateData = field === 'vibes'
-        ? { vibes: editVibes.length > 0 ? editVibes : ['current'] }
+        ? { vibes: finalVibes as string[] }
+        : { summary: editSummary.trim() || null };
         : { summary: editSummary.trim() || null };
 
       const { error } = await supabase
