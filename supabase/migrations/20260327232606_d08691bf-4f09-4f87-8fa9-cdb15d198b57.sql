@@ -1,0 +1,1 @@
+UPDATE books SET vibes = array_remove(vibes, 'current') WHERE 'current' = ANY(vibes) AND array_length(vibes, 1) > 1;
