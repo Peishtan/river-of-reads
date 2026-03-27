@@ -286,9 +286,10 @@ const ReaderArchetype = () => {
       <span
         className="text-xs font-serif font-bold tracking-widest uppercase cursor-default"
         style={{
-          background: `linear-gradient(135deg, ${result.color1}, ${result.color2})`,
+          background: `linear-gradient(135deg, ${result.textColor1}, ${result.textColor2})`,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
+          filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.15))',
         }}
       >
         {result.name}
