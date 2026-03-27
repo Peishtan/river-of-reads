@@ -61,9 +61,11 @@ const Library = () => {
     }
 
     result = [...result].sort((a, b) => {
+      const dateA = a.dateRead ? new Date(a.dateRead).getTime() : (a.year * 12 + a.month);
+      const dateB = b.dateRead ? new Date(b.dateRead).getTime() : (b.year * 12 + b.month);
       switch (sortKey) {
-        case 'date-desc': return (b.year * 12 + b.month) - (a.year * 12 + a.month);
-        case 'date-asc': return (a.year * 12 + a.month) - (b.year * 12 + b.month);
+        case 'date-desc': return dateB - dateA;
+        case 'date-asc': return dateA - dateB;
         case 'rating-desc': return b.rating - a.rating;
         case 'rating-asc': return a.rating - b.rating;
         case 'title-asc': return a.title.localeCompare(b.title);
