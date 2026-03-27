@@ -49,6 +49,7 @@ const MonthTooltip = ({ data }: MonthTooltipProps) => {
           ))}
         </div>
       )}
+      <p className="text-[9px] text-muted-foreground/30 mt-2 text-center">Double-click to open in Basin</p>
     </div>
   );
 };
