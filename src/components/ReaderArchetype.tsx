@@ -174,7 +174,7 @@ const rules: ArchetypeRule[] = [
       const top2 = new Set(s.slice(0, 2).map(([v]) => v));
       return top2.has('escapist') && top2.has('ideas');
     },
-    archetype: { name: 'The Submarine Pilot', description: 'You dive deep into speculative worlds where ideas and adventure merge beneath the surface.', icon: <></> },
+    archetype: { name: 'The Submarine Pilot', description: 'Dives deep into speculative worlds where ideas and adventure merge beneath the surface.', icon: <></> },
     iconKey: 'submariner',
   },
   {
@@ -182,39 +182,39 @@ const rules: ArchetypeRule[] = [
       const top2 = new Set(s.slice(0, 2).map(([v]) => v));
       return top2.has('history') && top2.has('life');
     },
-    archetype: { name: 'The River Keeper', description: 'You tend the currents between past and present, finding meaning where history meets lived experience.', icon: <></> },
+    archetype: { name: 'The River Keeper', description: 'Tends the currents between past and present, finding meaning where history meets lived experience.', icon: <></> },
     iconKey: 'keeper',
   },
   // Dominant archetypes
   {
     match: (s, t) => s[0][0] === 'escapist' && s[0][1] / t > 0.28,
-    archetype: { name: 'The White-Water Kayaker', description: 'You chase the rapids — drawn to adventure, world-building, and the thrill of the unknown.', icon: <></> },
+    archetype: { name: 'The White-Water Kayaker', description: 'Chases the rapids — drawn to adventure, world-building, and the thrill of the unknown.', icon: <></> },
     iconKey: 'kayaker',
   },
   {
     match: (s, t) => s[0][0] === 'life' && s[0][1] / t > 0.28,
-    archetype: { name: 'The Fly Fisher', description: 'You read the subtle currents — patient, reflective, casting lines into the deeper waters of life.', icon: <></> },
+    archetype: { name: 'The Fly Fisher', description: 'Reads the subtle currents — patient, reflective, casting lines into the deeper waters of life.', icon: <></> },
     iconKey: 'fisher',
   },
   {
     match: (s, t) => s[0][0] === 'history' && s[0][1] / t > 0.28,
-    archetype: { name: 'The Cartographer', description: 'You map the world through its stories — charting wars, civilizations, and the tides of time.', icon: <></> },
+    archetype: { name: 'The Cartographer', description: 'Maps the world through its stories — charting wars, civilizations, and the tides of time.', icon: <></> },
     iconKey: 'cartographer',
   },
   {
     match: (s, t) => s[0][0] === 'ideas' && s[0][1] / t > 0.28,
-    archetype: { name: 'The Lock Engineer', description: 'You tinker with ideas and test the current against logic — fascinated by how systems work.', icon: <></> },
+    archetype: { name: 'The Lock Engineer', description: 'Tinkers with ideas and tests the current against logic — fascinated by how systems work.', icon: <></> },
     iconKey: 'engineer',
   },
   {
     match: (s, t) => s[0][0] === 'nature' && s[0][1] / t > 0.28,
-    archetype: { name: 'The Drift Diver', description: 'You let the current carry you through wild places — drawn to the ocean, the land, and the untamed.', icon: <></> },
+    archetype: { name: 'The Drift Diver', description: 'Lets the current carry through wild places — drawn to the ocean, the land, and the untamed.', icon: <></> },
     iconKey: 'diver',
   },
   // Fallback: even spread
   {
     match: () => true,
-    archetype: { name: 'The Delta Explorer', description: 'Your reading branches in every direction — no single current defines you, and that\'s the beauty of it.', icon: <></> },
+    archetype: { name: 'The Delta Explorer', description: 'Reading branches in every direction — no single current defines the journey, and that\'s the beauty of it.', icon: <></> },
     iconKey: 'explorer',
   },
 ];
