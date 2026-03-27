@@ -109,6 +109,7 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
               summary: b.summary || undefined,
               dateRead: b.date_read || undefined,
               format: b.format || undefined,
+              bookId: b.id,
             });
           });
           const result: MonthData[] = [];

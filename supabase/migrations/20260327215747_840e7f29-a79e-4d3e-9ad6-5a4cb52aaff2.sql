@@ -1,0 +1,1 @@
+CREATE POLICY "Users can update own books" ON public.books FOR UPDATE TO public USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);

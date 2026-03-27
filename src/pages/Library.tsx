@@ -17,6 +17,7 @@ interface FlatBook {
   dateRead?: string;
   format?: string;
   summary?: string;
+  bookId?: string;
   year: number;
   month: number;
 }
