@@ -58,16 +58,13 @@ const TheDelta = () => {
   if (tributaries.length === 0) return null;
 
   return (
-    <div className="w-full max-w-2xl mx-auto mt-8 px-4">
+    <div className="w-full max-w-2xl mx-auto mt-10 px-4">
+      <h2 className="text-lg font-serif font-bold text-foreground tracking-wide uppercase mb-4 text-center">
+        The Delta
+      </h2>
       <div className="bg-card/40 backdrop-blur-sm border border-border rounded-lg px-6 py-5">
-        <div className="flex items-center gap-2 mb-4">
-          <GitBranch className="w-5 h-5 text-primary/70" />
-          <h2 className="text-lg font-serif font-bold text-foreground">The Delta</h2>
-          <span className="text-xs text-muted-foreground/60 ml-1">Incoming Tributaries</span>
-        </div>
-
         <p className="text-xs text-muted-foreground/70 mb-4 leading-relaxed">
-          Books discovered at the intersection of your most active streams — found before they've joined the river.
+          Incoming tributaries — books discovered at the intersection of your most active streams, before they've joined the river.
         </p>
 
         <div className="space-y-3">
