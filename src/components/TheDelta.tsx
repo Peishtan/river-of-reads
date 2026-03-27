@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useReadingData } from '@/contexts/ReadingDataContext';
-import { X, GitBranch } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface Tributary {
   id: string;
