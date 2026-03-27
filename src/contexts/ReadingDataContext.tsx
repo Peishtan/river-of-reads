@@ -106,6 +106,9 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
               })(),
               rating: b.rating || 3,
               pages: 250,
+              summary: b.summary || undefined,
+              dateRead: b.date_read || undefined,
+              format: b.format || undefined,
             });
           });
           const result: MonthData[] = [];
