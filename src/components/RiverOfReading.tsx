@@ -7,6 +7,7 @@ import { useReadingData } from '@/contexts/ReadingDataContext';
 import MonthTooltip from './MonthTooltip';
 
 import DeltaInsights from './DeltaInsights';
+import TheDelta from './TheDelta';
 
 /* ── helpers ─────────────────────────────────────────────── */
 
@@ -789,6 +790,8 @@ const RiverOfReading = () => {
       </div>
 
       <DeltaInsights />
+
+      <TheDelta />
 
       <div className="w-full max-w-2xl mx-auto mt-10 px-4 mb-8">
         <div className="bg-card/40 backdrop-blur-sm border border-border rounded-lg px-6 py-5">
