@@ -111,10 +111,9 @@ const TheDelta = () => {
                     key={stream}
                     className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
                     style={{
-                      backgroundColor: `${getStreamColor(stream)}25`,
-                      color: getStreamColor(stream),
-                      borderColor: `${getStreamColor(stream)}40`,
-                      textShadow: `0 0 8px ${getStreamColor(stream)}60`,
+                      backgroundColor: `color-mix(in srgb, ${getStreamColor(stream)} 20%, transparent)`,
+                      color: `color-mix(in srgb, ${getStreamColor(stream)} 60%, white)`,
+                      borderColor: `color-mix(in srgb, ${getStreamColor(stream)} 35%, transparent)`,
                     }}
                   >
                     {stream}
