@@ -206,7 +206,7 @@ const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetail
           {/* Source Tags */}
           {book.rawTags && book.rawTags.length > 0 && (
             <div>
-              <p className="text-xs text-muted-foreground/70 uppercase tracking-widest mb-2">Source Tags</p>
+              <p className="text-xs text-muted-foreground/70 uppercase tracking-widest mb-2">Vibe Tags</p>
               <div className="flex flex-wrap gap-1.5">
                 {book.rawTags.map(tag => {
                   const mappedVibe = TAG_TO_VIBE[tag.toLowerCase().trim()];
