@@ -704,36 +704,33 @@ const RiverOfReading = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-2 py-8">
-      <header className="text-center mb-6 max-w-3xl px-4">
-        <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-1 font-serif">
+      <header className="text-center mb-4 max-w-3xl px-4">
+        <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-2 font-serif">
           River of Reading
         </h1>
-        <p className="text-sm text-muted-foreground font-light tracking-wide font-sans">
-          Tributaries emerge when genres surge · hover to explore
-        </p>
-        <div className="flex items-center justify-center gap-4 mt-2">
+        <ReaderArchetype />
+        <div className="flex items-center justify-center gap-3 mt-2">
           {session && (
-            <a href="/upload" className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4">
-              Import your data →
+            <a href="/upload" className="text-[10px] text-primary/50 hover:text-primary transition-colors underline underline-offset-4">
+              Import →
             </a>
           )}
           {session ? (
             <button
               onClick={signOut}
-              className="text-xs text-muted-foreground/70 hover:text-destructive transition-colors underline underline-offset-4"
+              className="text-[10px] text-muted-foreground/50 hover:text-destructive transition-colors underline underline-offset-4"
             >
               Sign out
             </button>
           ) : (
-            <a href="/auth" className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-4">
-              Sign in →
-            </a>
+            <>
+              <a href="/auth" className="text-[10px] text-primary/50 hover:text-primary transition-colors underline underline-offset-4">
+                Sign in →
+              </a>
+              <span className="text-[10px] text-muted-foreground/50 italic">Viewing Peishan's books</span>
+            </>
           )}
         </div>
-        {!session && (
-          <p className="text-[10px] text-muted-foreground/70 mt-1 italic">Viewing Peishan's books</p>
-        )}
-        <ReaderArchetype />
       </header>
 
       <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
