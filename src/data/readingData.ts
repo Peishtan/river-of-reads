@@ -63,6 +63,9 @@ export interface Book {
   rating: number;
   pages: number;
   annotation?: string;
+  summary?: string;
+  dateRead?: string;
+  format?: string;
 }
 
 export interface MonthData {
