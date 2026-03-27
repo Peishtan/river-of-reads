@@ -57,31 +57,14 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    // Fetch user's books (most recent 50)
-    let { data: books, error: booksError } = await supabase
+    // Fetch candidate books (most recent 50) with admin client:
+    // include this user's books + legacy demo books with NULL user_id
+    const { data: books, error: booksError } = await adminSupabase
       .from("books")
       .select("title, author, vibes, rating, date_read")
-      .eq("user_id", userId)
+      .or(`user_id.eq.${userId},user_id.is.null`)
       .order("date_read", { ascending: false })
       .limit(50);
-
-    // Fallback: enrich with legacy demo books (user_id IS NULL) via admin client when needed
-    if (!booksError && (!books || books.length < 3)) {
-      const fallback = await adminSupabase
-        .from("books")
-        .select("title, author, vibes, rating, date_read")
-        .is("user_id", null)
-        .order("date_read", { ascending: false })
-        .limit(50);
-
-      if (fallback.error) {
-        booksError = fallback.error;
-      } else {
-        const existingTitles = new Set((books || []).map((b) => b.title.toLowerCase()));
-        const fallbackBooks = (fallback.data || []).filter((b) => !existingTitles.has(b.title.toLowerCase()));
-        books = [...(books || []), ...fallbackBooks].slice(0, 50);
-      }
-    }
 
     if (booksError) {
       console.error("Error fetching books:", booksError);
