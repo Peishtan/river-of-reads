@@ -683,7 +683,7 @@ const RiverOfReading = () => {
         });
     });
 
-  }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes]);
+  }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes, navigate]);
 
   // Dismiss on tap outside
   useEffect(() => {
