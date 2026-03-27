@@ -19,7 +19,7 @@ interface BookDetailSheetProps {
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetailSheetProps) => {
-  const { session, isCustomData } = useReadingData();
+  const { session, isCustomData, refreshData } = useReadingData();
   const [editingField, setEditingField] = useState<'vibes' | 'summary' | null>(null);
   const [editVibes, setEditVibes] = useState<VibeGroup[]>([]);
   const [editSummary, setEditSummary] = useState('');
@@ -71,6 +71,7 @@ const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetail
 
       toast.success(`${field === 'vibes' ? 'Streams' : 'Summary'} updated`);
       setEditingField(null);
+      refreshData();
       onBookUpdated?.();
     } catch (err) {
       console.error('Failed to update book:', err);
