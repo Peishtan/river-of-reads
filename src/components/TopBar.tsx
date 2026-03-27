@@ -9,7 +9,7 @@ const TopBar = () => {
 
   return (
     <nav className="w-full border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="flex items-center justify-between px-5 py-3 max-w-[1800px] mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-5 py-3 max-w-[1800px] mx-auto gap-1 sm:gap-0">
         {/* Left: nav links */}
         <div className="flex items-center gap-5">
           <a
@@ -52,7 +52,7 @@ const TopBar = () => {
               Sign out
             </button>
           ) : (
-            <span className="text-xs text-muted-foreground/60">
+            <span className="text-[11px] sm:text-xs text-muted-foreground/60">
               Viewing Peishan's books ·{' '}
               <a
                 href="/auth"
