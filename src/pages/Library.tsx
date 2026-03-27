@@ -26,7 +26,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep
 type SortKey = 'date-desc' | 'date-asc' | 'rating-desc' | 'rating-asc' | 'title-asc';
 
 const Library = () => {
-  const { data, session, signOut } = useReadingData();
+  const { data } = useReadingData();
   const [search, setSearch] = useState('');
   const [vibeFilter, setVibeFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<SortKey>('date-desc');
@@ -105,28 +105,6 @@ const Library = () => {
         <p className="text-sm text-muted-foreground">
           {allBooks.length} books · Every title that shaped the river
         </p>
-        <div className="flex items-center justify-center gap-3 mt-2">
-          <a href="/" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
-            ← River
-          </a>
-          {session && (
-            <a href="/upload" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
-              Import →
-            </a>
-          )}
-          {session ? (
-            <button
-              onClick={signOut}
-              className="text-[10px] text-muted-foreground/80 hover:text-destructive transition-colors underline underline-offset-4"
-            >
-              Sign out
-            </button>
-          ) : (
-            <span className="text-[10px] text-muted-foreground/80">
-              Viewing Peishan's books · <a href="/auth" className="text-primary/70 hover:text-primary transition-colors underline underline-offset-4">Sign in →</a>
-            </span>
-          )}
-        </div>
       </header>
 
       {/* Filters bar */}

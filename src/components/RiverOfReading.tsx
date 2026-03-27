@@ -54,7 +54,7 @@ const RiverOfReading = () => {
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   
 
-  const { data: rawReadingData, riverColors, session, signOut } = useReadingData();
+  const { data: rawReadingData, riverColors } = useReadingData();
 
   // Filter to 2021+ for visualization
   const readingData = useMemo(() => rawReadingData.filter(d => d.year >= 2021), [rawReadingData]);
@@ -709,28 +709,6 @@ const RiverOfReading = () => {
           River of Reading
         </h1>
         <ReaderArchetype />
-        <div className="flex items-center justify-center gap-3 mt-2">
-          <a href="/library" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
-            Library →
-          </a>
-          {session && (
-            <a href="/upload" className="text-[10px] text-primary/70 hover:text-primary transition-colors underline underline-offset-4">
-              Import →
-            </a>
-          )}
-          {session ? (
-            <button
-              onClick={signOut}
-              className="text-[10px] text-muted-foreground/80 hover:text-destructive transition-colors underline underline-offset-4"
-            >
-              Sign out
-            </button>
-          ) : (
-            <span className="text-[10px] text-muted-foreground/80">
-              Viewing Peishan's books · <a href="/auth" className="text-primary/70 hover:text-primary transition-colors underline underline-offset-4">Sign in for your own →</a>
-            </span>
-          )}
-        </div>
       </header>
 
       <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
