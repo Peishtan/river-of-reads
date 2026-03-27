@@ -8,6 +8,7 @@ import MonthTooltip from './MonthTooltip';
 
 import DeltaInsights from './DeltaInsights';
 import TheDelta from './TheDelta';
+import ReaderArchetype from './ReaderArchetype';
 
 /* ── helpers ─────────────────────────────────────────────── */
 
@@ -732,6 +733,7 @@ const RiverOfReading = () => {
         {!session && (
           <p className="text-[10px] text-muted-foreground/70 mt-1 italic">Viewing Peishan's books</p>
         )}
+        <ReaderArchetype />
       </header>
 
       <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
