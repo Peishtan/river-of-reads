@@ -66,6 +66,7 @@ export interface Book {
   summary?: string;
   dateRead?: string;
   format?: string;
+  bookId?: string; // DB id for editing
 }
 
 export interface MonthData {
