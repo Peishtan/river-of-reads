@@ -316,17 +316,7 @@ const RiverOfReading = () => {
       });
     });
 
-    /* ── Global stats (top-left) ────────────────────────── */
-
-    const totalBooks = readingData.reduce((a, m) => a + m.books.length, 0);
-    const yearsLogged = years.length;
-    g.append('text')
-      .attr('x', 0).attr('y', -30)
-      .attr('fill', 'hsl(200, 10%, 58%)')
-      .attr('font-size', '12px').attr('font-weight', '400')
-      .attr('font-family', "'Source Sans 3', sans-serif")
-      .attr('opacity', 0.85)
-      .text(`${totalBooks} books · ${yearsLogged} years`);
+    /* ── (stats moved to JSX header) ───────────────────── */
 
     /* ── Year labels ─────────────────────────────────────── */
 
