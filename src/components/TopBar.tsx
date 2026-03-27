@@ -47,12 +47,15 @@ const TopBar = () => {
             Sign out
           </button>
         ) : (
-          <a
-            href="/auth"
-            className="text-xs text-primary/70 hover:text-primary transition-colors"
-          >
-            Sign in
-          </a>
+          <span className="text-xs text-muted-foreground/60">
+            Viewing Peishan's books ·{' '}
+            <a
+              href="/auth"
+              className="text-primary/70 hover:text-primary transition-colors"
+            >
+              Sign in for your own →
+            </a>
+          </span>
         )}
       </div>
     </nav>
