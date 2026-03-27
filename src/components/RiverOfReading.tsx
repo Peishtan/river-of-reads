@@ -53,7 +53,7 @@ const RiverOfReading = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredMonth, setHoveredMonth] = useState<MonthData | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
-  
+  const navigate = useNavigate();
 
   const { data: rawReadingData, riverColors } = useReadingData();
 
