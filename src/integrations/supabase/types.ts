@@ -90,7 +90,7 @@ export type Database = {
           reason: string | null
           source_streams: string[]
           title: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           author?: string | null
@@ -101,7 +101,7 @@ export type Database = {
           reason?: string | null
           source_streams?: string[]
           title: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           author?: string | null
@@ -112,7 +112,7 @@ export type Database = {
           reason?: string | null
           source_streams?: string[]
           title?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
