@@ -47,13 +47,25 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    // Fetch user's books (most recent 50)
-    const { data: books, error: booksError } = await supabase
+    // Fetch user's books (most recent 50) — check user_id match OR null (legacy data)
+    let { data: books, error: booksError } = await supabase
       .from("books")
       .select("title, author, vibes, rating, date_read")
       .eq("user_id", userId)
       .order("date_read", { ascending: false })
       .limit(50);
+
+    // Fallback: if no books found for this user, try books with null user_id
+    if (!booksError && (!books || books.length === 0)) {
+      const fallback = await supabase
+        .from("books")
+        .select("title, author, vibes, rating, date_read")
+        .is("user_id", null)
+        .order("date_read", { ascending: false })
+        .limit(50);
+      books = fallback.data;
+      booksError = fallback.error;
+    }
 
     if (booksError) {
       console.error("Error fetching books:", booksError);
