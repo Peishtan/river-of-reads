@@ -490,20 +490,12 @@ const RiverOfReading = () => {
         .attr('fill', `url(#gloss-${vibe})`)
         .attr('opacity', 0.85);
 
-      // ── Primary shimmer sweep (left→right)
-      const fullArea = d3.area<LayerPoint>()
-        .x(d => d.x).y0(d => d.y0).y1(d => d.y1).curve(d3.curveBasis);
-      riverGroup.append('path').datum(pts).attr('d', fullArea)
-        .attr('fill', 'url(#shimmer-sweep)')
-        .attr('opacity', 0.7);
-
-      // ── Secondary + tertiary shimmer sweeps (varied speeds for organic feel)
-      riverGroup.append('path').datum(pts).attr('d', fullArea)
-        .attr('fill', 'url(#shimmer-sweep-2)')
-        .attr('opacity', 0.5);
-      riverGroup.append('path').datum(pts).attr('d', fullArea)
-        .attr('fill', 'url(#shimmer-sweep-3)')
-        .attr('opacity', 0.4);
+      // ── Per-stream shimmer (only active streams get shimmer — others stay still)
+      if (shimmerVibes.has(vibe)) {
+        riverGroup.append('path').datum(pts).attr('d', fullArea)
+          .attr('fill', `url(#shimmer-${vibe})`)
+          .attr('opacity', 0.65);
+      }
 
       // ── Top edge 'ripple' stroke (bright specular edge)
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
