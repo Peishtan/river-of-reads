@@ -2,6 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import StarRating from '@/components/StarRating';
 import { Book, VibeGroup, vibeLabels, vibeHSL } from '@/data/readingData';
+import { ExternalLink } from 'lucide-react';
 
 interface BookDetailSheetProps {
   book: (Book & { dateRead?: string; format?: string; summary?: string }) | null;
@@ -82,6 +83,16 @@ const BookDetailSheet = ({ book, open, onOpenChange }: BookDetailSheetProps) => 
               <p className="text-sm text-muted-foreground leading-relaxed">{book.summary}</p>
             </div>
           )}
+
+          {/* Goodreads link */}
+          <a
+            href={`https://www.goodreads.com/search?q=${encodeURIComponent(`${book.title} ${book.author}`.trim())}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-4"
+          >
+            Find on Goodreads <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       </SheetContent>
     </Sheet>
