@@ -56,8 +56,7 @@ const RiverOfReading = () => {
 
   const { data: rawReadingData, riverColors } = useReadingData();
 
-  // Filter to 2021+ for visualization
-  const readingData = useMemo(() => rawReadingData.filter(d => d.year >= 2021), [rawReadingData]);
+  const readingData = rawReadingData;
 
   /* ── derived data ──────────────────────────────────────── */
 
