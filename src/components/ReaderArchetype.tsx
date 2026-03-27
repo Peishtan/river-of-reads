@@ -265,21 +265,21 @@ const ReaderArchetype = () => {
   if (!result) return null;
 
   return (
-    <div className="flex flex-col items-center gap-2 mt-4 mb-2">
+    <div className="group relative flex items-center justify-center gap-2.5 mt-1">
       {/* Circle avatar with gradient border */}
       <div
-        className="w-20 h-20 rounded-full p-[2px] flex items-center justify-center"
+        className="w-10 h-10 rounded-full p-[1.5px] flex-shrink-0"
         style={{
           background: `linear-gradient(135deg, ${result.color1}, ${result.color2})`,
         }}
       >
-        <div className="w-full h-full rounded-full bg-background flex items-center justify-center p-3">
+        <div className="w-full h-full rounded-full bg-background flex items-center justify-center p-1.5">
           {result.icon}
         </div>
       </div>
       {/* Archetype name */}
-      <h2
-        className="text-sm font-serif font-bold tracking-widest uppercase"
+      <span
+        className="text-xs font-serif font-bold tracking-widest uppercase cursor-default"
         style={{
           background: `linear-gradient(135deg, ${result.color1}, ${result.color2})`,
           WebkitBackgroundClip: 'text',
@@ -287,11 +287,15 @@ const ReaderArchetype = () => {
         }}
       >
         {result.name}
-      </h2>
-      {/* Description */}
-      <p className="text-xs text-muted-foreground/70 text-center max-w-sm leading-relaxed">
-        {result.description}
-      </p>
+      </span>
+      {/* Hover tooltip */}
+      <div className="absolute top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+        <div className="bg-card/95 backdrop-blur-sm border border-border rounded-md px-3 py-2 shadow-lg max-w-xs">
+          <p className="text-[11px] text-muted-foreground leading-relaxed text-center">
+            {result.description}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
