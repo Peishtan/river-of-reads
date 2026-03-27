@@ -64,7 +64,7 @@ const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetail
 
       // Update the local book object
       if (field === 'vibes') {
-        book.vibes = editVibes.length > 0 ? editVibes : ['current' as VibeGroup];
+        book.vibes = finalVibes as VibeGroup[];
       } else {
         book.summary = editSummary.trim() || undefined;
       }
