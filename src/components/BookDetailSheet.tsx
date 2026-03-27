@@ -54,7 +54,6 @@ const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetail
       const updateData = field === 'vibes'
         ? { vibes: finalVibes as string[] }
         : { summary: editSummary.trim() || null };
-        : { summary: editSummary.trim() || null };
 
       const { error } = await supabase
         .from('books')
