@@ -386,8 +386,8 @@ const RiverOfReading = () => {
 
     /* ── Per-stream shimmer gradients (only top 2-3 streams by volume get shimmer) ── */
     const vibeVolumes: Record<string, number> = {};
-    activeVibes.forEach(vibe => {
-      vibeVolumes[vibe] = monthlyData.reduce((sum, m) => sum + (m.vibes[vibe] || 0), 0);
+    activeVibes.forEach((vibe, i) => {
+      vibeVolumes[vibe] = stackData.reduce((sum, row) => sum + (row[i + 1] as number || 0), 0);
     });
     const rankedVibes = Object.entries(vibeVolumes).sort((a, b) => b[1] - a[1]);
     const shimmerVibes = new Set(rankedVibes.slice(0, Math.min(3, Math.max(1, rankedVibes.length - 1))).map(([v]) => v));
