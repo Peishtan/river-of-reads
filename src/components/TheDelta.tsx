@@ -77,7 +77,7 @@ const TheDelta = () => {
         The Delta
       </h2>
       <p className="text-xs text-muted-foreground text-center max-w-xl mx-auto mb-6">
-        Next suggested reads based on your strongest streams.
+        Books at the confluence of your strongest streams.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {tributaries.map((t) => {
@@ -110,11 +110,8 @@ const TheDelta = () => {
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ background: gradientDot }}
                 />
-                <h3
-                  className="text-[11px] font-bold font-serif uppercase tracking-widest"
-                  style={{ color: `color-mix(in srgb, ${streamColors[0] || 'hsl(var(--muted-foreground))'} 70%, white)` }}
-                >
-                  From {primaryStream}
+                <h3 className="text-[11px] font-bold font-serif text-foreground uppercase tracking-widest">
+                  Suggested Read
                 </h3>
               </div>
               <p className="text-sm font-medium text-foreground leading-snug">{t.title}</p>
