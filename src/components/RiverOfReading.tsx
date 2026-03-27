@@ -384,42 +384,32 @@ const RiverOfReading = () => {
       .attr('xChannelSelector', 'R')
       .attr('yChannelSelector', 'G');
 
-    /* ── Animated shimmer gradient (flows left→right like particles) ── */
-    const shimmerGrad = defs.append('linearGradient').attr('id', 'shimmer-sweep')
-      .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%')
-      .attr('gradientUnits', 'userSpaceOnUse');
-    shimmerGrad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad.append('stop').attr('offset', '8%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad.append('stop').attr('offset', '18%').attr('stop-color', 'white').attr('stop-opacity', 0.06);
-    shimmerGrad.append('stop').attr('offset', '25%').attr('stop-color', 'white').attr('stop-opacity', 0.22);
-    shimmerGrad.append('stop').attr('offset', '32%').attr('stop-color', 'white').attr('stop-opacity', 0.06);
-    shimmerGrad.append('stop').attr('offset', '42%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    // Sweep left→right only, then reset
-    shimmerGrad.append('animateTransform')
-      .attr('attributeName', 'gradientTransform')
-      .attr('type', 'translate')
-      .attr('from', `${-innerW * 0.5} 0`)
-      .attr('to', `${innerW * 1.2} 0`)
-      .attr('dur', '5s')
-      .attr('repeatCount', 'indefinite');
+    /* ── Animated shimmer gradients (multiple passes at varied speeds for organic feel) ── */
+    const shimmerConfigs = [
+      { id: 'shimmer-sweep', peakOpacity: 0.22, peakPos: 25, width: 14, dur: 6.5, fromMul: -0.5, toMul: 1.2 },
+      { id: 'shimmer-sweep-2', peakOpacity: 0.14, peakPos: 50, width: 10, dur: 9.3, fromMul: -0.8, toMul: 1.0 },
+      { id: 'shimmer-sweep-3', peakOpacity: 0.10, peakPos: 35, width: 18, dur: 14, fromMul: -0.3, toMul: 1.4 },
+    ];
 
-    // Second shimmer pass — offset timing for layered light
-    const shimmerGrad2 = defs.append('linearGradient').attr('id', 'shimmer-sweep-2')
-      .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%')
-      .attr('gradientUnits', 'userSpaceOnUse');
-    shimmerGrad2.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad2.append('stop').attr('offset', '40%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad2.append('stop').attr('offset', '50%').attr('stop-color', 'white').attr('stop-opacity', 0.15);
-    shimmerGrad2.append('stop').attr('offset', '60%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad2.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
-    shimmerGrad2.append('animateTransform')
-      .attr('attributeName', 'gradientTransform')
-      .attr('type', 'translate')
-      .attr('from', `${-innerW * 0.8} 0`)
-      .attr('to', `${innerW * 1.0} 0`)
-      .attr('dur', '8s')
-      .attr('repeatCount', 'indefinite');
+    shimmerConfigs.forEach(({ id, peakOpacity, peakPos, width, dur, fromMul, toMul }) => {
+      const grad = defs.append('linearGradient').attr('id', id)
+        .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '0%')
+        .attr('gradientUnits', 'userSpaceOnUse');
+      grad.append('stop').attr('offset', '0%').attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('stop').attr('offset', `${peakPos - width}%`).attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('stop').attr('offset', `${peakPos - width / 2}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity * 0.3);
+      grad.append('stop').attr('offset', `${peakPos}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity);
+      grad.append('stop').attr('offset', `${peakPos + width / 2}%`).attr('stop-color', 'white').attr('stop-opacity', peakOpacity * 0.3);
+      grad.append('stop').attr('offset', `${peakPos + width}%`).attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('stop').attr('offset', '100%').attr('stop-color', 'white').attr('stop-opacity', 0);
+      grad.append('animateTransform')
+        .attr('attributeName', 'gradientTransform')
+        .attr('type', 'translate')
+        .attr('from', `${innerW * fromMul} 0`)
+        .attr('to', `${innerW * toMul} 0`)
+        .attr('dur', `${dur}s`)
+        .attr('repeatCount', 'indefinite');
+    });
 
     /* ── Per-stream specular highlight gradient (top-edge gloss) ── */
     activeVibes.forEach(vibe => {
@@ -495,10 +485,13 @@ const RiverOfReading = () => {
         .attr('fill', 'url(#shimmer-sweep)')
         .attr('opacity', 0.7);
 
-      // ── Secondary shimmer sweep (slower, offset — layered reflections)
+      // ── Secondary + tertiary shimmer sweeps (varied speeds for organic feel)
       riverGroup.append('path').datum(pts).attr('d', fullArea)
         .attr('fill', 'url(#shimmer-sweep-2)')
         .attr('opacity', 0.5);
+      riverGroup.append('path').datum(pts).attr('d', fullArea)
+        .attr('fill', 'url(#shimmer-sweep-3)')
+        .attr('opacity', 0.4);
 
       // ── Top edge 'ripple' stroke (bright specular edge)
       const topLine = d3.line<LayerPoint>().x(d => d.x).y(d => d.y1).curve(d3.curveBasis);
@@ -805,7 +798,9 @@ const RiverOfReading = () => {
             </p>
             <p>
               <strong className="text-foreground/80">How it stays up to date:</strong> My rivers are updated automatically
-              via an n8n pipeline I've created from <a href="https://www.goodreads.com/review/list_rss/13139577-peishan-tan?shelf=read" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">Goodreads</a>.
+              via an n8n pipeline from <a href="https://www.goodreads.com/review/list_rss/13139577-peishan-tan?shelf=read" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">Goodreads</a>.
+              The recommendations in <em>The Delta</em> are generated by AI — it analyses my recent reads and strongest
+              streams, then suggests books that bridge them or pull toward new horizons.
             </p>
             <p>
               <strong className="text-foreground/80">Make your own:</strong> You don't need Goodreads or any automation —
