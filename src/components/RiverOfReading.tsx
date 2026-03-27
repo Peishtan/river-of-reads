@@ -663,7 +663,7 @@ const RiverOfReading = () => {
     // Hitboxes
     const hitboxes = g.append('g');
     const colW = innerW / series.length;
-    series.forEach((_, i) => {
+    series.forEach((s, i) => {
       hitboxes.append('rect')
         .attr('x', xScale(i) - colW / 2).attr('y', 0)
         .attr('width', colW).attr('height', innerH)
@@ -673,7 +673,14 @@ const RiverOfReading = () => {
           setMousePos({ x: event.clientX, y: event.clientY });
         })
         .on('mouseleave', hideHover)
-        .on('click', (event: MouseEvent) => showHover(i, event));
+        .on('click', (event: MouseEvent) => {
+          // Double-click navigates to Basin for that month
+          if ((event as any).detail === 2) {
+            navigate(`/library?year=${s.year}&month=${s.month}`);
+          } else {
+            showHover(i, event);
+          }
+        });
     });
 
   }, [series, smoothedCounts, avgVibeRating, years, riverColors, activeVibes]);
