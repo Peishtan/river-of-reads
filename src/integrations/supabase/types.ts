@@ -80,6 +80,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tributaries: {
+        Row: {
+          author: string | null
+          created_at: string
+          dismissed: boolean
+          external_url: string | null
+          id: string
+          reason: string | null
+          source_streams: string[]
+          title: string
+          user_id: string
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string
+          dismissed?: boolean
+          external_url?: string | null
+          id?: string
+          reason?: string | null
+          source_streams?: string[]
+          title: string
+          user_id: string
+        }
+        Update: {
+          author?: string | null
+          created_at?: string
+          dismissed?: boolean
+          external_url?: string | null
+          id?: string
+          reason?: string | null
+          source_streams?: string[]
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
