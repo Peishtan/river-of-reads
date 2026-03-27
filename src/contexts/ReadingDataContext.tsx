@@ -53,7 +53,65 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load books from DB (works for both authenticated and anonymous users)
+  const loadBooks = useCallback(async () => {
+    try {
+      const { data: books } = await supabase
+        .from('books')
+        .select('*')
+        .order('date_read', { ascending: true });
+      if (books && books.length > 0) {
+        const monthMap = new Map<string, MonthData['books']>();
+        books.forEach(b => {
+          if (!b.date_read) return;
+          const d = new Date(b.date_read);
+          const key = `${d.getFullYear()}-${d.getMonth()}`;
+          if (!monthMap.has(key)) monthMap.set(key, []);
+          monthMap.get(key)!.push({
+            title: b.title,
+            author: b.author || '',
+            vibes: (() => {
+              const rawTags = b.vibes && b.vibes.length > 0 ? b.vibes : [];
+              const mapped = new Set<VibeGroup>();
+              for (const tag of rawTags) {
+                const vibe = TAG_TO_VIBE[tag.toLowerCase().trim()];
+                if (vibe) mapped.add(vibe);
+                else if (VIBES.includes(tag as VibeGroup)) mapped.add(tag as VibeGroup);
+              }
+              if (mapped.size > 0 && mapped.has('current') && mapped.size > 1) {
+                mapped.delete('current');
+              }
+              return mapped.size > 0 ? Array.from(mapped) : ['current'] as VibeGroup[];
+            })(),
+            rating: b.rating || 3,
+            pages: 250,
+            summary: b.summary || undefined,
+            dateRead: b.date_read || undefined,
+            format: b.format || undefined,
+            bookId: b.id,
+          });
+        });
+        const result: MonthData[] = [];
+        monthMap.forEach((bks, key) => {
+          const [y, m] = key.split('-').map(Number);
+          result.push({ year: y, month: m, books: bks });
+        });
+        result.sort((a, b) => a.year - b.year || a.month - b.month);
+        if (result.length > 0) {
+          setDataRaw(result);
+          setIsCustomData(true);
+        }
+      } else {
+        setDataRaw(dummyData);
+        setIsCustomData(false);
+      }
+    } catch (err) {
+      console.warn('Could not load books:', err);
+      setDataRaw(dummyData);
+      setIsCustomData(false);
+    }
+  }, []);
+
+  // Load books and colors when session changes
   useEffect(() => {
     const loadColors = async () => {
       if (!session) {
@@ -80,69 +138,9 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    const loadBooks = async () => {
-      try {
-        const { data: books } = await supabase
-          .from('books')
-          .select('*')
-          .order('date_read', { ascending: true });
-        if (books && books.length > 0) {
-          const monthMap = new Map<string, MonthData['books']>();
-          books.forEach(b => {
-            if (!b.date_read) return;
-            const d = new Date(b.date_read);
-            const key = `${d.getFullYear()}-${d.getMonth()}`;
-            if (!monthMap.has(key)) monthMap.set(key, []);
-            monthMap.get(key)!.push({
-              title: b.title,
-              author: b.author || '',
-              vibes: (() => {
-                const rawTags = b.vibes && b.vibes.length > 0 ? b.vibes : [];
-                const mapped = new Set<VibeGroup>();
-                for (const tag of rawTags) {
-                  const vibe = TAG_TO_VIBE[tag.toLowerCase().trim()];
-                  if (vibe) mapped.add(vibe);
-                  else if (VIBES.includes(tag as VibeGroup)) mapped.add(tag as VibeGroup);
-                }
-                // If any non-current vibes were found, remove 'current' (it was a fallback)
-                if (mapped.size > 0 && mapped.has('current') && mapped.size > 1) {
-                  mapped.delete('current');
-                }
-                return mapped.size > 0 ? Array.from(mapped) : ['current'] as VibeGroup[];
-              })(),
-              rating: b.rating || 3,
-              pages: 250,
-              summary: b.summary || undefined,
-              dateRead: b.date_read || undefined,
-              format: b.format || undefined,
-              bookId: b.id,
-            });
-          });
-          const result: MonthData[] = [];
-          monthMap.forEach((bks, key) => {
-            const [y, m] = key.split('-').map(Number);
-            result.push({ year: y, month: m, books: bks });
-          });
-          result.sort((a, b) => a.year - b.year || a.month - b.month);
-          if (result.length > 0) {
-            setDataRaw(result);
-            setIsCustomData(true);
-          }
-        } else {
-          // Fallback to demo data if DB is empty
-          setDataRaw(dummyData);
-          setIsCustomData(false);
-        }
-      } catch (err) {
-        console.warn('Could not load books:', err);
-        setDataRaw(dummyData);
-        setIsCustomData(false);
-      }
-    };
-
     loadColors();
     loadBooks();
-  }, [session]);
+  }, [session, loadBooks]);
 
   const setData = useCallback((d: MonthData[]) => {
     setDataRaw(d);
@@ -186,7 +184,7 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <ReadingDataContext.Provider value={{ data, setData, isCustomData, riverColors, setRiverColor, session, loading, signOut }}>
+    <ReadingDataContext.Provider value={{ data, setData, isCustomData, riverColors, setRiverColor, session, loading, signOut, refreshData: loadBooks }}>
       {children}
     </ReadingDataContext.Provider>
   );
