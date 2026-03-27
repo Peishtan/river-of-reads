@@ -699,6 +699,12 @@ const RiverOfReading = () => {
           River of Reading
         </h1>
         <ReaderArchetype />
+        <p className="text-xs text-muted-foreground/70 mt-2 tracking-wide">
+          {readingData.reduce((a, m) => a + m.books.length, 0)} books · {(() => {
+            const yrs = new Set(readingData.map(m => m.year));
+            return yrs.size;
+          })()} years
+        </p>
       </header>
 
       <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
