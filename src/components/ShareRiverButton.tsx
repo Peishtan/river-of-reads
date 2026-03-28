@@ -20,20 +20,49 @@ const ShareRiverButton = ({ captureSelector }: ShareRiverButtonProps) => {
         return;
       }
 
-      const canvas = await html2canvas(el, {
-        backgroundColor: '#141b22', // --background approx
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        // Ignore interactive-only elements
-        ignoreElements: (element) =>
-          element.classList?.contains('share-exclude') ?? false,
+      // Convert SVGs to canvas-friendly format before capture
+      const svgs = el.querySelectorAll('svg');
+      const svgBackups: { svg: SVGElement; origWidth: string; origHeight: string }[] = [];
+      svgs.forEach((svg) => {
+        const rect = svg.getBoundingClientRect();
+        svgBackups.push({
+          svg,
+          origWidth: svg.getAttribute('width') || '',
+          origHeight: svg.getAttribute('height') || '',
+        });
+        svg.setAttribute('width', String(rect.width));
+        svg.setAttribute('height', String(rect.height));
       });
+
+      let canvas: HTMLCanvasElement;
+      try {
+        canvas = await html2canvas(el, {
+          backgroundColor: '#141b22',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          allowTaint: true,
+          foreignObjectRendering: false,
+          ignoreElements: (element) =>
+            element.classList?.contains('share-exclude') ?? false,
+        });
+      } finally {
+        // Restore SVG attributes
+        svgBackups.forEach(({ svg, origWidth, origHeight }) => {
+          if (origWidth) svg.setAttribute('width', origWidth);
+          else svg.removeAttribute('width');
+          if (origHeight) svg.setAttribute('height', origHeight);
+          else svg.removeAttribute('height');
+        });
+      }
 
       const blob = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, 'image/png')
       );
-      if (!blob) return;
+      if (!blob) {
+        console.warn('Share: canvas.toBlob returned null');
+        return;
+      }
 
       const file = new File([blob], 'river-of-reading.png', { type: 'image/png' });
 
@@ -45,19 +74,21 @@ const ShareRiverButton = ({ captureSelector }: ShareRiverButtonProps) => {
           files: [file],
         });
       } else {
-        // Fallback: download
+        // Fallback: download via link
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'river-of-reading.png';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
 
       setDone(true);
       setTimeout(() => setDone(false), 2000);
     } catch (err) {
-      console.warn('Share failed:', err);
+      console.error('Share failed:', err);
     } finally {
       setCapturing(false);
     }
