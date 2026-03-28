@@ -270,7 +270,7 @@ const ReaderArchetype = () => {
   if (!result) return null;
 
   return (
-    <div className="group relative flex items-center justify-center gap-3 mt-1">
+    <div className="group relative flex flex-col items-center gap-2 mt-1 w-full">
       {/* Circle avatar with gradient border */}
       <div
         className="w-12 h-12 rounded-full p-[1.5px] flex-shrink-0"
