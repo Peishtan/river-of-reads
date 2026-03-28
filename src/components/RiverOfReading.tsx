@@ -10,6 +10,7 @@ import MonthTooltip from './MonthTooltip';
 import DeltaInsights from './DeltaInsights';
 import TheDelta from './TheDelta';
 import ReaderArchetype from './ReaderArchetype';
+import ShareRiverButton from './ShareRiverButton';
 
 /* ── helpers ─────────────────────────────────────────────── */
 
