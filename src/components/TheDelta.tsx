@@ -74,6 +74,28 @@ const TheDelta = () => {
     return c.startsWith('hsl') ? c : `hsl(${c})`;
   };
 
+  const handleBorrow = async (tributary: Tributary) => {
+    setBorrowingId(tributary.id);
+    setBorrowError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('borrow-book', {
+        body: { title: tributary.title, author: tributary.author },
+      });
+      if (error) throw error;
+      if (data?.libby_url) {
+        setLibbyUrl(data.libby_url);
+        setLibbyModalOpen(true);
+      } else {
+        setBorrowError('No library link found for this book.');
+      }
+    } catch (err: any) {
+      console.error('Borrow error:', err);
+      setBorrowError(err?.message || 'Could not complete borrow request.');
+    } finally {
+      setBorrowingId(null);
+    }
+  };
+
   if (loading) return null;
   if (tributaries.length === 0) return null;
 
