@@ -865,19 +865,14 @@ const RiverOfReading = () => {
           })}
         </div>
 
-        <DeltaInsights />
+        {/* Share button — inside card, before gauge */}
+        <div className="mt-5 share-exclude">
+          <ShareRiverButton captureSelector="#river-share-card" />
+        </div>
 
-        {/* Watermark for share image */}
-        <p className="text-[10px] text-muted-foreground/40 mt-6 tracking-widest uppercase">
-          river-of-reads.lovable.app
-        </p>
+        <DeltaInsights />
       </div>
       {/* ── End shareable region ── */}
-
-      {/* Share button — outside capture region */}
-      <div className="mt-4 share-exclude">
-        <ShareRiverButton captureSelector="#river-share-card" />
-      </div>
 
       <TheDelta />
 
