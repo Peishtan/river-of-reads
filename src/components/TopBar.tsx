@@ -41,7 +41,7 @@ const TopBar = () => {
                   href="/upload"
                   className="text-xs tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Import
+                  Source
                 </a>
               </>
             )}
@@ -51,7 +51,7 @@ const TopBar = () => {
               className="text-xs tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
             >
               <MessageSquare className="w-3 h-3" />
-              Feedback
+              Ripple
             </button>
           </div>
 
