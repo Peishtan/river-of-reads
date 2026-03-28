@@ -176,10 +176,56 @@ const TheDelta = () => {
                   ))}
                 </div>
               )}
+              {session && (
+                <div className="mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs h-7"
+                    disabled={borrowingId === t.id}
+                    onClick={() => handleBorrow(t)}
+                  >
+                    {borrowingId === t.id ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Searching…
+                      </>
+                    ) : (
+                      'Borrow'
+                    )}
+                  </Button>
+                  {borrowError && borrowingId === null && (
+                    <p className="text-[10px] text-destructive mt-1 text-center">{borrowError}</p>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
       </div>
+
+      <Dialog open={libbyModalOpen} onOpenChange={setLibbyModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Book Found</DialogTitle>
+            <DialogDescription>
+              This book is available to borrow through your library.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-2">
+            <Button
+              onClick={() => {
+                if (libbyUrl) window.open(libbyUrl, '_blank', 'noopener');
+                setLibbyModalOpen(false);
+              }}
+              className="gap-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Open in Libby
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
