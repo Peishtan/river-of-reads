@@ -56,7 +56,7 @@ const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card border-border max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-serif text-lg text-foreground">Send Feedback</DialogTitle>
+          <DialogTitle className="font-serif text-lg text-foreground">Send a Ripple</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
             Report a data issue or share a suggestion.
           </DialogDescription>
