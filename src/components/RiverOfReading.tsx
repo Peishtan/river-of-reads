@@ -801,74 +801,83 @@ const RiverOfReading = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-2 py-8">
-      <header className="text-center mb-4 max-w-3xl px-4">
-        <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-2 font-serif">
-          River of Reading
-        </h1>
-        <ReaderArchetype />
-        <p className="text-xs text-muted-foreground/70 mt-2 tracking-wide">
-          {readingData.reduce((a, m) => a + m.books.length, 0)} books · {(() => {
-            const yrs = new Set(readingData.map(m => m.year));
-            return yrs.size;
-          })()} years
-        </p>
-      </header>
+      {/* ── Shareable region ── */}
+      <div id="river-share-card" className="w-full flex flex-col items-center bg-background">
+        <header className="text-center mb-4 max-w-3xl px-4">
+          <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-2 font-serif">
+            River of Reading
+          </h1>
+          <ReaderArchetype />
+          <p className="text-xs text-muted-foreground/70 mt-2 tracking-wide">
+            {readingData.reduce((a, m) => a + m.books.length, 0)} books · {(() => {
+              const yrs = new Set(readingData.map(m => m.year));
+              return yrs.size;
+            })()} years
+          </p>
+        </header>
 
-      <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
-          <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
-        </div>
-      </div>
-
-      {hoveredMonth && mousePos && (() => {
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const tooltipW = 260;
-        const tooltipH = 200;
-        // Clamp position so tooltip never leaves viewport
-        let left = mousePos.x + 16;
-        let top = mousePos.y - tooltipH - 8;
-        // Flip right → left if clipped
-        if (left + tooltipW > vw - 8) {
-          left = mousePos.x - tooltipW - 16;
-        }
-        // Clamp left edge
-        if (left < 8) left = 8;
-        // Flip up → down if clipped
-        if (top < 8) {
-          top = mousePos.y + 16;
-        }
-        // Clamp bottom edge
-        if (top + tooltipH > vh - 8) {
-          top = vh - tooltipH - 8;
-        }
-        return (
-          <div
-            className="fixed z-50 pointer-events-none animate-fade-up"
-            style={{
-              left: `${left}px`,
-              top: `${top}px`,
-            }}
-          >
-            <MonthTooltip data={hoveredMonth} />
+        <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
+            <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
           </div>
-        );
-      })()}
+        </div>
 
-      <div className="flex flex-wrap items-center gap-5 mt-4 justify-center px-4">
-        {activeVibes.map(v => {
-          const count = readingData.reduce((a, m) => a + m.books.filter(b => b.vibes.includes(v)).length, 0);
+        {hoveredMonth && mousePos && (() => {
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          const tooltipW = 260;
+          const tooltipH = 200;
+          let left = mousePos.x + 16;
+          let top = mousePos.y - tooltipH - 8;
+          if (left + tooltipW > vw - 8) {
+            left = mousePos.x - tooltipW - 16;
+          }
+          if (left < 8) left = 8;
+          if (top < 8) {
+            top = mousePos.y + 16;
+          }
+          if (top + tooltipH > vh - 8) {
+            top = vh - tooltipH - 8;
+          }
           return (
-            <div key={v} className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[v], opacity: 0.85 }} />
-              <span className="text-[12px] text-muted-foreground">{vibeLabels[v]}</span>
-              <span className="text-[11px] text-muted-foreground/70">{count}</span>
+            <div
+              className="fixed z-50 pointer-events-none animate-fade-up share-exclude"
+              style={{
+                left: `${left}px`,
+                top: `${top}px`,
+              }}
+            >
+              <MonthTooltip data={hoveredMonth} />
             </div>
           );
-        })}
-      </div>
+        })()}
 
-      <DeltaInsights />
+        <div className="flex flex-wrap items-center gap-5 mt-4 justify-center px-4">
+          {activeVibes.map(v => {
+            const count = readingData.reduce((a, m) => a + m.books.filter(b => b.vibes.includes(v)).length, 0);
+            return (
+              <div key={v} className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: riverColors[v], opacity: 0.85 }} />
+                <span className="text-[12px] text-muted-foreground">{vibeLabels[v]}</span>
+                <span className="text-[11px] text-muted-foreground/70">{count}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <DeltaInsights />
+
+        {/* Watermark for share image */}
+        <p className="text-[10px] text-muted-foreground/40 mt-6 tracking-widest uppercase">
+          river-of-reads.lovable.app
+        </p>
+      </div>
+      {/* ── End shareable region ── */}
+
+      {/* Share button — outside capture region */}
+      <div className="mt-4 share-exclude">
+        <ShareRiverButton captureSelector="#river-share-card" />
+      </div>
 
       <TheDelta />
 
