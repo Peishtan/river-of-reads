@@ -869,10 +869,10 @@ const RiverOfReading = () => {
         <div className="mt-5 share-exclude">
           <ShareRiverButton captureSelector="#river-share-card" />
         </div>
-
-        <DeltaInsights />
       </div>
       {/* ── End shareable region ── */}
+
+      <DeltaInsights />
 
       <TheDelta />
 
