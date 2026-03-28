@@ -223,7 +223,6 @@ const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetail
                       }}
                     >
                       {tag}
-                      {mappedVibe && <span className="ml-1 opacity-60">→ {vibeLabels[mappedVibe]}</span>}
                     </span>
                   );
                 })}
