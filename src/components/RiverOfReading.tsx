@@ -807,7 +807,7 @@ const RiverOfReading = () => {
           <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-2 font-serif">
             River of Reading
           </h1>
-          <ReaderArchetype />
+          <div className="share-exclude"><ReaderArchetype /></div>
           <p className="text-xs text-muted-foreground/70 mt-2 tracking-wide">
             {readingData.reduce((a, m) => a + m.books.length, 0)} books · {(() => {
               const yrs = new Set(readingData.map(m => m.year));
