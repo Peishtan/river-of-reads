@@ -27,7 +27,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep
 type SortKey = 'date-desc' | 'date-asc' | 'rating-desc' | 'rating-asc' | 'title-asc';
 
 const Library = () => {
-  const { data, isCustomData, session } = useReadingData();
+  const { data, isCustomData, session, loading } = useReadingData();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [vibeFilter, setVibeFilter] = useState<string>('all');
@@ -156,6 +156,14 @@ const Library = () => {
   useEffect(() => { setFocusIndex(-1); }, [search, vibeFilter, sortKey]);
 
   const isFilteredByDate = yearParam !== null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground/50 text-sm">Loading…</div>
+      </div>
+    );
+  }
 
   // Check if we're showing demo data (no custom data and not logged in)
   const showEmptyState = !isCustomData && !session;
