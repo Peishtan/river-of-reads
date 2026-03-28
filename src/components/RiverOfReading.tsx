@@ -803,7 +803,7 @@ const RiverOfReading = () => {
     <div className="min-h-screen bg-background flex flex-col items-center px-2 py-8">
       {/* ── Shareable region ── */}
       <div id="river-share-card" className="w-full flex flex-col items-center bg-background pb-6">
-        <header className="text-center mb-4 max-w-3xl px-4">
+        <header className="text-center mb-4 max-w-3xl w-full px-4">
           <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-2 font-serif">
             River of Reading
           </h1>
