@@ -2,7 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useReadingData } from '@/contexts/ReadingDataContext';
 import { VibeGroup, vibeLabels } from '@/data/readingData';
-import { X } from 'lucide-react';
+import { X, Loader2, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface Tributary {
   id: string;
@@ -24,6 +26,10 @@ const TheDelta = () => {
   const { session, riverColors } = useReadingData();
   const [tributaries, setTributaries] = useState<Tributary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [borrowingId, setBorrowingId] = useState<string | null>(null);
+  const [libbyUrl, setLibbyUrl] = useState<string | null>(null);
+  const [libbyModalOpen, setLibbyModalOpen] = useState(false);
+  const [borrowError, setBorrowError] = useState<string | null>(null);
 
   const fetchTributaries = useCallback(async () => {
     try {
@@ -66,6 +72,28 @@ const TheDelta = () => {
     if (!vibe) return 'hsl(var(--muted-foreground))';
     const c = riverColors[vibe];
     return c.startsWith('hsl') ? c : `hsl(${c})`;
+  };
+
+  const handleBorrow = async (tributary: Tributary) => {
+    setBorrowingId(tributary.id);
+    setBorrowError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('borrow-book', {
+        body: { title: tributary.title, author: tributary.author },
+      });
+      if (error) throw error;
+      if (data?.libby_url) {
+        setLibbyUrl(data.libby_url);
+        setLibbyModalOpen(true);
+      } else {
+        setBorrowError('No library link found for this book.');
+      }
+    } catch (err: any) {
+      console.error('Borrow error:', err);
+      setBorrowError(err?.message || 'Could not complete borrow request.');
+    } finally {
+      setBorrowingId(null);
+    }
   };
 
   if (loading) return null;
@@ -148,10 +176,56 @@ const TheDelta = () => {
                   ))}
                 </div>
               )}
+              {session && (
+                <div className="mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs h-7"
+                    disabled={borrowingId === t.id}
+                    onClick={() => handleBorrow(t)}
+                  >
+                    {borrowingId === t.id ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Searching…
+                      </>
+                    ) : (
+                      'Borrow'
+                    )}
+                  </Button>
+                  {borrowError && borrowingId === null && (
+                    <p className="text-[10px] text-destructive mt-1 text-center">{borrowError}</p>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
       </div>
+
+      <Dialog open={libbyModalOpen} onOpenChange={setLibbyModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Book Found</DialogTitle>
+            <DialogDescription>
+              This book is available to borrow through your library.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-2">
+            <Button
+              onClick={() => {
+                if (libbyUrl) window.open(libbyUrl, '_blank', 'noopener');
+                setLibbyModalOpen(false);
+              }}
+              className="gap-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Open in Libby
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
