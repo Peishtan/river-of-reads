@@ -172,7 +172,7 @@ const Library = () => {
     <div className="min-h-screen bg-background flex flex-col items-center px-4 py-8">
       {/* Header */}
       <header className="text-center mb-8 max-w-3xl">
-        <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-1 font-serif">
+        <h1 className="text-3xl md:text-4xl font-black text-primary tracking-[0.18em] uppercase mb-1 font-serif">
           The Basin
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -182,7 +182,7 @@ const Library = () => {
           }
         </p>
         {isFilteredByDate && (
-          <a href="/library" className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-4 mt-1 inline-block">
+          <a href="/library" className="text-xs text-primary underline underline-offset-4 hover:text-primary/80 transition-colors mt-1 inline-block">
             View all books →
           </a>
         )}

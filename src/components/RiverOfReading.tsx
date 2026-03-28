@@ -887,7 +887,7 @@ const RiverOfReading = () => {
               broader streams. For example, <em>thriller</em> and <em>dystopian</em> flow into Escapist & Adventure,
               while <em>memoir</em> and <em>warm</em> feed into Life & Reflective.
               A book can contribute to multiple streams if it carries tags from different groups.
-              You can see exactly which tags a book has by tapping it in <a href="/library" className="text-primary/70 hover:text-primary underline underline-offset-4">the Basin</a>.
+              You can see exactly which tags a book has by tapping it in <a href="/library" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">the Basin</a>.
             </p>
             <p>
               Your reader archetype is determined by the blend of your
