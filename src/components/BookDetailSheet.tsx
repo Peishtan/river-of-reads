@@ -217,9 +217,9 @@ const BookDetailSheet = ({ book, open, onOpenChange, onBookUpdated }: BookDetail
                       key={tag}
                       className="text-[11px] px-2 py-0.5 rounded-full border"
                       style={{
+                        backgroundColor: `${color}20`,
                         borderColor: color,
                         color: color,
-                        opacity: 0.8,
                       }}
                     >
                       {tag}
