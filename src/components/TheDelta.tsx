@@ -178,24 +178,22 @@ const TheDelta = () => {
               )}
               {session && (
                 <div className="mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs h-7"
+                  <button
+                    className="text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 inline-flex items-center gap-1"
                     disabled={borrowingId === t.id}
                     onClick={() => handleBorrow(t)}
                   >
                     {borrowingId === t.id ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        Searching…
+                        <span>Searching…</span>
                       </>
                     ) : (
-                      'Borrow'
+                      'Borrow →'
                     )}
-                  </Button>
+                  </button>
                   {borrowError && borrowingId === null && (
-                    <p className="text-[10px] text-destructive mt-1 text-center">{borrowError}</p>
+                    <p className="text-[10px] text-destructive mt-1">{borrowError}</p>
                   )}
                 </div>
               )}
