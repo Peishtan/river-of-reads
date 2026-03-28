@@ -787,6 +787,14 @@ const RiverOfReading = () => {
 
   /* ── JSX ───────────────────────────────────────────────── */
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground/50 text-sm">Loading…</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-2 py-8">
       <header className="text-center mb-4 max-w-3xl px-4">
