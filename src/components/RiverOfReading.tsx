@@ -871,6 +871,14 @@ const RiverOfReading = () => {
               while lower-rated books fade back, so your favourites literally shine through.
             </p>
             <p>
+              <strong className="text-foreground/70">How tags become streams:</strong> Each book carries one or more vibe tags
+              that describe its feel — like <em>reflective</em>, <em>dark</em>, or <em>nature</em>. These tags are mapped to
+              broader streams. For example, <em>thriller</em> and <em>dystopian</em> flow into <strong className="text-foreground/70">Escapist & Adventure</strong>,
+              while <em>memoir</em> and <em>warm</em> feed into <strong className="text-foreground/70">Life & Reflective</strong>.
+              A book can contribute to multiple streams if it carries tags from different groups.
+              You can see exactly which tags a book has by tapping it in <a href="/library" className="text-primary/70 hover:text-primary underline underline-offset-4">the Basin</a>.
+            </p>
+            <p>
               <strong className="text-foreground/70">Your reader archetype</strong> is determined by the blend of your
               strongest streams — it shifts as your reading evolves.
             </p>
