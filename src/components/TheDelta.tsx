@@ -26,6 +26,10 @@ const TheDelta = () => {
   const { session, riverColors } = useReadingData();
   const [tributaries, setTributaries] = useState<Tributary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [borrowingId, setBorrowingId] = useState<string | null>(null);
+  const [libbyUrl, setLibbyUrl] = useState<string | null>(null);
+  const [libbyModalOpen, setLibbyModalOpen] = useState(false);
+  const [borrowError, setBorrowError] = useState<string | null>(null);
 
   const fetchTributaries = useCallback(async () => {
     try {
