@@ -59,14 +59,6 @@ const RiverOfReading = () => {
 
   const readingData = rawReadingData;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground/50 text-sm">Loading…</div>
-      </div>
-    );
-  }
-
   /* ── derived data ──────────────────────────────────────── */
 
   // Only include 'current' vibe if any books actually use it
