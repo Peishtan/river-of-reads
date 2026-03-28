@@ -55,7 +55,7 @@ const RiverOfReading = () => {
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const navigate = useNavigate();
 
-  const { data: rawReadingData, riverColors, session } = useReadingData();
+  const { data: rawReadingData, riverColors, session, loading } = useReadingData();
 
   const readingData = rawReadingData;
 
@@ -778,6 +778,14 @@ const RiverOfReading = () => {
   }, []);
 
   /* ── JSX ───────────────────────────────────────────────── */
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground/50 text-sm">Loading…</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-2 py-8">
