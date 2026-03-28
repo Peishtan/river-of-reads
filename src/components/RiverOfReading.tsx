@@ -175,14 +175,25 @@ const RiverOfReading = () => {
   const smoothedCounts = useMemo(() => {
     const raw: Record<VibeGroup, number[]> = { escapist: [], ideas: [], nature: [], history: [], life: [], current: [] };
     series.forEach(s => activeVibes.forEach(v => raw[v].push(s.vibeBooks[v])));
+
+    // Total raw books per month (across all vibes) to detect truly empty months
+    const totalRaw = series.map(s => {
+      let sum = 0;
+      activeVibes.forEach(v => { sum += s.vibeBooks[v]; });
+      return sum;
+    });
+
     const out: Record<VibeGroup, number[]> = {} as any;
     activeVibes.forEach(v => {
       const s = smooth(smooth(raw[v], 3), 2);
       // Apply lifecycle mask
       for (let i = 0; i < s.length; i++) {
         s[i] *= vibeLifecycle[v][i];
-        // Prevent visual bleed: if there are no raw 'current' books in a month,
-        // keep Main Current at zero even after smoothing.
+        // Clamp to zero for months with no books at all (prevents smoothing bleed)
+        if (totalRaw[i] === 0) {
+          s[i] = 0;
+        }
+        // Also clamp Main Current specifically when it has no raw books
         if (v === 'current' && raw[v][i] === 0) {
           s[i] = 0;
         }
