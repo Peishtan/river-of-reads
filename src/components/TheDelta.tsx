@@ -2,7 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useReadingData } from '@/contexts/ReadingDataContext';
 import { VibeGroup, vibeLabels } from '@/data/readingData';
-import { X } from 'lucide-react';
+import { X, Loader2, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface Tributary {
   id: string;
