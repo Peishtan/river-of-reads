@@ -3,8 +3,17 @@ import html2canvas from 'html2canvas';
 import { Share2, Download, Check } from 'lucide-react';
 
 interface ShareRiverButtonProps {
-  /** CSS selector or ref for the capturable region */
   captureSelector: string;
+}
+
+function downloadBlob(url: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'river-of-reading.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 const ShareRiverButton = ({ captureSelector }: ShareRiverButtonProps) => {
@@ -20,73 +29,81 @@ const ShareRiverButton = ({ captureSelector }: ShareRiverButtonProps) => {
         return;
       }
 
-      // Convert SVGs to canvas-friendly format before capture
-      const svgs = el.querySelectorAll('svg');
-      const svgBackups: { svg: SVGElement; origWidth: string; origHeight: string }[] = [];
-      svgs.forEach((svg) => {
-        const rect = svg.getBoundingClientRect();
-        svgBackups.push({
-          svg,
-          origWidth: svg.getAttribute('width') || '',
-          origHeight: svg.getAttribute('height') || '',
-        });
-        svg.setAttribute('width', String(rect.width));
-        svg.setAttribute('height', String(rect.height));
+      // 1. Create off-screen container with a deep clone
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.style.zIndex = '-1';
+      document.body.appendChild(container);
+
+      const clone = el.cloneNode(true) as HTMLElement;
+
+      // Remove elements marked as share-exclude
+      clone.querySelectorAll('.share-exclude').forEach((n) => n.remove());
+
+      // Copy computed styles for the root
+      const elStyles = getComputedStyle(el);
+      clone.style.width = elStyles.width;
+      clone.style.backgroundColor = elStyles.backgroundColor || '#141b22';
+
+      // Inline SVG dimensions so html2canvas can rasterise them
+      const origSvgs = el.querySelectorAll('svg');
+      const cloneSvgs = clone.querySelectorAll('svg');
+      origSvgs.forEach((origSvg, i) => {
+        const rect = origSvg.getBoundingClientRect();
+        const cloneSvg = cloneSvgs[i];
+        if (cloneSvg) {
+          cloneSvg.setAttribute('width', String(rect.width));
+          cloneSvg.setAttribute('height', String(rect.height));
+        }
       });
 
-      let canvas: HTMLCanvasElement;
+      container.appendChild(clone);
+
+      // Wait for fonts
+      await document.fonts.ready;
+
       try {
-        canvas = await html2canvas(el, {
-          backgroundColor: '#141b22',
+        const canvas = await html2canvas(clone, {
+          width: clone.scrollWidth,
+          height: clone.scrollHeight,
           scale: 2,
+          backgroundColor: '#141b22',
           useCORS: true,
           logging: false,
           allowTaint: true,
           foreignObjectRendering: false,
-          ignoreElements: (element) =>
-            element.classList?.contains('share-exclude') ?? false,
         });
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            console.warn('Share: canvas.toBlob returned null');
+            return;
+          }
+
+          const file = new File([blob], 'river-of-reading.png', { type: 'image/png' });
+
+          if (navigator.share && navigator.canShare?.({ files: [file] })) {
+            navigator.share({
+              title: 'River of Reading',
+              text: 'My reading life as a river 🌊',
+              files: [file],
+            }).catch(() => {
+              const url = URL.createObjectURL(blob);
+              downloadBlob(url);
+            });
+          } else {
+            const url = URL.createObjectURL(blob);
+            downloadBlob(url);
+          }
+
+          setDone(true);
+          setTimeout(() => setDone(false), 2000);
+        }, 'image/png');
       } finally {
-        // Restore SVG attributes
-        svgBackups.forEach(({ svg, origWidth, origHeight }) => {
-          if (origWidth) svg.setAttribute('width', origWidth);
-          else svg.removeAttribute('width');
-          if (origHeight) svg.setAttribute('height', origHeight);
-          else svg.removeAttribute('height');
-        });
+        document.body.removeChild(container);
       }
-
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, 'image/png')
-      );
-      if (!blob) {
-        console.warn('Share: canvas.toBlob returned null');
-        return;
-      }
-
-      const file = new File([blob], 'river-of-reading.png', { type: 'image/png' });
-
-      // Try native share first (mobile)
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          title: 'River of Reading',
-          text: 'My reading life as a river 🌊',
-          files: [file],
-        });
-      } else {
-        // Fallback: download via link
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'river-of-reading.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-
-      setDone(true);
-      setTimeout(() => setDone(false), 2000);
     } catch (err) {
       console.error('Share failed:', err);
     } finally {
