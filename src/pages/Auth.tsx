@@ -42,7 +42,7 @@ const AuthPage = () => {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <div className="max-w-sm w-full">
         <h1 className="text-3xl font-black text-foreground tracking-[0.18em] uppercase mb-1 font-serif text-center">
-          River of Reading
+          River of Reads
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-8 font-sans">
           {mode === 'login' ? 'Sign in to your reading river' : 'Create your account'}

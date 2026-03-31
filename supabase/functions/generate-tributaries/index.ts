@@ -124,7 +124,7 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are a literary recommendation engine for "River of Reading" — a visualization that maps someone's reading life as a flowing river with tributaries.
+    const systemPrompt = `You are a literary recommendation engine for "River of Reads" — a visualization that maps someone's reading life as a flowing river with tributaries.
 
 The reader's strongest streams are: ${topVibeNames}.
 
