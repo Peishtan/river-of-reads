@@ -25,12 +25,14 @@ interface FlatBook {
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 type SortKey = 'date-desc' | 'date-asc' | 'rating-desc' | 'rating-asc' | 'title-asc';
+type FormatFilter = 'all' | 'fiction' | 'nonfiction';
 
 const Library = () => {
   const { data, isCustomData, session, loading } = useReadingData();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [vibeFilter, setVibeFilter] = useState<string>('all');
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
   const [sortKey, setSortKey] = useState<SortKey>('date-desc');
   const [selectedBook, setSelectedBook] = useState<FlatBook | null>(null);
   const [focusIndex, setFocusIndex] = useState(-1);
