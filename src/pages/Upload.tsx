@@ -100,24 +100,29 @@ const UploadPage = () => {
       await supabase.from('books').delete().eq('user_id', userId);
 
       const parsed = parseMappedCSV(rows, mapping as ColumnMapping);
-      // Batch insert
+      // Batch insert — save RAW tags (not mapped vibes) so AI can classify them later
       const batchSize = 50;
       for (let i = 0; i < parsed.length; i += batchSize) {
-        const batch = parsed.slice(i, i + batchSize).map(b => ({
-          title: b.title,
-          author: b.author || null,
-          date_read: b.dateRead.toISOString().split('T')[0],
-          rating: b.rating,
-          vibes: b.vibes,
-          user_id: userId,
-        }));
+        const batch = parsed.slice(i, i + batchSize).map(b => {
+          const rawTags = b.rawVibes.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+          return {
+            title: b.title,
+            author: b.author || null,
+            date_read: b.dateRead.toISOString().split('T')[0],
+            rating: b.rating,
+            vibes: rawTags.length > 0 ? rawTags : [],
+            user_id: userId,
+          };
+        });
         const { error: insertError } = await supabase.from('books').insert(batch);
         if (insertError) throw insertError;
       }
 
       // Trigger AI tag classification for unrecognized tags
       const allTags = new Set<string>();
-      parsed.forEach(b => b.vibes.forEach(t => allTags.add(t.toLowerCase().trim())));
+      parsed.forEach(b => {
+        b.rawVibes.split(',').map(t => t.trim().toLowerCase()).filter(Boolean).forEach(t => allTags.add(t));
+      });
       const unknownTags = [...allTags].filter(t => !TAG_TO_VIBE[t]);
       if (unknownTags.length > 0) {
         try {
