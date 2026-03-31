@@ -830,6 +830,27 @@ const RiverOfReading = () => {
           </p>
         </header>
 
+        {/* Format filter pills */}
+        <div className="flex items-center gap-1.5 mb-4 share-exclude">
+          {([
+            { key: 'all' as FormatFilter, label: 'All' },
+            { key: 'fiction' as FormatFilter, label: 'Fiction' },
+            { key: 'nonfiction' as FormatFilter, label: 'Non-fiction & Memoir' },
+          ]).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFormatFilter(key)}
+              className={`px-3 py-1 rounded-full text-[11px] font-medium tracking-wide transition-all duration-200 border ${
+                formatFilter === key
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground/70'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
             <svg ref={svgRef} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" />
