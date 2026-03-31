@@ -819,7 +819,7 @@ const RiverOfReading = () => {
       <div id="river-share-card" className="w-full flex flex-col items-center bg-background pb-6">
         <header className="text-center mb-4 max-w-3xl w-full px-4">
           <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-[0.18em] uppercase mb-2 font-serif">
-            River of Reading
+            River of Reads
           </h1>
           <div className="share-exclude"><ReaderArchetype /></div>
           <p className="text-xs text-muted-foreground/70 mt-2 tracking-wide">

@@ -76,7 +76,7 @@ const ShareRiverButton = ({ captureSelector }: ShareRiverButtonProps) => {
       if (navigator.share) {
         try {
           const shareData: ShareData = {
-            title: 'River of Reading',
+            title: 'River of Reads',
             text: 'My reading life as a river 🌊',
             files: [file],
           };
