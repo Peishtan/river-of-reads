@@ -25,12 +25,14 @@ interface FlatBook {
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 type SortKey = 'date-desc' | 'date-asc' | 'rating-desc' | 'rating-asc' | 'title-asc';
+type FormatFilter = 'all' | 'fiction' | 'nonfiction';
 
 const Library = () => {
   const { data, isCustomData, session, loading } = useReadingData();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [vibeFilter, setVibeFilter] = useState<string>('all');
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
   const [sortKey, setSortKey] = useState<SortKey>('date-desc');
   const [selectedBook, setSelectedBook] = useState<FlatBook | null>(null);
   const [focusIndex, setFocusIndex] = useState(-1);
@@ -83,6 +85,15 @@ const Library = () => {
       result = result.filter(b => b.vibes.includes(vibeFilter as VibeGroup));
     }
 
+    if (formatFilter !== 'all') {
+      result = result.filter(b => {
+        const fmt = (b.format || '').toLowerCase().trim();
+        if (formatFilter === 'fiction') return fmt === 'fiction';
+        if (formatFilter === 'nonfiction') return fmt === 'non-fiction' || fmt === 'nonfiction' || fmt === 'memoir';
+        return true;
+      });
+    }
+
     result = [...result].sort((a, b) => {
       const dateA = a.dateRead ? new Date(a.dateRead).getTime() : (a.year * 12 + a.month);
       const dateB = b.dateRead ? new Date(b.dateRead).getTime() : (b.year * 12 + b.month);
@@ -97,7 +108,7 @@ const Library = () => {
     });
 
     return result;
-  }, [baseFiltered, search, vibeFilter, sortKey]);
+  }, [baseFiltered, search, vibeFilter, formatFilter, sortKey]);
 
   // Flat list for keyboard nav
   const flatFiltered = filtered;
@@ -153,7 +164,7 @@ const Library = () => {
   }, [focusIndex]);
 
   // Reset focus when filters change
-  useEffect(() => { setFocusIndex(-1); }, [search, vibeFilter, sortKey]);
+  useEffect(() => { setFocusIndex(-1); }, [search, vibeFilter, formatFilter, sortKey]);
 
   const isFilteredByDate = yearParam !== null;
 
@@ -260,6 +271,27 @@ const Library = () => {
                 <SelectItem value="title-asc">A → Z</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Format filter pills */}
+          <div className="w-full max-w-4xl flex items-center gap-1.5 mb-4">
+            {([
+              { key: 'all' as FormatFilter, label: 'All formats' },
+              { key: 'fiction' as FormatFilter, label: 'Fiction' },
+              { key: 'nonfiction' as FormatFilter, label: 'Non-fiction & Memoir' },
+            ]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFormatFilter(key)}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium tracking-wide transition-all duration-200 border ${
+                  formatFilter === key
+                    ? 'bg-foreground text-background border-foreground'
+                    : 'bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground/70'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Results count + keyboard hint */}
