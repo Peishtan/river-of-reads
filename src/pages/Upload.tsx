@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { parseCSVText, parseMappedCSV, booksToMonthData, ColumnMapping } from '@/lib/parseCSV';
+import { TAG_TO_VIBE } from '@/data/readingData';
 import { useReadingData } from '@/contexts/ReadingDataContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
