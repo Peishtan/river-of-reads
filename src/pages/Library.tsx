@@ -164,7 +164,7 @@ const Library = () => {
   }, [focusIndex]);
 
   // Reset focus when filters change
-  useEffect(() => { setFocusIndex(-1); }, [search, vibeFilter, sortKey]);
+  useEffect(() => { setFocusIndex(-1); }, [search, vibeFilter, formatFilter, sortKey]);
 
   const isFilteredByDate = yearParam !== null;
 
