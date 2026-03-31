@@ -49,16 +49,30 @@ function lightenHSL(hsl: string, amount = 12): string {
 
 /* ── component ───────────────────────────────────────────── */
 
+type FormatFilter = 'all' | 'fiction' | 'nonfiction';
+
 const RiverOfReading = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredMonth, setHoveredMonth] = useState<MonthData | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
   const navigate = useNavigate();
 
   const { data: rawReadingData, riverColors, session, loading } = useReadingData();
 
-  const readingData = rawReadingData;
+  const readingData = useMemo(() => {
+    if (formatFilter === 'all') return rawReadingData;
+    return rawReadingData.map(month => ({
+      ...month,
+      books: month.books.filter(b => {
+        const fmt = (b.format || '').toLowerCase().trim();
+        if (formatFilter === 'fiction') return fmt === 'fiction';
+        if (formatFilter === 'nonfiction') return fmt === 'non-fiction' || fmt === 'nonfiction' || fmt === 'memoir';
+        return true;
+      }),
+    })).filter(month => month.books.length > 0);
+  }, [rawReadingData, formatFilter]);
 
   /* ── derived data ──────────────────────────────────────── */
 
