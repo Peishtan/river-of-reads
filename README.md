@@ -22,6 +22,8 @@ The core visualization is a horizontal stacked-area chart built with **D3.js**. 
 | `current` | The Main Current | The base flow — books that don't match any recognized tag |
 
 > **How tags work:** Tags describe a book's *themes and moods*, not its genre or format. A novel can be tagged `reflective` (→ Life & Reflective) or `dark` (→ Escapist & Adventure) based on its feel. Fiction vs non-fiction doesn't determine the stream — a memoir about adventure could be `escapist`, while a thriller with psychological depth might be both `thriller` + `reflective`. When a book has tags mapping to multiple streams, it contributes to all of them. Books with no recognized tags fall into The Main Current.
+>
+> **AI tag classification:** Tags not in the built-in map are automatically classified by AI (via the `classify-tags` edge function) into the best-fitting stream. This runs once per upload — mappings are cached per-user in the `tag_mappings` table, so users can use any vocabulary they like and it'll be mapped intelligently.
 
 ### Branch Lifecycle
 
@@ -35,6 +37,7 @@ Branches don't just exist from the start — they have organic birth and death r
 - **Meandering:** Each tributary follows its own sine-wave meander pattern, so streams weave and braid naturally rather than running in straight parallel lines.
 - **Smoothing:** Book counts are Gaussian-smoothed across neighboring months to avoid jagged transitions.
 - **Delta ending:** The river fans out into a wide delta at the current month rather than collapsing to a point.
+- **Format filter:** Toggle between All, Fiction, and Non-fiction & Memoir to see how each format flows through the streams. The entire river re-renders with filtered data.
 - **Tooltips:** Hover over any month to see the books read, their ratings, and vibe tags.
 - **Customizable colors:** Each tributary color can be customized via the settings panel.
 
@@ -74,7 +77,7 @@ Combo archetypes (Submarine Pilot, River Keeper) take priority when both streams
 The Basin is a searchable, filterable list of every book that has flowed through the river — "where the river settles." Accessible at `/library`, it provides:
 
 - **Search** by title or author
-- **Filter** by vibe stream
+- **Filter** by vibe stream or book format (Fiction / Non-fiction & Memoir)
 - **Sort** by date (newest/oldest), rating (highest/lowest), or alphabetically
 - **Year grouping** with sticky headers when sorted by date
 - **Day-level sorting** within months using the full `date_read` timestamp
@@ -142,6 +145,8 @@ src/
 
 supabase/
 └── functions/
+    ├── classify-tags/
+    │   └── index.ts           # AI tag classification edge function
     └── generate-tributaries/
         └── index.ts           # AI recommendation edge function
 ```

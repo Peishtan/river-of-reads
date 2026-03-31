@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { parseCSVText, parseMappedCSV, booksToMonthData, ColumnMapping } from '@/lib/parseCSV';
+import { TAG_TO_VIBE } from '@/data/readingData';
 import { useReadingData } from '@/contexts/ReadingDataContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -114,6 +115,19 @@ const UploadPage = () => {
         if (insertError) throw insertError;
       }
 
+      // Trigger AI tag classification for unrecognized tags
+      const allTags = new Set<string>();
+      parsed.forEach(b => b.vibes.forEach(t => allTags.add(t.toLowerCase().trim())));
+      const unknownTags = [...allTags].filter(t => !TAG_TO_VIBE[t]);
+      if (unknownTags.length > 0) {
+        try {
+          await supabase.functions.invoke('classify-tags', { body: { tags: unknownTags } });
+          toast({ title: 'Tags classified', description: `${unknownTags.length} new tags were auto-mapped to streams by AI.` });
+        } catch (err) {
+          console.warn('Tag classification failed (non-blocking):', err);
+        }
+      }
+
       toast({ title: 'Saved!', description: `${parsed.length} books saved to Lovable Cloud.` });
     } catch (err) {
       console.error('Save error:', err);
@@ -205,10 +219,11 @@ const UploadPage = () => {
                 <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">How categories work:</strong> Tags are mapped into 5 river tributaries —
                   <em> Nature & Ocean, History & World, Ideas & Tech, Escapist & Adventure,</em> and <em>Life & Reflective</em>.
-                  A book can belong to multiple categories. Unrecognized tags flow into <em>The Main Current</em>.
+                  A book can belong to multiple categories. <strong>Unrecognized tags are automatically classified by AI</strong> into
+                  the best-fitting stream — so you can use your own tags and they'll be mapped intelligently.
                 </p>
                 <p className="text-[10px] text-muted-foreground/70 mt-1.5">
-                  Recognized tags: nature, travel, history, culture, politics, memoir, legal, business, future, science, technology, psychology, adventure, mystery, thriller, dystopian, reflective, literary, warm, hope, food, craft, and more.
+                  Pre-mapped tags: nature, travel, history, culture, politics, memoir, business, future, science, technology, psychology, adventure, mystery, thriller, dystopian, reflective, literary, warm, hope, food, craft, and more. Any others are AI-classified on first upload.
                 </p>
               </div>
             </div>

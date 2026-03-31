@@ -55,6 +55,21 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
 
   const loadBooks = useCallback(async () => {
     try {
+      // Load user-specific tag mappings alongside books
+      let customTagMap: Record<string, VibeGroup> = {};
+      if (session) {
+        const { data: mappings } = await supabase
+          .from('tag_mappings')
+          .select('tag, vibe_key');
+        if (mappings) {
+          mappings.forEach(m => {
+            if (VIBES.includes(m.vibe_key as VibeGroup)) {
+              customTagMap[m.tag.toLowerCase().trim()] = m.vibe_key as VibeGroup;
+            }
+          });
+        }
+      }
+
       const { data: books } = await supabase
         .from('books')
         .select('*')
@@ -73,7 +88,9 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
               const rawTags = b.vibes && b.vibes.length > 0 ? b.vibes : [];
               const mapped = new Set<VibeGroup>();
               for (const tag of rawTags) {
-                const vibe = TAG_TO_VIBE[tag.toLowerCase().trim()];
+                const normalized = tag.toLowerCase().trim();
+                // Check static map first, then user's custom AI-generated map
+                const vibe = TAG_TO_VIBE[normalized] || customTagMap[normalized];
                 if (vibe) mapped.add(vibe);
                 else if (VIBES.includes(tag as VibeGroup)) mapped.add(tag as VibeGroup);
               }
@@ -110,7 +127,7 @@ export const ReadingDataProvider = ({ children }: { children: ReactNode }) => {
       setDataRaw(dummyData);
       setIsCustomData(false);
     }
-  }, []);
+  }, [session]);
 
   // Load books and colors when session changes
   useEffect(() => {
