@@ -115,6 +115,19 @@ const UploadPage = () => {
         if (insertError) throw insertError;
       }
 
+      // Trigger AI tag classification for unrecognized tags
+      const allTags = new Set<string>();
+      parsed.forEach(b => b.vibes.forEach(t => allTags.add(t.toLowerCase().trim())));
+      const unknownTags = [...allTags].filter(t => !TAG_TO_VIBE[t]);
+      if (unknownTags.length > 0) {
+        try {
+          await supabase.functions.invoke('classify-tags', { body: { tags: unknownTags } });
+          toast({ title: 'Tags classified', description: `${unknownTags.length} new tags were auto-mapped to streams by AI.` });
+        } catch (err) {
+          console.warn('Tag classification failed (non-blocking):', err);
+        }
+      }
+
       toast({ title: 'Saved!', description: `${parsed.length} books saved to Lovable Cloud.` });
     } catch (err) {
       console.error('Save error:', err);
