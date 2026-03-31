@@ -77,7 +77,7 @@ Combo archetypes (Submarine Pilot, River Keeper) take priority when both streams
 The Basin is a searchable, filterable list of every book that has flowed through the river — "where the river settles." Accessible at `/library`, it provides:
 
 - **Search** by title or author
-- **Filter** by vibe stream
+- **Filter** by vibe stream or book format (Fiction / Non-fiction & Memoir)
 - **Sort** by date (newest/oldest), rating (highest/lowest), or alphabetically
 - **Year grouping** with sticky headers when sorted by date
 - **Day-level sorting** within months using the full `date_read` timestamp
