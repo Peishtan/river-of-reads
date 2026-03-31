@@ -929,10 +929,15 @@ const RiverOfReading = () => {
               <>
                 <div className="border-t border-border/20 pt-3 mt-4" />
                 <p>
+                  <span className="text-foreground/60">How it stays current —</span> my river is updated automatically
+                  via an n8n pipeline from <a href="https://www.goodreads.com/review/list_rss/13139577-peishan-tan?shelf=read" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">Goodreads</a>.
+                  Recommendations in <em>The Delta</em> are AI-generated from my reading patterns.
+                </p>
+                <p>
                   <span className="text-foreground/60">Make your own —</span>{' '}
                   <a href="/auth" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">create an account</a> and{' '}
-                  <a href="/upload" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">upload a CSV</a> of
-                  your reading history. Any spreadsheet with titles, dates, ratings, and genre tags will work.
+                  <a href="/upload" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">upload a CSV</a>.
+                  Any spreadsheet with titles, dates, ratings, and genre tags will work.
                 </p>
               </>
             )}
