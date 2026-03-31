@@ -145,6 +145,8 @@ src/
 
 supabase/
 └── functions/
+    ├── classify-tags/
+    │   └── index.ts           # AI tag classification edge function
     └── generate-tributaries/
         └── index.ts           # AI recommendation edge function
 ```
