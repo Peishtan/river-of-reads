@@ -110,6 +110,30 @@ export type Database = {
         }
         Relationships: []
       }
+      tag_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          tag: string
+          user_id: string
+          vibe_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag: string
+          user_id: string
+          vibe_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag?: string
+          user_id?: string
+          vibe_key?: string
+        }
+        Relationships: []
+      }
       tributaries: {
         Row: {
           author: string | null
