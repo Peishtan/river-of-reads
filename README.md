@@ -37,6 +37,7 @@ Branches don't just exist from the start — they have organic birth and death r
 - **Meandering:** Each tributary follows its own sine-wave meander pattern, so streams weave and braid naturally rather than running in straight parallel lines.
 - **Smoothing:** Book counts are Gaussian-smoothed across neighboring months to avoid jagged transitions.
 - **Delta ending:** The river fans out into a wide delta at the current month rather than collapsing to a point.
+- **Format filter:** Toggle between All, Fiction, and Non-fiction & Memoir to see how each format flows through the streams. The entire river re-renders with filtered data.
 - **Tooltips:** Hover over any month to see the books read, their ratings, and vibe tags.
 - **Customizable colors:** Each tributary color can be customized via the settings panel.
 
