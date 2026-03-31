@@ -1,4 +1,4 @@
-# River of Reading
+# River of Reads
 
 An interactive visualization of reading history rendered as a braided streamgraph — a flowing river where each tributary represents a different reading "vibe."
 
