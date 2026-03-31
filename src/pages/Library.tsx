@@ -108,7 +108,7 @@ const Library = () => {
     });
 
     return result;
-  }, [baseFiltered, search, vibeFilter, sortKey]);
+  }, [baseFiltered, search, vibeFilter, formatFilter, sortKey]);
 
   // Flat list for keyboard nav
   const flatFiltered = filtered;
