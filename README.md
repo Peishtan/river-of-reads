@@ -22,6 +22,8 @@ The core visualization is a horizontal stacked-area chart built with **D3.js**. 
 | `current` | The Main Current | The base flow — books that don't match any recognized tag |
 
 > **How tags work:** Tags describe a book's *themes and moods*, not its genre or format. A novel can be tagged `reflective` (→ Life & Reflective) or `dark` (→ Escapist & Adventure) based on its feel. Fiction vs non-fiction doesn't determine the stream — a memoir about adventure could be `escapist`, while a thriller with psychological depth might be both `thriller` + `reflective`. When a book has tags mapping to multiple streams, it contributes to all of them. Books with no recognized tags fall into The Main Current.
+>
+> **AI tag classification:** Tags not in the built-in map are automatically classified by AI (via the `classify-tags` edge function) into the best-fitting stream. This runs once per upload — mappings are cached per-user in the `tag_mappings` table, so users can use any vocabulary they like and it'll be mapped intelligently.
 
 ### Branch Lifecycle
 

@@ -927,7 +927,13 @@ const RiverOfReading = () => {
               broader streams. For example, <em>thriller</em> and <em>dystopian</em> flow into Escapist & Adventure,
               while <em>memoir</em> and <em>warm</em> feed into Life & Reflective.
               A book can contribute to multiple streams if it carries tags from different groups.
+              <strong> Tags that aren't in the built-in list are automatically classified by AI</strong> into the
+              best-fitting stream — so you can use your own vocabulary and it'll just work.
               You can see exactly which tags a book has by tapping it in <a href="/library" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">the Basin</a>.
+            </p>
+            <p>
+              Use the <strong>format filter</strong> above the river to view only Fiction or Non-fiction & Memoir books —
+              the river re-renders to show how each format flows through your streams.
             </p>
             <p>
               Your reader archetype is determined by the blend of your
