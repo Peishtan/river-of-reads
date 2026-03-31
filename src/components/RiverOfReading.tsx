@@ -49,16 +49,30 @@ function lightenHSL(hsl: string, amount = 12): string {
 
 /* ── component ───────────────────────────────────────────── */
 
+type FormatFilter = 'all' | 'fiction' | 'nonfiction';
+
 const RiverOfReading = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredMonth, setHoveredMonth] = useState<MonthData | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
   const navigate = useNavigate();
 
   const { data: rawReadingData, riverColors, session, loading } = useReadingData();
 
-  const readingData = rawReadingData;
+  const readingData = useMemo(() => {
+    if (formatFilter === 'all') return rawReadingData;
+    return rawReadingData.map(month => ({
+      ...month,
+      books: month.books.filter(b => {
+        const fmt = (b.format || '').toLowerCase().trim();
+        if (formatFilter === 'fiction') return fmt === 'fiction';
+        if (formatFilter === 'nonfiction') return fmt === 'non-fiction' || fmt === 'nonfiction' || fmt === 'memoir';
+        return true;
+      }),
+    })).filter(month => month.books.length > 0);
+  }, [rawReadingData, formatFilter]);
 
   /* ── derived data ──────────────────────────────────────── */
 
@@ -815,6 +829,27 @@ const RiverOfReading = () => {
             })()} years
           </p>
         </header>
+
+        {/* Format filter pills */}
+        <div className="flex items-center gap-1.5 mb-4 share-exclude">
+          {([
+            { key: 'all' as FormatFilter, label: 'All' },
+            { key: 'fiction' as FormatFilter, label: 'Fiction' },
+            { key: 'nonfiction' as FormatFilter, label: 'Non-fiction & Memoir' },
+          ]).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFormatFilter(key)}
+              className={`px-3 py-1 rounded-full text-[11px] font-medium tracking-wide transition-all duration-200 border ${
+                formatFilter === key
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground/70'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         <div className="w-full max-w-[1800px] overflow-x-auto px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div ref={containerRef} className="relative" style={{ minWidth: 1200 }}>
