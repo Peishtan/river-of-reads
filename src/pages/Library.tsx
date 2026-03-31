@@ -273,6 +273,27 @@ const Library = () => {
             </Select>
           </div>
 
+          {/* Format filter pills */}
+          <div className="w-full max-w-4xl flex items-center gap-1.5 mb-4">
+            {([
+              { key: 'all' as FormatFilter, label: 'All formats' },
+              { key: 'fiction' as FormatFilter, label: 'Fiction' },
+              { key: 'nonfiction' as FormatFilter, label: 'Non-fiction & Memoir' },
+            ]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFormatFilter(key)}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium tracking-wide transition-all duration-200 border ${
+                  formatFilter === key
+                    ? 'bg-foreground text-background border-foreground'
+                    : 'bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground/70'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           {/* Results count + keyboard hint */}
           <div className="w-full max-w-4xl mb-4 flex items-center justify-between">
             <p className="text-xs text-muted-foreground/60">
