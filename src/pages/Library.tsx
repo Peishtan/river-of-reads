@@ -85,6 +85,15 @@ const Library = () => {
       result = result.filter(b => b.vibes.includes(vibeFilter as VibeGroup));
     }
 
+    if (formatFilter !== 'all') {
+      result = result.filter(b => {
+        const fmt = (b.format || '').toLowerCase().trim();
+        if (formatFilter === 'fiction') return fmt === 'fiction';
+        if (formatFilter === 'nonfiction') return fmt === 'non-fiction' || fmt === 'nonfiction' || fmt === 'memoir';
+        return true;
+      });
+    }
+
     result = [...result].sort((a, b) => {
       const dateA = a.dateRead ? new Date(a.dateRead).getTime() : (a.year * 12 + a.month);
       const dateB = b.dateRead ? new Date(b.dateRead).getTime() : (b.year * 12 + b.month);
