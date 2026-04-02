@@ -58,7 +58,7 @@ const FeedbackDialog = ({ open, onOpenChange }: FeedbackDialogProps) => {
         <DialogHeader>
           <DialogTitle className="font-serif text-lg text-foreground">Send a Ripple</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            Report a data issue or share a suggestion.
+            Leave a note in the current.
           </DialogDescription>
         </DialogHeader>
 
