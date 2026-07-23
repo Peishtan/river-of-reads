@@ -1,0 +1,1 @@
+ALTER TABLE public.books ADD CONSTRAINT books_user_title_date_unique UNIQUE (user_id, title, date_read);
