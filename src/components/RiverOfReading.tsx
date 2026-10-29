@@ -930,7 +930,7 @@ const RiverOfReading = () => {
                 <div className="border-t border-border/20 pt-3 mt-4" />
                 <p>
                   <span className="text-foreground/60">How it stays current —</span> my river is updated automatically
-                  via an n8n pipeline from <a href="https://www.goodreads.com/review/list_rss/13139577-peishan-tan?shelf=read" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">Goodreads</a>.
+                  via an n8n pipeline from <a href="https://hardcover.app/@peishanexplores/books/read" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors">Hardcover.app</a>.
                   Recommendations in <em>The Delta</em> are AI-generated from my reading patterns.
                 </p>
                 <p>
