@@ -162,19 +162,26 @@ Open [http://localhost:5173](http://localhost:5173) to view the river.
 
 ## Automated Book Ingestion (n8n)
 
-New books are automatically added to the database via an **n8n workflow** that runs on a schedule (or can be triggered manually). The workflow:
+New books are automatically added to the database via an **n8n workflow** that runs on a schedule (or can be triggered manually). Books are logged in **[Hardcover](https://hardcover.app)** and pulled from its GraphQL API. The workflow:
 
-1. **Fetches book data** from an external source (e.g. a reading tracker API or RSS feed)
-2. **Parses and enriches** each book with title, author, date read, rating, and vibe tags using a JavaScript code node
-3. **Authenticates** against the backend using stored credentials to obtain a session token
-4. **Inserts** each book into the `books` table via the REST API with proper authorization headers
+1. **Fetches recent reads from Hardcover** — a `POST` to `https://api.hardcover.app/v1/graphql` returns the user's books with status "read" (`status_id: 3`), newest first, including title, author, rating, last read date, and cover image
+2. **Normalizes fields** — the response is split into one item per book and mapped to the fields the rest of the workflow expects (`title`, `author_name`, `user_read_at`, `user_rating`, `book_id`, `book_image_url`)
+3. **Checks Notion for existing books** — skips any book whose title (before any subtitle or series tag) is already in the Notion reading log
+4. **Classifies and summarizes** each new book with an LLM, which assigns format, vibe tags, and a short reflective summary
+5. **Writes to Notion** as a new page in the reading log
+6. **Authenticates** against the backend using stored credentials to obtain a session token
+7. **Inserts** each book into the `books` table via the REST API with proper authorization headers
+
+> **Why Hardcover?** Goodreads shelf RSS feeds stopped working, and shelf pages now require a login to view. Hardcover offers a documented API with personal tokens, so the sync no longer depends on scraping.
 
 ### Key Details
 
-- **Duplicate prevention:** The workflow should check for existing entries before inserting (e.g. by matching on title + date_read) to avoid duplicates.
-- **Vibe tagging:** Tags from the source are mapped to the six river tributaries (`nature`, `history`, `ideas`, `escapist`, `life`, `current`) in the n8n Code node.
+- **Hardcover auth:** The request uses an API token from Hardcover's account settings, sent as `Authorization: Bearer <token>`. The token must include scopes that allow reading your profile (`read:me`) and your library; without the library scope the query returns an empty list rather than an error. Tokens expire, so the workflow fails if the token isn't renewed.
+- **Query shape:** Books are fetched through `me { user_books(...) }` and sorted with `last_read_date: desc_nulls_last`, so undated books don't crowd out recent reads.
+- **Duplicate prevention:** Two layers. The Notion lookup matches on title, ignoring subtitles and series tags (e.g. "The Red Book (Billy Harney, #2)" matches "The Red Book"). The `books` table also has a unique constraint on user + title + date read, and the insert uses `on_conflict` with `Prefer: resolution=ignore-duplicates`, so any duplicate that slips past Notion is skipped instead of failing the run.
+- **Ratings:** Hardcover allows half-star ratings. The insert rounds them to whole numbers and sends `null` for unrated books, to satisfy the `books_rating_check` constraint.
+- **Vibe tagging:** Tags from the LLM are mapped to the six river tributaries (`nature`, `history`, `ideas`, `escapist`, `life`, `current`) in the n8n Code node.
 - **Auth flow:** The workflow uses `POST /auth/v1/token?grant_type=password` to obtain an access token, then passes it as a `Bearer` token in the `Authorization` header for the insert request.
-- **Prefer header:** Add `Prefer: return=representation` to the insert HTTP request to get the created row back in the response.
 
 ### Adding a New Book Manually
 
